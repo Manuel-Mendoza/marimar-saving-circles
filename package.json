@@ -7,7 +7,7 @@
     "backend"
   ],
   "scripts": {
-    "dev": "concurrently \"bun run dev --cwd client\" \"bun run dev --cwd backend\"",
+    "dev": "concurrently \"cd client && bunx vite\" \"cd backend && bun run dev\"",
     "dev:client": "bun run dev --cwd client",
     "dev:backend": "bun run dev --cwd backend",
     "build": "bun run build --cwd client && bun run build --cwd backend",
