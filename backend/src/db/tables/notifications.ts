@@ -1,11 +1,10 @@
-import { pgTable, text, boolean, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { notificationTypeEnum } from '../enums';
+import { pgTable, text, boolean, timestamp, serial } from 'drizzle-orm/pg-core';
 
-// Notifications table
+// Notifications table with numeric IDs
 export const notifications = pgTable('notifications', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  userId: text('user_id').notNull(),
-  tipo: notificationTypeEnum('tipo').notNull(),
+  id: serial('id').primaryKey(),
+  userId: serial('user_id').notNull(),
+  tipo: text('tipo').notNull(),
   titulo: text('titulo').notNull(),
   mensaje: text('mensaje').notNull(),
   leido: boolean('leido').notNull().default(false),

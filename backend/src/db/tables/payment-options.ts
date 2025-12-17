@@ -1,10 +1,9 @@
-import { pgTable, text, boolean, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { paymentTypeEnum } from '../enums';
+import { pgTable, text, boolean, timestamp, serial } from 'drizzle-orm/pg-core';
 
-// Payment options table
+// Payment options table with numeric IDs
 export const paymentOptions = pgTable('payment_options', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  tipo: paymentTypeEnum('tipo').notNull(),
+  id: serial('id').primaryKey(),
+  tipo: text('tipo').notNull(),
   detalles: text('detalles').notNull(),
   activo: boolean('activo').notNull().default(true),
   fechaCreacion: timestamp('fecha_creacion').notNull().defaultNow(),

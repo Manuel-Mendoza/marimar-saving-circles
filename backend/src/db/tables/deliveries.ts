@@ -1,12 +1,12 @@
-import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { users } from './users';
-import { groups } from './groups';
+import { pgTable, text, timestamp, serial, integer } from 'drizzle-orm/pg-core';
+import { users } from '../tables/users';
+import { groups } from '../tables/groups';
 
-// Deliveries table - Registro de entregas de productos a participantes
+// Deliveries table with numeric IDs
 export const deliveries = pgTable('deliveries', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  groupId: uuid('group_id').notNull().references(() => groups.id, { onDelete: 'cascade' }),
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  groupId: integer('group_id').notNull().references(() => groups.id, { onDelete: 'cascade' }),
   productName: text('product_name').notNull(), // Nombre del producto entregado
   productValue: text('product_value').notNull(), // Valor del producto
   fechaEntrega: timestamp('fecha_entrega').notNull().defaultNow(),

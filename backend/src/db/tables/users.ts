@@ -1,9 +1,8 @@
-import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { userTypeEnum } from '../enums';
+import { pgTable, text, timestamp, serial } from 'drizzle-orm/pg-core';
 
-// Users table
+// Users table with numeric auto-increment ID
 export const users = pgTable('users', {
-  id: uuid('id').primaryKey().defaultRandom(),
+  id: serial('id').primaryKey(),
   nombre: text('nombre').notNull(),
   apellido: text('apellido').notNull(),
   cedula: text('cedula').notNull().unique(),
@@ -11,7 +10,7 @@ export const users = pgTable('users', {
   direccion: text('direccion').notNull(),
   correoElectronico: text('correo_electronico').notNull().unique(),
   password: text('password').notNull(),
-  tipo: userTypeEnum('tipo').notNull().default('USUARIO'),
+  tipo: text('tipo').notNull().default('USUARIO'),
   fechaRegistro: timestamp('fecha_registro').notNull().defaultNow(),
 });
 
