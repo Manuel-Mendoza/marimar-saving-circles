@@ -12,6 +12,7 @@ export const users = pgTable('users', {
   password: text('password').notNull(),
   tipo: text('tipo').notNull().default('USUARIO'),
   fechaRegistro: timestamp('fecha_registro').notNull().defaultNow(),
+  ultimoAcceso: timestamp('ultimo_acceso'),
 });
 
 // Types
