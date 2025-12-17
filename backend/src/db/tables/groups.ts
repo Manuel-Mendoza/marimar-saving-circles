@@ -5,13 +5,11 @@ import { groupStatusEnum } from '../enums';
 export const groups = pgTable('groups', {
   id: uuid('id').primaryKey().defaultRandom(),
   nombre: text('nombre').notNull(),
+  duracionMeses: integer('duracion_meses').notNull(), // Duración del grupo en meses ⭐
   estado: groupStatusEnum('estado').notNull().default('SIN_COMPLETAR'),
   fechaInicio: timestamp('fecha_inicio'),
   fechaFinal: timestamp('fecha_final'),
-  valor: real('valor').notNull(),
-  semana: integer('semana').notNull(),
-  mes: integer('mes').notNull(),
-  turnoActual: text('turno_actual'),
+  turnoActual: integer('turno_actual').default(1), // Mes actual del ciclo (1, 2, 3, ...)
 });
 
 // Types
