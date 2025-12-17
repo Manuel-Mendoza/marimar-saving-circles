@@ -13,6 +13,7 @@ dist-ssr
 *.local
 .env
 .env.*.local
+*.md
 
 # Drizzle migrations (opcional - si no quieres versionar las migraciones)
 drizzle
