@@ -1,73 +1,195 @@
-# Welcome to your Lovable project
+# Marimar Saving Circles - Monolith Application
 
-## Project info
+Sistema de ahorro colaborativo "San Marimar" - Una plataforma completa para la gestión de círculos de ahorro donde los usuarios pueden unirse a grupos colaborativos.
 
-**URL**: https://lovable.dev/projects/b001a00b-39c4-4df9-8480-b3af6bd06d79
+## Arquitectura del Proyecto
 
-## How can I edit this code?
+Este proyecto está estructurado como un **monolito** con separación clara entre frontend y backend:
 
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/b001a00b-39c4-4df9-8480-b3af6bd06d79) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```
+marimar-saving-circles/
+├── client/                 # Frontend (React + TypeScript + Vite)
+├── backend/                # Backend (Hono + Node.js + TypeScript)
+├── shared/                 # Tipos y utilidades compartidas
+└── package.json           # Configuración del monólito
 ```
 
-**Edit a file directly in GitHub**
+## Tecnologías
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Frontend (Client)
+- **React 18** con TypeScript
+- **Vite** para desarrollo y build
+- **Tailwind CSS** + **shadcn/ui** para UI
+- **React Router** para navegación
+- **React Hook Form** + **Zod** para formularios
+- **TanStack Query** para manejo de estado del servidor
 
-**Use GitHub Codespaces**
+### Backend (Server)
+- **Hono** - Framework web rápido para Node.js
+- **TypeScript** para type safety
+- **PostgreSQL** (Neon.tech) + **Drizzle ORM** para base de datos
+- **PASETO** para autenticación segura
+- **Zod** para validación
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Instalación y Configuración
 
-## What technologies are used for this project?
+### Prerrequisitos
+- Node.js 18+ y npm
+- Cuenta en [Neon.tech](https://neon.tech) para PostgreSQL serverless
 
-This project is built with:
+### Instalación
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+```bash
+# Clonar el repositorio
+git clone <repository-url>
+cd marimar-saving-circles
 
-## How can I deploy this project?
+# Instalar dependencias del monólito
+npm install
 
-Simply open [Lovable](https://lovable.dev/projects/b001a00b-39c4-4df9-8480-b3af6bd06d79) and click on Share -> Publish.
+# O instalar manualmente en cada workspace
+npm install --workspaces
+```
 
-## Can I connect a custom domain to my Lovable project?
+### Configuración del Backend
 
-Yes, you can!
+```bash
+# Copiar archivo de variables de entorno
+cp backend/.env.example backend/.env
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+# Editar las variables según tu configuración
+# IMPORTANTE: Configurar PASETO_SECRET con una clave segura de 32 bytes en base64
+```
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+### Base de Datos - Neon.tech
+
+1. **Crear cuenta en Neon.tech**
+   - Ve a [neon.tech](https://neon.tech) y crea una cuenta gratuita
+   - Crea un nuevo proyecto de PostgreSQL
+
+2. **Obtener la URL de conexión**
+   - En el dashboard de Neon, ve a "Connection Details"
+   - Copia la "Connection string" que incluye usuario, contraseña y host
+
+3. **Configurar variables de entorno**
+   Edita `backend/.env` y configura:
+
+```env
+DATABASE_URL=postgresql://username:password@hostname/database?sslmode=require
+```
+
+4. **Inicializar Drizzle**
+```bash
+cd backend
+npm run db:push    # Crear tablas en Neon
+npm run db:generate # Generar tipos de TypeScript
+```
+
+### Verificar Instalación
+
+```bash
+# Verificar que todo funciona
+npm run dev
+
+# Si hay problemas con la DB, verificar con Drizzle Studio
+cd backend
+npm run db:studio  # Abre interfaz visual de base de datos
+```
+
+## Desarrollo
+
+### Ejecutar ambos servicios (recomendado)
+
+```bash
+# Ejecuta frontend y backend simultáneamente
+npm run dev
+
+# Frontend: http://localhost:5173
+# Backend: http://localhost:5000
+```
+
+### Ejecutar servicios individualmente
+
+```bash
+# Solo frontend
+npm run dev:client
+
+# Solo backend
+npm run dev:backend
+```
+
+### Build para producción
+
+```bash
+# Build completo
+npm run build
+
+# Build individual
+npm run build:client
+npm run build:backend
+```
+
+## Estructura de API
+
+### Endpoints Disponibles
+
+#### Autenticación
+- `POST /api/auth/login` - Iniciar sesión
+- `POST /api/auth/register` - Registrarse
+- `POST /api/auth/logout` - Cerrar sesión
+- `GET /api/auth/me` - Obtener usuario actual
+
+#### Grupos
+- `GET /api/groups` - Listar grupos
+- `POST /api/groups` - Crear grupo
+- `GET /api/groups/:id` - Obtener grupo específico
+- `PUT /api/groups/:id` - Actualizar grupo
+- `DELETE /api/groups/:id` - Eliminar grupo
+
+#### Usuarios
+- `GET /api/users` - Listar usuarios
+- `GET /api/users/:id` - Obtener usuario específico
+- `PUT /api/users/:id` - Actualizar usuario
+
+#### Productos
+- `GET /api/products` - Listar productos de ahorro
+- `POST /api/products` - Crear producto
+- `GET /api/products/:id` - Obtener producto específico
+- `PUT /api/products/:id` - Actualizar producto
+- `DELETE /api/products/:id` - Eliminar producto
+
+## Estado Actual
+
+### ✅ Completado
+- Estructura monolítica configurada
+- Frontend básico funcional
+- Backend con Hono configurado
+- Sistema de rutas placeholder
+- Configuración de TypeScript
+- Variables de entorno
+
+### 🚧 En Desarrollo
+- Implementación completa de API endpoints
+- Modelos de base de datos
+- Autenticación PASETO
+- Lógica de negocio de círculos de ahorro
+- Dashboard administrativo
+
+### 📋 Pendiente
+- Tests unitarios e integración
+- Documentación de API completa
+- Sistema de notificaciones
+- Integración de pagos
+- Despliegue en producción
+
+## Contribución
+
+1. Crear rama desde `main`
+2. Realizar cambios
+3. Ejecutar tests si existen
+4. Hacer commit con mensaje descriptivo
+5. Crear Pull Request
+
+## Licencia
+
+MIT

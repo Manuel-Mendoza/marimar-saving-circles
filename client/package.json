@@ -1,24 +1,14 @@
 {
-  "name": "marimar-saving-circles-monolith",
+  "name": "marimar-saving-circles-client",
   "private": true,
-  "version": "1.0.0",
-  "workspaces": [
-    "client",
-    "backend"
-  ],
+  "version": "0.0.0",
+  "type": "module",
   "scripts": {
-    "dev": "concurrently \"bun run dev --cwd client\" \"bun run dev --cwd backend\"",
-    "dev:client": "bun run dev --cwd client",
-    "dev:backend": "bun run dev --cwd backend",
-    "build": "bun run build --cwd client && bun run build --cwd backend",
-    "build:client": "bun run build --cwd client",
-    "build:backend": "bun run build --cwd backend",
-    "start": "concurrently \"bun run preview --cwd client\" \"bun run start --cwd backend\"",
-    "install:all": "bun install",
-    "clean": "rm -rf node_modules client/node_modules backend/node_modules && bun install"
-  },
-  "devDependencies": {
-    "concurrently": "^8.2.2"
+    "dev": "bunx vite",
+    "build": "bunx vite build",
+    "build:dev": "bunx vite build --mode development",
+    "lint": "eslint .",
+    "preview": "bunx vite preview"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -42,7 +32,6 @@
     "@radix-ui/react-select": "^2.1.1",
     "@radix-ui/react-separator": "^1.1.0",
     "@radix-ui/react-slider": "^1.2.0",
-    "@radix-ui/react-slot": "^1.1.0",
     "@radix-ui/react-switch": "^1.1.0",
     "@radix-ui/react-tabs": "^1.1.0",
     "@radix-ui/react-toast": "^1.2.1",

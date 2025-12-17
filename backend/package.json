@@ -1,0 +1,39 @@
+{
+  "name": "marimar-saving-circles-backend",
+  "version": "1.0.0",
+  "description": "Backend API for Marimar Saving Circles",
+  "main": "dist/server.js",
+  "type": "module",
+  "scripts": {
+    "dev": "bun --hot src/server.ts",
+    "build": "bun build src/server.ts --outdir dist --target bun",
+    "start": "bun run dist/server.js",
+    "lint": "eslint src/**/*.ts",
+    "test": "jest",
+    "db:generate": "drizzle-kit generate:pg",
+    "db:push": "drizzle-kit push:pg",
+    "db:migrate": "drizzle-kit migrate:pg",
+    "db:studio": "drizzle-kit studio"
+  },
+  "dependencies": {
+    "hono": "^4.0.0",
+    "dotenv": "^16.3.1",
+    "paseto": "^3.1.4",
+    "drizzle-orm": "^0.29.4",
+    "postgres": "^3.4.3",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.5",
+    "@typescript-eslint/eslint-plugin": "^6.14.0",
+    "@typescript-eslint/parser": "^6.14.0",
+    "drizzle-kit": "^0.20.14",
+    "eslint": "^8.55.0",
+    "typescript": "^5.3.3",
+    "jest": "^29.7.0",
+    "@types/jest": "^29.5.8"
+  },
+  "keywords": ["saving-circles", "api", "hono", "typescript"],
+  "author": "Marimar Team",
+  "license": "MIT"
+}
