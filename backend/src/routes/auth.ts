@@ -5,8 +5,6 @@ import { users } from '../db/tables/users.js';
 import { db } from '../config/database.js';
 import { hashPassword, verifyPassword, generateToken } from '../utils/auth.js';
 import { authenticate } from '../middleware/auth.js';
-import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
 
 const auth = new Hono();
 
@@ -155,7 +153,7 @@ auth.post('/register', async (c) => {
     }
 
     // Procesar imagen de cédula si existe
-    let imagePath = null;
+    let imageUrl = null;
     if (file) {
       // Validar tipo de archivo
       if (!file.type.startsWith('image/')) {
@@ -173,20 +171,47 @@ auth.post('/register', async (c) => {
         }, 400);
       }
 
-      // Crear directorio si no existe
-      const uploadsDir = join(process.cwd(), 'uploads', 'cedulas');
-      await mkdir(uploadsDir, { recursive: true });
+      try {
+        // Convertir archivo a base64 para imgbb
+        const arrayBuffer = await file.arrayBuffer();
+        const base64 = Buffer.from(arrayBuffer).toString('base64');
 
-      // Generar nombre único para el archivo
-      const fileExtension = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${validatedData.cedula}.${fileExtension}`;
-      const filePath = join(uploadsDir, fileName);
+        // Subir a imgbb
+        const imgbbApiKey = process.env.IMGBB_API_KEY;
+        if (!imgbbApiKey) {
+          return c.json({
+            success: false,
+            message: 'Error de configuración del servidor'
+          }, 500);
+        }
 
-      // Guardar archivo
-      const arrayBuffer = await file.arrayBuffer();
-      await writeFile(filePath, new Uint8Array(arrayBuffer));
+        const imgbbFormData = new FormData();
+        imgbbFormData.append('key', imgbbApiKey);
+        imgbbFormData.append('image', base64);
+        imgbbFormData.append('name', `cedula-${validatedData.cedula}-${Date.now()}`);
 
-      imagePath = `/uploads/cedulas/${fileName}`;
+        const imgbbResponse = await fetch('https://api.imgbb.com/1/upload', {
+          method: 'POST',
+          body: imgbbFormData,
+        });
+
+        const imgbbResult = await imgbbResponse.json();
+
+        if (imgbbResult.success) {
+          imageUrl = imgbbResult.data.url;
+        } else {
+          return c.json({
+            success: false,
+            message: 'Error al subir la imagen'
+          }, 500);
+        }
+      } catch (error) {
+        console.error('Error subiendo imagen a imgbb:', error);
+        return c.json({
+          success: false,
+          message: 'Error al procesar la imagen'
+        }, 500);
+      }
     }
 
     // Hash de la contraseña
@@ -204,7 +229,7 @@ auth.post('/register', async (c) => {
         correoElectronico: validatedData.correoElectronico,
         password: hashedPassword,
         tipo: 'USUARIO', // Por defecto todos los registros son usuarios
-        imagenCedula: imagePath
+        imagenCedula: imageUrl
       })
       .returning();
 

@@ -48,6 +48,20 @@ FRONTEND_URL=http://localhost:5173
 3. Ve a "Connection Details" y copia la connection string
 4. Pégala en `DATABASE_URL` en tu `.env`
 
+### 4. Configurar ImgBB para Subida de Imágenes
+
+El sistema usa ImgBB para almacenar las imágenes de cédula de identidad de los usuarios.
+
+1. Ve a [imgbb.com](https://imgbb.com) y crea una cuenta gratuita
+2. Ve a [API](https://api.imgbb.com) y genera una API key
+3. Agrega tu API key en el archivo `.env`:
+
+```env
+IMGBB_API_KEY=tu-api-key-de-imgbb-aqui
+```
+
+**Nota**: ImgBB ofrece 500 subidas gratuitas por mes. Para más uso, considera actualizar a un plan pago.
+
 ### 4. Inicializar Drizzle
 
 ```bash
