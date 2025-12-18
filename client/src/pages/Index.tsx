@@ -11,9 +11,21 @@ import AdminDashboard from '@/components/Dashboard/AdminDashboard';
 import LandingPage from '@/components/Landing/LandingPage';
 
 const AppContent = () => {
-  const { isAuthenticated, isAdmin } = useAuth();
+  const { isAuthenticated, isAdmin, isLoading } = useAuth();
   const [showRegistration, setShowRegistration] = useState(false);
   const [showAuthSection, setShowAuthSection] = useState(false);
+
+  // Mostrar loading mientras se verifica la autenticación
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Verificando sesión...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Si no está autenticado y no ha decidido entrar al sistema, mostrar landing
   if (!isAuthenticated && !showAuthSection) {

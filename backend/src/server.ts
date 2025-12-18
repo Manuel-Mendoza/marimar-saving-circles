@@ -1,7 +1,10 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
+import { serveStatic } from 'hono/serve-static';
 import { serve } from '@hono/node-server';
+import { readFile, access } from 'fs/promises';
+import { extname } from 'path';
 import dotenv from 'dotenv';
 import { connectDB } from './config/database.js';
 import authRoutes from './routes/auth.js';
@@ -26,6 +29,33 @@ app.use('*', cors({
 }));
 app.use('*', logger());
 app.use('*', rateLimiter);
+
+// Static files - servir archivos de uploads
+app.get('/uploads/*', async (c) => {
+  const path = c.req.path;
+  const filePath = path.replace('/uploads/', './uploads/');
+
+  try {
+    // Verificar si el archivo existe
+    await access(filePath);
+
+    const content = await readFile(filePath);
+    const extension = extname(path).toLowerCase();
+
+    const contentType = extension === '.jpg' || extension === '.jpeg' ? 'image/jpeg' :
+                       extension === '.png' ? 'image/png' :
+                       extension === '.gif' ? 'image/gif' : 'application/octet-stream';
+
+    return new Response(new Uint8Array(content), {
+      headers: {
+        'Content-Type': contentType,
+        'Cache-Control': 'public, max-age=31536000'
+      }
+    });
+  } catch (error) {
+    return c.json({ error: 'File not found' }, 404);
+  }
+});
 
 // Routes
 app.route('/api/auth', authRoutes);

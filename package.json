@@ -17,9 +17,6 @@
     "install:all": "bun install",
     "clean": "rm -rf node_modules client/node_modules backend/node_modules && bun install"
   },
-  "devDependencies": {
-    "concurrently": "^8.2.2"
-  },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
     "@radix-ui/react-accordion": "^1.2.0",
@@ -72,6 +69,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "concurrently": "^8.2.2",
     "@eslint/js": "^9.9.0",
     "@tailwindcss/typography": "^0.5.15",
     "@types/node": "^22.5.5",

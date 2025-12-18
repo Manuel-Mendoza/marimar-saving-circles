@@ -5,8 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { User, Shield } from 'lucide-react';
 
 interface LoginFormProps {
   onNewUser: () => void;
@@ -18,22 +16,25 @@ const LoginForm = ({ onNewUser }: LoginFormProps) => {
     email: '',
     password: ''
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleLogin = (userType: 'usuario' | 'administrador') => {
-    // Simulación de login - en producción conectar con backend
-    const mockUser = {
-      id: userType === 'administrador' ? 'admin-1' : 'user-1',
-      nombre: userType === 'administrador' ? 'Admin' : 'Usuario',
-      apellido: 'Demo',
-      cedula: '12345678',
-      telefono: '+58 424 123 4567',
-      direccion: 'Caracas, Venezuela',
-      correoElectronico: credentials.email || 'demo@sanmarimar.com',
-      tipo: userType,
-      grupos: []
-    };
+  const handleLogin = async () => {
+    if (!credentials.email || !credentials.password) {
+      setError('Por favor ingrese email y contraseña');
+      return;
+    }
 
-    login(mockUser);
+    setIsLoading(true);
+    setError('');
+
+    try {
+      await login(credentials.email, credentials.password);
+    } catch (error: any) {
+      setError(error.message || 'Error al iniciar sesión');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -46,89 +47,50 @@ const LoginForm = ({ onNewUser }: LoginFormProps) => {
           </CardDescription>
         </CardHeader>
         
-        <CardContent>
-          <Tabs defaultValue="usuario" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="usuario" className="flex items-center gap-2">
-                <User size={16} />
-                Usuario
-              </TabsTrigger>
-              <TabsTrigger value="administrador" className="flex items-center gap-2">
-                <Shield size={16} />
-                Admin
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="usuario" className="space-y-4 mt-6">
-              <div className="space-y-2">
-                <Label htmlFor="user-email">Correo Electrónico</Label>
-                <Input
-                  id="user-email"
-                  type="email"
-                  placeholder="usuario@ejemplo.com"
-                  value={credentials.email}
-                  onChange={(e) => setCredentials(prev => ({ ...prev, email: e.target.value }))}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="user-password">Contraseña</Label>
-                <Input
-                  id="user-password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={credentials.password}
-                  onChange={(e) => setCredentials(prev => ({ ...prev, password: e.target.value }))}
-                />
-              </div>
-              
-              <Button 
-                className="w-full bg-blue-600 hover:bg-blue-700"
-                onClick={() => handleLogin('usuario')}
-              >
-                Iniciar Sesión como Usuario
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={onNewUser}
-              >
-                ¿Nuevo usuario? Registrarse
-              </Button>
-            </TabsContent>
-            
-            <TabsContent value="administrador" className="space-y-4 mt-6">
-              <div className="space-y-2">
-                <Label htmlFor="admin-email">Correo Electrónico</Label>
-                <Input
-                  id="admin-email"
-                  type="email"
-                  placeholder="admin@sanmarimar.com"
-                  value={credentials.email}
-                  onChange={(e) => setCredentials(prev => ({ ...prev, email: e.target.value }))}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="admin-password">Contraseña</Label>
-                <Input
-                  id="admin-password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={credentials.password}
-                  onChange={(e) => setCredentials(prev => ({ ...prev, password: e.target.value }))}
-                />
-              </div>
-              
-              <Button 
-                className="w-full bg-indigo-600 hover:bg-indigo-700"
-                onClick={() => handleLogin('administrador')}
-              >
-                Iniciar Sesión como Admin
-              </Button>
-            </TabsContent>
-          </Tabs>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="email">Correo Electrónico</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="usuario@ejemplo.com"
+              value={credentials.email}
+              onChange={(e) => setCredentials(prev => ({ ...prev, email: e.target.value }))}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="password">Contraseña</Label>
+            <Input
+              id="password"
+              type="password"
+              placeholder="••••••••"
+              value={credentials.password}
+              onChange={(e) => setCredentials(prev => ({ ...prev, password: e.target.value }))}
+            />
+          </div>
+
+          {error && (
+            <div className="text-red-600 text-sm text-center">
+              {error}
+            </div>
+          )}
+
+          <Button
+            className="w-full bg-blue-600 hover:bg-blue-700"
+            onClick={handleLogin}
+            disabled={isLoading}
+          >
+            {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+          </Button>
+
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={onNewUser}
+          >
+            ¿Nuevo usuario? Registrarse
+          </Button>
         </CardContent>
       </Card>
     </div>

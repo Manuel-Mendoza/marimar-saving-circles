@@ -5,6 +5,8 @@ import { users } from '../db/tables/users.js';
 import { db } from '../config/database.js';
 import { hashPassword, verifyPassword, generateToken } from '../utils/auth.js';
 import { authenticate } from '../middleware/auth.js';
+import { writeFile, mkdir } from 'fs/promises';
+import { join } from 'path';
 
 const auth = new Hono();
 
@@ -21,8 +23,7 @@ const registerSchema = z.object({
   telefono: z.string().min(11, 'El teléfono debe tener al menos 11 caracteres'),
   direccion: z.string().min(10, 'La dirección debe tener al menos 10 caracteres'),
   correoElectronico: z.string().email('Correo electrónico inválido'),
-  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
-  tipo: z.enum(['USUARIO', 'ADMINISTRADOR']).optional().default('USUARIO')
+  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres')
 });
 
 // Login endpoint
@@ -108,14 +109,28 @@ auth.post('/login', async (c) => {
 // Register endpoint
 auth.post('/register', async (c) => {
   try {
-    const body = await c.req.json();
-    const userData = registerSchema.parse(body);
+    const body = await c.req.parseBody();
+    const file = body['imagenCedula'] as File;
+
+    // Extraer datos del formulario
+    const userData = {
+      nombre: body.nombre as string,
+      apellido: body.apellido as string,
+      cedula: body.cedula as string,
+      telefono: body.telefono as string,
+      direccion: body.direccion as string,
+      correoElectronico: body.correoElectronico as string,
+      password: body.password as string,
+    };
+
+    // Validar datos
+    const validatedData = registerSchema.parse(userData);
 
     // Verificar si el email ya existe
     const [existingUser] = await db
       .select()
       .from(users)
-      .where(eq(users.correoElectronico, userData.correoElectronico))
+      .where(eq(users.correoElectronico, validatedData.correoElectronico))
       .limit(1);
 
     if (existingUser) {
@@ -129,7 +144,7 @@ auth.post('/register', async (c) => {
     const [existingCedula] = await db
       .select()
       .from(users)
-      .where(eq(users.cedula, userData.cedula))
+      .where(eq(users.cedula, validatedData.cedula))
       .limit(1);
 
     if (existingCedula) {
@@ -139,21 +154,57 @@ auth.post('/register', async (c) => {
       }, 409);
     }
 
+    // Procesar imagen de cédula si existe
+    let imagePath = null;
+    if (file) {
+      // Validar tipo de archivo
+      if (!file.type.startsWith('image/')) {
+        return c.json({
+          success: false,
+          message: 'El archivo debe ser una imagen'
+        }, 400);
+      }
+
+      // Validar tamaño (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        return c.json({
+          success: false,
+          message: 'La imagen no puede ser mayor a 5MB'
+        }, 400);
+      }
+
+      // Crear directorio si no existe
+      const uploadsDir = join(process.cwd(), 'uploads', 'cedulas');
+      await mkdir(uploadsDir, { recursive: true });
+
+      // Generar nombre único para el archivo
+      const fileExtension = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${validatedData.cedula}.${fileExtension}`;
+      const filePath = join(uploadsDir, fileName);
+
+      // Guardar archivo
+      const arrayBuffer = await file.arrayBuffer();
+      await writeFile(filePath, new Uint8Array(arrayBuffer));
+
+      imagePath = `/uploads/cedulas/${fileName}`;
+    }
+
     // Hash de la contraseña
-    const hashedPassword = await hashPassword(userData.password);
+    const hashedPassword = await hashPassword(validatedData.password);
 
     // Crear usuario
     const newUsers = await db
       .insert(users)
       .values({
-        nombre: userData.nombre,
-        apellido: userData.apellido,
-        cedula: userData.cedula,
-        telefono: userData.telefono,
-        direccion: userData.direccion,
-        correoElectronico: userData.correoElectronico,
+        nombre: validatedData.nombre,
+        apellido: validatedData.apellido,
+        cedula: validatedData.cedula,
+        telefono: validatedData.telefono,
+        direccion: validatedData.direccion,
+        correoElectronico: validatedData.correoElectronico,
         password: hashedPassword,
-        tipo: userData.tipo
+        tipo: 'USUARIO', // Por defecto todos los registros son usuarios
+        imagenCedula: imagePath
       })
       .returning();
 
@@ -245,6 +296,7 @@ auth.get('/me', authenticate, async (c) => {
         direccion: users.direccion,
         correoElectronico: users.correoElectronico,
         tipo: users.tipo,
+        imagenCedula: users.imagenCedula,
         fechaRegistro: users.fechaRegistro,
         ultimoAcceso: users.ultimoAcceso
       })

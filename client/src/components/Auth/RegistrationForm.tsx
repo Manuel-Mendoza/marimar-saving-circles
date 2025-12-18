@@ -19,20 +19,59 @@ const RegistrationForm = ({ onBack }: RegistrationFormProps) => {
     cedula: '',
     telefono: '',
     direccion: '',
-    correoElectronico: ''
+    correoElectronico: '',
+    password: ''
   });
+  const [imagenCedula, setImagenCedula] = useState<File | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const newUser = {
-      id: `user-${Date.now()}`,
-      ...formData,
-      tipo: 'usuario' as const,
-      grupos: []
-    };
 
-    login(newUser);
+    if (formData.password.length < 6) {
+      setError('La contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+
+    if (!imagenCedula) {
+      setError('Debe subir una imagen de su cédula de identidad');
+      return;
+    }
+
+    setIsLoading(true);
+    setError('');
+
+    try {
+      // Crear FormData para enviar archivo y datos
+      const submitData = new FormData();
+      submitData.append('nombre', formData.nombre);
+      submitData.append('apellido', formData.apellido);
+      submitData.append('cedula', formData.cedula);
+      submitData.append('telefono', formData.telefono);
+      submitData.append('direccion', formData.direccion);
+      submitData.append('correoElectronico', formData.correoElectronico);
+      submitData.append('password', formData.password);
+      submitData.append('imagenCedula', imagenCedula);
+
+      const response = await fetch('http://localhost:5000/api/auth/register', {
+        method: 'POST',
+        body: submitData,
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Auto-login después del registro
+        await login(formData.correoElectronico, formData.password);
+      } else {
+        setError(data.message || 'Error al registrar usuario');
+      }
+    } catch (error: any) {
+      setError('Error de conexión. Verifique que el servidor esté ejecutándose.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleChange = (field: string, value: string) => {
@@ -128,9 +167,59 @@ const RegistrationForm = ({ onBack }: RegistrationFormProps) => {
                 placeholder="usuario@ejemplo.com"
               />
             </div>
-            
-            <Button type="submit" className="w-full bg-green-600 hover:bg-green-700">
-              Crear Cuenta
+
+            <div className="space-y-2">
+              <Label htmlFor="password">Contraseña *</Label>
+              <Input
+                id="password"
+                type="password"
+                required
+                value={formData.password}
+                onChange={(e) => handleChange('password', e.target.value)}
+                placeholder="••••••••"
+                minLength={6}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="imagenCedula">Imagen de Cédula de Identidad *</Label>
+              <Input
+                id="imagenCedula"
+                type="file"
+                accept="image/*"
+                required
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    // Validar tamaño del archivo (max 5MB)
+                    if (file.size > 5 * 1024 * 1024) {
+                      setError('La imagen no puede ser mayor a 5MB');
+                      setImagenCedula(null);
+                      e.target.value = '';
+                      return;
+                    }
+                    setImagenCedula(file);
+                    setError('');
+                  }
+                }}
+              />
+              <p className="text-sm text-gray-600">
+                Suba una imagen clara de su cédula de identidad (máx. 5MB)
+              </p>
+            </div>
+
+            {error && (
+              <div className="text-red-600 text-sm text-center">
+                {error}
+              </div>
+            )}
+
+            <Button
+              type="submit"
+              className="w-full bg-green-600 hover:bg-green-700"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Creando cuenta...' : 'Crear Cuenta'}
             </Button>
           </form>
         </CardContent>
