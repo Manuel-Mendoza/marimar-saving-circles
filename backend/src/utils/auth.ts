@@ -1,6 +1,7 @@
 // Authentication utilities using Bun's native crypto APIs and PASETO
 
 import { V4 as paseto } from 'paseto';
+import { generateKeyPairSync, createPrivateKey } from 'crypto';
 
 export async function hashPassword(password: string): Promise<string> {
   const encoder = new TextEncoder();
@@ -85,17 +86,20 @@ export async function verifyPassword(password: string, storedHash: string): Prom
   }
 }
 
-// Generate a secure random key for PASETO
+// Generate an Ed25519 private key for PASETO v4
 export function generatePasetoKey(): string {
-  const keyBytes = crypto.getRandomValues(new Uint8Array(32));
-  return btoa(String.fromCharCode(...keyBytes));
+  const { privateKey } = generateKeyPairSync('ed25519', {
+    privateKeyEncoding: { format: 'pem', type: 'pkcs8' },
+    publicKeyEncoding: { format: 'pem', type: 'spki' }
+  });
+  return privateKey;
 }
 
 // Generate PASETO token
 export async function generateToken(payload: object, secretKey: string): Promise<string> {
   try {
-    // For PASETO v4, the key should be passed as a Buffer
-    const keyBytes = Buffer.from(secretKey, 'base64');
+    // Create Ed25519 private key from PEM
+    const privateKey = createPrivateKey(secretKey);
 
     // Create PASETO token with expiration
     const token = await paseto.sign(
@@ -104,7 +108,7 @@ export async function generateToken(payload: object, secretKey: string): Promise
         iat: new Date(),
         exp: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
       },
-      keyBytes
+      privateKey
     );
 
     return token;
@@ -117,11 +121,11 @@ export async function generateToken(payload: object, secretKey: string): Promise
 // Verify PASETO token
 export async function verifyToken(token: string, secretKey: string): Promise<object | null> {
   try {
-    // For PASETO v4, the key should be passed as a Buffer
-    const keyBytes = Buffer.from(secretKey, 'base64');
+    // Create Ed25519 private key from PEM
+    const privateKey = createPrivateKey(secretKey);
 
     // Verify and decode the token
-    const payload = await paseto.verify(token, keyBytes);
+    const payload = await paseto.verify(token, privateKey);
 
     return payload;
   } catch (error) {
