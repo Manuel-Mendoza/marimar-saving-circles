@@ -20,10 +20,27 @@ const PORT = parseInt(process.env.PORT || '5000');
 connectDB();
 
 // Middleware
+const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:8080';
+console.log(`🔗 CORS configured for: ${frontendUrl}`);
+
+// CORS middleware - more permissive for development
 app.use('*', cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-  credentials: true
+  origin: (origin, c) => {
+    // Allow localhost on any port for development
+    if (origin?.startsWith('http://localhost:') || origin === frontendUrl || !origin) {
+      return origin;
+    }
+    return null;
+  },
+  credentials: true,
+  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
 }));
+
+// Additional CORS headers for preflight requests
+app.options('*', (c) => {
+  return c.text('', 200);
+});
 app.use('*', logger());
 app.use('*', rateLimiter);
 

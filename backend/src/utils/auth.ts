@@ -94,8 +94,8 @@ export function generatePasetoKey(): string {
 // Generate PASETO token
 export async function generateToken(payload: object, secretKey: string): Promise<string> {
   try {
-    // Decode the base64 secret key
-    const keyBytes = Uint8Array.from(atob(secretKey), c => c.charCodeAt(0));
+    // For PASETO v4, the key should be passed as a Buffer
+    const keyBytes = Buffer.from(secretKey, 'base64');
 
     // Create PASETO token with expiration
     const token = await paseto.sign(
@@ -104,11 +104,7 @@ export async function generateToken(payload: object, secretKey: string): Promise
         iat: new Date(),
         exp: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
       },
-      keyBytes,
-      {
-        issuer: 'marimar-saving-circles',
-        audience: 'marimar-users'
-      }
+      keyBytes
     );
 
     return token;
@@ -121,15 +117,11 @@ export async function generateToken(payload: object, secretKey: string): Promise
 // Verify PASETO token
 export async function verifyToken(token: string, secretKey: string): Promise<object | null> {
   try {
-    // Decode the base64 secret key
-    const keyBytes = Uint8Array.from(atob(secretKey), c => c.charCodeAt(0));
+    // For PASETO v4, the key should be passed as a Buffer
+    const keyBytes = Buffer.from(secretKey, 'base64');
 
     // Verify and decode the token
-    const payload = await paseto.verify(token, keyBytes, {
-      issuer: 'marimar-saving-circles',
-      audience: 'marimar-users',
-      clockTolerance: '1 minute'
-    });
+    const payload = await paseto.verify(token, keyBytes);
 
     return payload;
   } catch (error) {
