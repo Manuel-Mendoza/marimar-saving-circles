@@ -261,11 +261,13 @@ const UserDashboard = () => {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="todos" className="w-full">
-              <TabsList className="grid w-full grid-cols-4 mb-6">
+              <TabsList className="grid w-full grid-cols-6 mb-6">
                 <TabsTrigger value="todos">Todos</TabsTrigger>
                 <TabsTrigger value="electrodomésticos">Electrodomésticos</TabsTrigger>
+                <TabsTrigger value="línea blanca">Línea Blanca</TabsTrigger>
                 <TabsTrigger value="celulares">Celulares</TabsTrigger>
                 <TabsTrigger value="tv">TV</TabsTrigger>
+                <TabsTrigger value="cama">Cama</TabsTrigger>
               </TabsList>
 
               <TabsContent value="todos">
@@ -415,9 +417,107 @@ const UserDashboard = () => {
                 </div>
               </TabsContent>
 
+              <TabsContent value="línea blanca">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {productos.filter(p => p.activo && p.tags?.includes('línea blanca')).map((producto) => {
+                    const pagoMensual = Math.round(producto.precioUsd / producto.tiempoDuracion);
+                    return (
+                      <div key={producto.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div className="flex justify-between items-start mb-2">
+                          <h3 className="font-semibold text-lg">{producto.nombre}</h3>
+                          {producto.tags && producto.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              {producto.tags.map((tag, index) => (
+                                <Badge key={index} variant="secondary" className="text-xs">
+                                  {tag}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-gray-600 mb-3">{producto.descripcion}</p>
+
+                        <div className="space-y-2 mb-4">
+                          <div className="flex justify-between">
+                            <span className="text-sm">Precio USD:</span>
+                            <span className="font-semibold">${producto.precioUsd}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm">Precio VES:</span>
+                            <span className="font-semibold">Bs. {producto.precioVes.toLocaleString()}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm">Pago mensual:</span>
+                            <span className="font-semibold">${pagoMensual}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm">Duración:</span>
+                            <span className="font-semibold">{producto.tiempoDuracion} meses</span>
+                          </div>
+                        </div>
+
+                        <Button className="w-full bg-green-600 hover:bg-green-700">
+                          <Package className="h-4 w-4 mr-2" />
+                          Unirme al Grupo de {producto.tiempoDuracion} meses
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </TabsContent>
+
               <TabsContent value="tv">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {productos.filter(p => p.activo && p.tags?.includes('tv')).map((producto) => {
+                    const pagoMensual = Math.round(producto.precioUsd / producto.tiempoDuracion);
+                    return (
+                      <div key={producto.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div className="flex justify-between items-start mb-2">
+                          <h3 className="font-semibold text-lg">{producto.nombre}</h3>
+                          {producto.tags && producto.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              {producto.tags.map((tag, index) => (
+                                <Badge key={index} variant="secondary" className="text-xs">
+                                  {tag}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-gray-600 mb-3">{producto.descripcion}</p>
+
+                        <div className="space-y-2 mb-4">
+                          <div className="flex justify-between">
+                            <span className="text-sm">Precio USD:</span>
+                            <span className="font-semibold">${producto.precioUsd}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm">Precio VES:</span>
+                            <span className="font-semibold">Bs. {producto.precioVes.toLocaleString()}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm">Pago mensual:</span>
+                            <span className="font-semibold">${pagoMensual}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm">Duración:</span>
+                            <span className="font-semibold">{producto.tiempoDuracion} meses</span>
+                          </div>
+                        </div>
+
+                        <Button className="w-full bg-green-600 hover:bg-green-700">
+                          <Package className="h-4 w-4 mr-2" />
+                          Unirme al Grupo de {producto.tiempoDuracion} meses
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="cama">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {productos.filter(p => p.activo && p.tags?.includes('cama')).map((producto) => {
                     const pagoMensual = Math.round(producto.precioUsd / producto.tiempoDuracion);
                     return (
                       <div key={producto.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
