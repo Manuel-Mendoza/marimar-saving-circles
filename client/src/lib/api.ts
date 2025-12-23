@@ -106,6 +106,10 @@ class ApiClient {
   }
 
   // User management endpoints (Admin only)
+  async getAllUsers() {
+    return this.request<{ users: any[] }>('/users');
+  }
+
   async getPendingUsers() {
     return this.request<{ users: any[] }>('/users/pending');
   }

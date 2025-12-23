@@ -5,6 +5,16 @@ import { useAppState } from '@/contexts/AppStateContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import {
   Sidebar,
   SidebarContent,
@@ -22,6 +32,9 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart';
+// Suppress recharts defaultProps warning - this is a known issue with the library
+// and doesn't affect functionality. The warning appears because recharts uses
+// defaultProps on function components, which React plans to deprecate.
 import {
   Bar,
   BarChart,
@@ -32,7 +45,7 @@ import {
   CartesianGrid,
   ResponsiveContainer
 } from 'recharts';
-import { Users, Package, CheckCircle, Clock, UserCheck, UserX, AlertCircle, Eye, LayoutDashboard, Settings, BarChart3, TrendingUp } from 'lucide-react';
+import { Users, Package, CheckCircle, Clock, UserCheck, UserX, AlertCircle, Eye, LayoutDashboard, Settings, BarChart3, TrendingUp, Search, Filter, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
 import { apiClient } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 
@@ -49,7 +62,7 @@ interface PendingUser {
   fechaRegistro: Date;
 }
 
-type ActiveView = 'dashboard' | 'approvals' | 'groups' | 'products' | 'reports';
+type ActiveView = 'dashboard' | 'approvals' | 'users' | 'groups' | 'products' | 'reports';
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -57,8 +70,12 @@ const AdminDashboard = () => {
   const { toast } = useToast();
   const [activeView, setActiveView] = useState<ActiveView>('dashboard');
   const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([]);
+  const [allUsers, setAllUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [usersLoading, setUsersLoading] = useState(false);
   const [processingUser, setProcessingUser] = useState<number | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   // Cargar usuarios pendientes
   useEffect(() => {
@@ -66,6 +83,35 @@ const AdminDashboard = () => {
       fetchPendingUsers();
     }
   }, [activeView]);
+
+  // Cargar todos los usuarios cuando se selecciona la vista de usuarios
+  useEffect(() => {
+    if (activeView === 'users') {
+      fetchAllUsers();
+    }
+  }, [activeView]);
+
+  const fetchAllUsers = async () => {
+    setUsersLoading(true);
+    try {
+      const response = await apiClient.getAllUsers();
+      if (response.success && response.data) {
+        // Convertir fechas a objetos Date
+        const usersWithDates = response.data.users.map((user: any) => ({
+          ...user,
+          fechaRegistro: new Date(user.fechaRegistro),
+          ultimoAcceso: user.ultimoAcceso ? new Date(user.ultimoAcceso) : null,
+          fechaAprobacion: user.fechaAprobacion ? new Date(user.fechaAprobacion) : null,
+        }));
+        setAllUsers(usersWithDates);
+      }
+    } catch (error) {
+      console.error('Error cargando todos los usuarios:', error);
+      setAllUsers([]);
+    } finally {
+      setUsersLoading(false);
+    }
+  };
 
   const fetchPendingUsers = async () => {
     try {
@@ -92,8 +138,11 @@ const AdminDashboard = () => {
     try {
       const response = await apiClient.approveUser(userId);
       if (response.success) {
-        // Remover usuario de la lista de pendientes
+        // Remover usuario de la lista de pendientes y actualizar lista general
         setPendingUsers(prev => prev.filter(u => u.id !== userId));
+        setAllUsers(prev => prev.map(user =>
+          user.id === userId ? { ...user, estado: 'APROBADO', fechaAprobacion: new Date() } : user
+        ));
         toast({
           title: "Usuario aprobado",
           description: "El usuario ha sido aprobado exitosamente y ahora puede acceder al sistema.",
@@ -101,9 +150,12 @@ const AdminDashboard = () => {
       }
     } catch (error: any) {
       console.error('Error aprobando usuario:', error);
+      const errorMessage = error.message?.includes('ya procesado')
+        ? "Este usuario ya ha sido procesado anteriormente."
+        : error.message || "No se pudo aprobar al usuario. Inténtalo de nuevo.";
       toast({
         title: "Error al aprobar usuario",
-        description: error.message || "No se pudo aprobar al usuario. Inténtalo de nuevo.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -116,8 +168,11 @@ const AdminDashboard = () => {
     try {
       const response = await apiClient.rejectUser(userId);
       if (response.success) {
-        // Remover usuario de la lista de pendientes
+        // Remover usuario de la lista de pendientes y actualizar lista general
         setPendingUsers(prev => prev.filter(u => u.id !== userId));
+        setAllUsers(prev => prev.map(user =>
+          user.id === userId ? { ...user, estado: 'RECHAZADO', fechaAprobacion: new Date() } : user
+        ));
         toast({
           title: "Usuario rechazado",
           description: "El usuario ha sido rechazado y no podrá acceder al sistema.",
@@ -125,9 +180,12 @@ const AdminDashboard = () => {
       }
     } catch (error: any) {
       console.error('Error rechazando usuario:', error);
+      const errorMessage = error.message?.includes('ya procesado')
+        ? "Este usuario ya ha sido procesado anteriormente."
+        : error.message || "No se pudo rechazar al usuario. Inténtalo de nuevo.";
       toast({
         title: "Error al rechazar usuario",
-        description: error.message || "No se pudo rechazar al usuario. Inténtalo de nuevo.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -349,10 +407,36 @@ const AdminDashboard = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     {pendingUser.imagenCedula && (
-                      <Button variant="outline" size="sm">
-                        <Eye className="h-4 w-4 mr-1" />
-                        Ver Cédula
-                      </Button>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            <Eye className="h-4 w-4 mr-1" />
+                            Ver Cédula
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-2xl">
+                          <DialogHeader>
+                            <DialogTitle>
+                              Cédula de Identidad - {pendingUser.nombre} {pendingUser.apellido}
+                            </DialogTitle>
+                            <DialogDescription>
+                              Documento de identidad del usuario registrado
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="flex justify-center">
+                            <img
+                              src={pendingUser.imagenCedula}
+                              alt={`Cédula de ${pendingUser.nombre} ${pendingUser.apellido}`}
+                              className="max-w-full max-h-96 object-contain rounded-lg shadow-md"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.src = 'https://via.placeholder.com/400x300/f3f4f6/9ca3af?text=Imagen+no+disponible';
+                                  target.alt = 'Imagen no disponible';
+                                }}
+                            />
+                          </div>
+                        </DialogContent>
+                      </Dialog>
                     )}
                     <Button
                       onClick={() => handleApproveUser(pendingUser.id)}
@@ -381,6 +465,262 @@ const AdminDashboard = () => {
       </Card>
     </div>
   );
+
+  const renderUsersView = () => {
+    // Filtrar usuarios según búsqueda y filtros
+    const filteredUsers = allUsers.filter(user => {
+      const matchesSearch = searchTerm === '' ||
+        user.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.apellido.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.correoElectronico.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.cedula.includes(searchTerm);
+
+      const matchesStatus = statusFilter === 'all' || user.estado === statusFilter;
+
+      return matchesSearch && matchesStatus;
+    });
+
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Gestión de Usuarios
+          </h1>
+          <p className="text-gray-600 mt-1">
+            Administra todos los usuarios registrados en el sistema
+          </p>
+        </div>
+
+        {/* Estadísticas de usuarios */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Usuarios</CardTitle>
+              <Users className="h-4 w-4 text-blue-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-blue-600">{allUsers.length}</div>
+              <p className="text-xs text-muted-foreground">
+                Registrados
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Aprobados</CardTitle>
+              <UserCheck className="h-4 w-4 text-green-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600">
+                {allUsers.filter(u => u.estado === 'APROBADO').length}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Usuarios activos
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Pendientes</CardTitle>
+              <Clock className="h-4 w-4 text-orange-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-orange-600">
+                {allUsers.filter(u => u.estado === 'PENDIENTE').length}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Esperando aprobación
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Administradores</CardTitle>
+              <Settings className="h-4 w-4 text-purple-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-purple-600">
+                {allUsers.filter(u => u.tipo === 'ADMINISTRADOR').length}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Usuarios admin
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Controles de búsqueda y filtros */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Buscar y Filtrar Usuarios</CardTitle>
+            <CardDescription>
+              Utiliza los controles para encontrar usuarios específicos
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Input
+                    placeholder="Buscar por nombre, apellido, email o cédula..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-48">
+                  <Filter className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Filtrar por estado" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los estados</SelectItem>
+                  <SelectItem value="APROBADO">Aprobados</SelectItem>
+                  <SelectItem value="PENDIENTE">Pendientes</SelectItem>
+                  <SelectItem value="RECHAZADO">Rechazados</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Lista de usuarios */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Usuarios Registrados</CardTitle>
+            <CardDescription>
+              {filteredUsers.length} usuario{filteredUsers.length !== 1 ? 's' : ''} encontrado{filteredUsers.length !== 1 ? 's' : ''}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {usersLoading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-4 text-gray-600">Cargando usuarios...</p>
+              </div>
+            ) : filteredUsers.length === 0 ? (
+              <div className="text-center py-8">
+                <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500">No se encontraron usuarios con los criterios de búsqueda</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {filteredUsers.map((user) => (
+                  <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="font-semibold">{user.nombre} {user.apellido}</h3>
+                        <Badge variant={user.tipo === 'ADMINISTRADOR' ? 'default' : 'secondary'}>
+                          {user.tipo}
+                        </Badge>
+                        <Badge variant={
+                          user.estado === 'APROBADO' ? 'default' :
+                          user.estado === 'PENDIENTE' ? 'secondary' : 'destructive'
+                        }>
+                          {user.estado}
+                        </Badge>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+                        <div>
+                          <p><strong>Cédula:</strong> {user.cedula}</p>
+                          <p><strong>Teléfono:</strong> {user.telefono}</p>
+                          <p><strong>Email:</strong> {user.correoElectronico}</p>
+                        </div>
+                        <div>
+                          <p><strong>Registro:</strong> {user.fechaRegistro.toLocaleDateString('es-ES')}</p>
+                          {user.ultimoAcceso && (
+                            <p><strong>Último acceso:</strong> {user.ultimoAcceso.toLocaleDateString('es-ES')}</p>
+                          )}
+                          {user.fechaAprobacion && (
+                            <p><strong>Aprobado:</strong> {user.fechaAprobacion.toLocaleDateString('es-ES')}</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 ml-4">
+                      {user.imagenCedula && (
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button variant="outline" size="sm">
+                              <Eye className="h-4 w-4 mr-1" />
+                              Ver ID
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-2xl">
+                            <DialogHeader>
+                              <DialogTitle>
+                                Documento de Identidad - {user.nombre} {user.apellido}
+                              </DialogTitle>
+                              <DialogDescription>
+                                Cédula de identidad del usuario
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="flex justify-center">
+                              <img
+                                src={user.imagenCedula}
+                                alt={`Cédula de ${user.nombre} ${user.apellido}`}
+                                className="max-w-full max-h-96 object-contain rounded-lg shadow-md"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.src = 'https://via.placeholder.com/400x300/f3f4f6/9ca3af?text=Imagen+no+disponible';
+                                  target.alt = 'Imagen no disponible';
+                                }}
+                              />
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                      )}
+
+                      {/* Acciones adicionales según el estado */}
+                      {user.estado === 'PENDIENTE' && (
+                        <>
+                          <Button
+                            onClick={() => handleApproveUser(user.id)}
+                            disabled={processingUser === user.id}
+                            className="bg-green-600 hover:bg-green-700"
+                            size="sm"
+                          >
+                            <UserCheck className="h-4 w-4 mr-1" />
+                            {processingUser === user.id ? '...' : 'Aprobar'}
+                          </Button>
+                          <Button
+                            onClick={() => handleRejectUser(user.id)}
+                            disabled={processingUser === user.id}
+                            variant="destructive"
+                            size="sm"
+                          >
+                            <UserX className="h-4 w-4 mr-1" />
+                            Rechazar
+                          </Button>
+                        </>
+                      )}
+
+                      {user.estado === 'APROBADO' && user.tipo !== 'ADMINISTRADOR' && (
+                        <Button
+                          onClick={() => handleRejectUser(user.id)}
+                          disabled={processingUser === user.id}
+                          variant="destructive"
+                          size="sm"
+                        >
+                          <UserX className="h-4 w-4 mr-1" />
+                          Suspender
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
 
   const renderGroupsView = () => (
     <div className="space-y-6">
@@ -438,6 +778,8 @@ const AdminDashboard = () => {
         return renderDashboardView();
       case 'approvals':
         return renderApprovalsView();
+      case 'users':
+        return renderUsersView();
       case 'groups':
         return renderGroupsView();
       case 'products':
@@ -479,6 +821,15 @@ const AdminDashboard = () => {
                     {pendingUsers.length}
                   </Badge>
                 )}
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                isActive={activeView === 'users'}
+                onClick={() => setActiveView('users')}
+              >
+                <Users className="h-4 w-4" />
+                Usuarios
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>

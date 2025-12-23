@@ -60,6 +60,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       if (response.success && response.data) {
         setUser(response.data.user);
+        // Guardar token en localStorage
+        localStorage.setItem("auth_token", response.data.token);
         localStorage.setItem(
           "sanmarimar_user",
           JSON.stringify(response.data.user)
@@ -80,6 +82,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       console.error("Logout error:", error);
     } finally {
       setUser(null);
+      localStorage.removeItem("auth_token");
       localStorage.removeItem("sanmarimar_user");
     }
   };
@@ -97,6 +100,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         try {
           // Verificar que el token sea válido y el usuario esté aprobado
           const response = await apiClient.getCurrentUser();
+
           if (response.success && response.data) {
             const currentUser = response.data.user;
             // Verificar que el usuario esté aprobado
@@ -112,11 +116,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             // Token inválido, limpiar
             localStorage.removeItem("auth_token");
             localStorage.removeItem("sanmarimar_user");
+            setUser(null);
           }
         } catch (error) {
-          // Token inválido o error, limpiar
-          localStorage.removeItem("auth_token");
-          localStorage.removeItem("sanmarimar_user");
+          console.error('Error verificando sesión:', error);
+          // Solo limpiar si es un error de autenticación (401), no por errores de red
+          if (error.message?.includes('Token') || error.message?.includes('autenticación') || error.message?.includes('401')) {
+            localStorage.removeItem("auth_token");
+            localStorage.removeItem("sanmarimar_user");
+            setUser(null);
+          }
+          // Si es error de red, mantener la sesión local y reintentar después
         }
       }
       setIsLoading(false);

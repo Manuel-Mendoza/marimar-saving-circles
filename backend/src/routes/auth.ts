@@ -338,9 +338,12 @@ auth.get('/me', authenticate, async (c) => {
         direccion: users.direccion,
         correoElectronico: users.correoElectronico,
         tipo: users.tipo,
+        estado: users.estado,
         imagenCedula: users.imagenCedula,
         fechaRegistro: users.fechaRegistro,
-        ultimoAcceso: users.ultimoAcceso
+        ultimoAcceso: users.ultimoAcceso,
+        aprobadoPor: users.aprobadoPor,
+        fechaAprobacion: users.fechaAprobacion
       })
       .from(users)
       .where(eq(users.id, userPayload.id))
