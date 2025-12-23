@@ -8,16 +8,17 @@ import {
 import { apiClient } from "@/lib/api";
 
 interface User {
-  id: string;
+  id: number;
   nombre: string;
   apellido: string;
   cedula: string;
   telefono: string;
   direccion: string;
   correoElectronico: string;
-  tipo: string;
+  tipo: 'USUARIO' | 'ADMINISTRADOR';
   imagenCedula?: string;
-  grupos?: any[];
+  fechaRegistro: Date;
+  ultimoAcceso?: Date;
 }
 
 interface AuthContextType {
@@ -81,7 +82,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   const isAuthenticated = !!user;
-  const isAdmin = user?.tipo === "administrador";
+  const isAdmin = user?.tipo === "ADMINISTRADOR";
 
   // Cargar usuario al inicializar si hay token
   useEffect(() => {
