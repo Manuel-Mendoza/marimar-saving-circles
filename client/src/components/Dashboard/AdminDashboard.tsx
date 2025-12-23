@@ -1,12 +1,23 @@
-
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useAppState } from '@/contexts/AppStateContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import React, { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useAppState } from "@/contexts/AppStateContext";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -14,7 +25,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   Sidebar,
   SidebarContent,
@@ -25,13 +36,13 @@ import {
   SidebarProvider,
   SidebarInset,
   SidebarTrigger,
-} from '@/components/ui/sidebar';
-import { Separator } from '@/components/ui/separator';
+} from "@/components/ui/sidebar";
+import { Separator } from "@/components/ui/separator";
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from '@/components/ui/chart';
+} from "@/components/ui/chart";
 // Suppress recharts defaultProps warning - this is a known issue with the library
 // and doesn't affect functionality. The warning appears because recharts uses
 // defaultProps on function components, which React plans to deprecate.
@@ -43,11 +54,29 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  ResponsiveContainer
-} from 'recharts';
-import { Users, Package, CheckCircle, Clock, UserCheck, UserX, AlertCircle, Eye, LayoutDashboard, Settings, BarChart3, TrendingUp, Search, Filter, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
-import { apiClient } from '@/lib/api';
-import { useToast } from '@/hooks/use-toast';
+  ResponsiveContainer,
+} from "recharts";
+import {
+  Users,
+  Package,
+  CheckCircle,
+  Clock,
+  UserCheck,
+  UserX,
+  AlertCircle,
+  Eye,
+  LayoutDashboard,
+  Settings,
+  BarChart3,
+  TrendingUp,
+  Search,
+  Filter,
+  MoreHorizontal,
+  Edit,
+  Trash2,
+} from "lucide-react";
+import { apiClient } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 interface PendingUser {
   id: number;
@@ -56,37 +85,43 @@ interface PendingUser {
   cedula: string;
   telefono: string;
   correoElectronico: string;
-  tipo: 'USUARIO' | 'ADMINISTRADOR';
-  estado: 'PENDIENTE' | 'APROBADO' | 'RECHAZADO';
+  tipo: "USUARIO" | "ADMINISTRADOR";
+  estado: "PENDIENTE" | "APROBADO" | "RECHAZADO";
   imagenCedula?: string;
   fechaRegistro: Date;
 }
 
-type ActiveView = 'dashboard' | 'approvals' | 'users' | 'groups' | 'products' | 'reports';
+type ActiveView =
+  | "dashboard"
+  | "approvals"
+  | "users"
+  | "groups"
+  | "products"
+  | "reports";
 
 const AdminDashboard = () => {
   const { user } = useAuth();
   const { grupos, productos } = useAppState();
   const { toast } = useToast();
-  const [activeView, setActiveView] = useState<ActiveView>('dashboard');
+  const [activeView, setActiveView] = useState<ActiveView>("dashboard");
   const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([]);
   const [allUsers, setAllUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [usersLoading, setUsersLoading] = useState(false);
   const [processingUser, setProcessingUser] = useState<number | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   // Cargar usuarios pendientes
   useEffect(() => {
-    if (activeView === 'approvals' || activeView === 'dashboard') {
+    if (activeView === "approvals" || activeView === "dashboard") {
       fetchPendingUsers();
     }
   }, [activeView]);
 
   // Cargar todos los usuarios cuando se selecciona la vista de usuarios
   useEffect(() => {
-    if (activeView === 'users') {
+    if (activeView === "users") {
       fetchAllUsers();
     }
   }, [activeView]);
@@ -101,12 +136,14 @@ const AdminDashboard = () => {
           ...user,
           fechaRegistro: new Date(user.fechaRegistro),
           ultimoAcceso: user.ultimoAcceso ? new Date(user.ultimoAcceso) : null,
-          fechaAprobacion: user.fechaAprobacion ? new Date(user.fechaAprobacion) : null,
+          fechaAprobacion: user.fechaAprobacion
+            ? new Date(user.fechaAprobacion)
+            : null,
         }));
         setAllUsers(usersWithDates);
       }
     } catch (error) {
-      console.error('Error cargando todos los usuarios:', error);
+      console.error("Error cargando todos los usuarios:", error);
       setAllUsers([]);
     } finally {
       setUsersLoading(false);
@@ -120,12 +157,12 @@ const AdminDashboard = () => {
         // Convertir fechaRegistro strings a Date objects
         const usersWithDates = response.data.users.map((user: any) => ({
           ...user,
-          fechaRegistro: new Date(user.fechaRegistro)
+          fechaRegistro: new Date(user.fechaRegistro),
         }));
         setPendingUsers(usersWithDates);
       }
     } catch (error) {
-      console.error('Error cargando usuarios pendientes:', error);
+      console.error("Error cargando usuarios pendientes:", error);
       // En caso de error, mantener lista vacía
       setPendingUsers([]);
     } finally {
@@ -139,18 +176,23 @@ const AdminDashboard = () => {
       const response = await apiClient.approveUser(userId);
       if (response.success) {
         // Remover usuario de la lista de pendientes y actualizar lista general
-        setPendingUsers(prev => prev.filter(u => u.id !== userId));
-        setAllUsers(prev => prev.map(user =>
-          user.id === userId ? { ...user, estado: 'APROBADO', fechaAprobacion: new Date() } : user
-        ));
+        setPendingUsers((prev) => prev.filter((u) => u.id !== userId));
+        setAllUsers((prev) =>
+          prev.map((user) =>
+            user.id === userId
+              ? { ...user, estado: "APROBADO", fechaAprobacion: new Date() }
+              : user
+          )
+        );
         toast({
           title: "Usuario aprobado",
-          description: "El usuario ha sido aprobado exitosamente y ahora puede acceder al sistema.",
+          description:
+            "El usuario ha sido aprobado exitosamente y ahora puede acceder al sistema.",
         });
       }
     } catch (error: any) {
-      console.error('Error aprobando usuario:', error);
-      const errorMessage = error.message?.includes('ya procesado')
+      console.error("Error aprobando usuario:", error);
+      const errorMessage = error.message?.includes("ya procesado")
         ? "Este usuario ya ha sido procesado anteriormente."
         : error.message || "No se pudo aprobar al usuario. Inténtalo de nuevo.";
       toast({
@@ -169,20 +211,26 @@ const AdminDashboard = () => {
       const response = await apiClient.rejectUser(userId);
       if (response.success) {
         // Remover usuario de la lista de pendientes y actualizar lista general
-        setPendingUsers(prev => prev.filter(u => u.id !== userId));
-        setAllUsers(prev => prev.map(user =>
-          user.id === userId ? { ...user, estado: 'RECHAZADO', fechaAprobacion: new Date() } : user
-        ));
+        setPendingUsers((prev) => prev.filter((u) => u.id !== userId));
+        setAllUsers((prev) =>
+          prev.map((user) =>
+            user.id === userId
+              ? { ...user, estado: "RECHAZADO", fechaAprobacion: new Date() }
+              : user
+          )
+        );
         toast({
           title: "Usuario rechazado",
-          description: "El usuario ha sido rechazado y no podrá acceder al sistema.",
+          description:
+            "El usuario ha sido rechazado y no podrá acceder al sistema.",
         });
       }
     } catch (error: any) {
-      console.error('Error rechazando usuario:', error);
-      const errorMessage = error.message?.includes('ya procesado')
+      console.error("Error rechazando usuario:", error);
+      const errorMessage = error.message?.includes("ya procesado")
         ? "Este usuario ya ha sido procesado anteriormente."
-        : error.message || "No se pudo rechazar al usuario. Inténtalo de nuevo.";
+        : error.message ||
+          "No se pudo rechazar al usuario. Inténtalo de nuevo.";
       toast({
         title: "Error al rechazar usuario",
         description: errorMessage,
@@ -195,26 +243,26 @@ const AdminDashboard = () => {
 
   // Datos para la gráfica (mock data)
   const chartData = [
-    { month: 'Ene', usuarios: 12, contribuciones: 2450, grupos: 3 },
-    { month: 'Feb', usuarios: 19, contribuciones: 3200, grupos: 5 },
-    { month: 'Mar', usuarios: 28, contribuciones: 4100, grupos: 7 },
-    { month: 'Abr', usuarios: 35, contribuciones: 5800, grupos: 9 },
-    { month: 'May', usuarios: 42, contribuciones: 7200, grupos: 11 },
-    { month: 'Jun', usuarios: 51, contribuciones: 8900, grupos: 13 },
+    { month: "Ene", usuarios: 12, contribuciones: 2450, grupos: 3 },
+    { month: "Feb", usuarios: 19, contribuciones: 3200, grupos: 5 },
+    { month: "Mar", usuarios: 28, contribuciones: 4100, grupos: 7 },
+    { month: "Abr", usuarios: 35, contribuciones: 5800, grupos: 9 },
+    { month: "May", usuarios: 42, contribuciones: 7200, grupos: 11 },
+    { month: "Jun", usuarios: 51, contribuciones: 8900, grupos: 13 },
   ];
 
   const chartConfig = {
     usuarios: {
-      label: 'Nuevos Usuarios',
-      color: 'hsl(var(--chart-1))',
+      label: "Nuevos Usuarios",
+      color: "hsl(var(--chart-1))",
     },
     contribuciones: {
-      label: 'Contribuciones ($)',
-      color: 'hsl(var(--chart-2))',
+      label: "Contribuciones ($)",
+      color: "hsl(var(--chart-2))",
     },
     grupos: {
-      label: 'Grupos Activos',
-      color: 'hsl(var(--chart-3))',
+      label: "Grupos Activos",
+      color: "hsl(var(--chart-3))",
     },
   };
 
@@ -235,11 +283,15 @@ const AdminDashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Usuarios Pendientes</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Usuarios Pendientes
+            </CardTitle>
             <AlertCircle className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{pendingUsers.length}</div>
+            <div className="text-2xl font-bold text-orange-600">
+              {pendingUsers.length}
+            </div>
             <p className="text-xs text-muted-foreground">
               Esperando aprobación
             </p>
@@ -248,14 +300,16 @@ const AdminDashboard = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Grupos Activos</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Grupos Activos
+            </CardTitle>
             <Users className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{grupos.length}</div>
-            <p className="text-xs text-muted-foreground">
-              Grupos de ahorro
-            </p>
+            <div className="text-2xl font-bold text-blue-600">
+              {grupos.length}
+            </div>
+            <p className="text-xs text-muted-foreground">Grupos de ahorro</p>
           </CardContent>
         </Card>
 
@@ -265,10 +319,10 @@ const AdminDashboard = () => {
             <Package className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{productos.length}</div>
-            <p className="text-xs text-muted-foreground">
-              Disponibles
-            </p>
+            <div className="text-2xl font-bold text-green-600">
+              {productos.length}
+            </div>
+            <p className="text-xs text-muted-foreground">Disponibles</p>
           </CardContent>
         </Card>
 
@@ -298,14 +352,21 @@ const AdminDashboard = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-        <ChartContainer config={chartConfig} className="h-[300px] w-full">
-            <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+          <ChartContainer config={chartConfig} className="h-[300px] w-full">
+            <BarChart
+              data={chartData}
+              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+            >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="month" />
               <YAxis />
               <ChartTooltip content={<ChartTooltipContent />} />
               <Bar dataKey="usuarios" fill="var(--color-usuarios)" radius={4} />
-              <Bar dataKey="contribuciones" fill="var(--color-contribuciones)" radius={4} />
+              <Bar
+                dataKey="contribuciones"
+                fill="var(--color-contribuciones)"
+                radius={4}
+              />
               <Bar dataKey="grupos" fill="var(--color-grupos)" radius={4} />
             </BarChart>
           </ChartContainer>
@@ -378,30 +439,51 @@ const AdminDashboard = () => {
           {loading ? (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="mt-4 text-gray-600">Cargando usuarios pendientes...</p>
+              <p className="mt-4 text-gray-600">
+                Cargando usuarios pendientes...
+              </p>
             </div>
           ) : pendingUsers.length === 0 ? (
             <div className="text-center py-8">
               <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
-              <p className="text-gray-500">No hay usuarios pendientes de aprobación</p>
+              <p className="text-gray-500">
+                No hay usuarios pendientes de aprobación
+              </p>
             </div>
           ) : (
             <div className="space-y-4">
               {pendingUsers.map((pendingUser) => (
-                <div key={pendingUser.id} className="flex items-center justify-between p-4 border rounded-lg bg-orange-50">
+                <div
+                  key={pendingUser.id}
+                  className="flex items-center justify-between p-4 border rounded-lg bg-orange-50"
+                >
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-semibold">{pendingUser.nombre} {pendingUser.apellido}</h3>
+                      <h3 className="font-semibold">
+                        {pendingUser.nombre} {pendingUser.apellido}
+                      </h3>
                       <Badge variant="secondary">Pendiente</Badge>
                     </div>
                     <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
                       <div>
-                        <p><strong>Cédula:</strong> {pendingUser.cedula}</p>
-                        <p><strong>Teléfono:</strong> {pendingUser.telefono}</p>
+                        <p>
+                          <strong>Cédula:</strong> {pendingUser.cedula}
+                        </p>
+                        <p>
+                          <strong>Teléfono:</strong> {pendingUser.telefono}
+                        </p>
                       </div>
                       <div>
-                        <p><strong>Email:</strong> {pendingUser.correoElectronico}</p>
-                        <p><strong>Registro:</strong> {pendingUser.fechaRegistro.toLocaleDateString('es-ES')}</p>
+                        <p>
+                          <strong>Email:</strong>{" "}
+                          {pendingUser.correoElectronico}
+                        </p>
+                        <p>
+                          <strong>Registro:</strong>{" "}
+                          {pendingUser.fechaRegistro.toLocaleDateString(
+                            "es-ES"
+                          )}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -417,7 +499,8 @@ const AdminDashboard = () => {
                         <DialogContent className="max-w-2xl">
                           <DialogHeader>
                             <DialogTitle>
-                              Cédula de Identidad - {pendingUser.nombre} {pendingUser.apellido}
+                              Cédula de Identidad - {pendingUser.nombre}{" "}
+                              {pendingUser.apellido}
                             </DialogTitle>
                             <DialogDescription>
                               Documento de identidad del usuario registrado
@@ -428,11 +511,12 @@ const AdminDashboard = () => {
                               src={pendingUser.imagenCedula}
                               alt={`Cédula de ${pendingUser.nombre} ${pendingUser.apellido}`}
                               className="max-w-full max-h-96 object-contain rounded-lg shadow-md"
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement;
-                                  target.src = 'https://via.placeholder.com/400x300/f3f4f6/9ca3af?text=Imagen+no+disponible';
-                                  target.alt = 'Imagen no disponible';
-                                }}
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.src =
+                                  "https://via.placeholder.com/400x300/f3f4f6/9ca3af?text=Imagen+no+disponible";
+                                target.alt = "Imagen no disponible";
+                              }}
                             />
                           </div>
                         </DialogContent>
@@ -445,7 +529,9 @@ const AdminDashboard = () => {
                       size="sm"
                     >
                       <UserCheck className="h-4 w-4 mr-1" />
-                      {processingUser === pendingUser.id ? 'Procesando...' : 'Aprobar'}
+                      {processingUser === pendingUser.id
+                        ? "Procesando..."
+                        : "Aprobar"}
                     </Button>
                     <Button
                       onClick={() => handleRejectUser(pendingUser.id)}
@@ -468,14 +554,18 @@ const AdminDashboard = () => {
 
   const renderUsersView = () => {
     // Filtrar usuarios según búsqueda y filtros
-    const filteredUsers = allUsers.filter(user => {
-      const matchesSearch = searchTerm === '' ||
+    const filteredUsers = allUsers.filter((user) => {
+      const matchesSearch =
+        searchTerm === "" ||
         user.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.apellido.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.correoElectronico.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.correoElectronico
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
         user.cedula.includes(searchTerm);
 
-      const matchesStatus = statusFilter === 'all' || user.estado === statusFilter;
+      const matchesStatus =
+        statusFilter === "all" || user.estado === statusFilter;
 
       return matchesSearch && matchesStatus;
     });
@@ -495,14 +585,16 @@ const AdminDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Usuarios</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Total Usuarios
+              </CardTitle>
               <Users className="h-4 w-4 text-blue-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{allUsers.length}</div>
-              <p className="text-xs text-muted-foreground">
-                Registrados
-              </p>
+              <div className="text-2xl font-bold text-blue-600">
+                {allUsers.length}
+              </div>
+              <p className="text-xs text-muted-foreground">Registrados</p>
             </CardContent>
           </Card>
 
@@ -513,11 +605,9 @@ const AdminDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">
-                {allUsers.filter(u => u.estado === 'APROBADO').length}
+                {allUsers.filter((u) => u.estado === "APROBADO").length}
               </div>
-              <p className="text-xs text-muted-foreground">
-                Usuarios activos
-              </p>
+              <p className="text-xs text-muted-foreground">Usuarios activos</p>
             </CardContent>
           </Card>
 
@@ -528,7 +618,7 @@ const AdminDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-orange-600">
-                {allUsers.filter(u => u.estado === 'PENDIENTE').length}
+                {allUsers.filter((u) => u.estado === "PENDIENTE").length}
               </div>
               <p className="text-xs text-muted-foreground">
                 Esperando aprobación
@@ -538,16 +628,16 @@ const AdminDashboard = () => {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Administradores</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Administradores
+              </CardTitle>
               <Settings className="h-4 w-4 text-purple-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-purple-600">
-                {allUsers.filter(u => u.tipo === 'ADMINISTRADOR').length}
+                {allUsers.filter((u) => u.tipo === "ADMINISTRADOR").length}
               </div>
-              <p className="text-xs text-muted-foreground">
-                Usuarios admin
-              </p>
+              <p className="text-xs text-muted-foreground">Usuarios admin</p>
             </CardContent>
           </Card>
         </div>
@@ -594,7 +684,9 @@ const AdminDashboard = () => {
           <CardHeader>
             <CardTitle>Usuarios Registrados</CardTitle>
             <CardDescription>
-              {filteredUsers.length} usuario{filteredUsers.length !== 1 ? 's' : ''} encontrado{filteredUsers.length !== 1 ? 's' : ''}
+              {filteredUsers.length} usuario
+              {filteredUsers.length !== 1 ? "s" : ""} encontrado
+              {filteredUsers.length !== 1 ? "s" : ""}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -606,38 +698,71 @@ const AdminDashboard = () => {
             ) : filteredUsers.length === 0 ? (
               <div className="text-center py-8">
                 <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">No se encontraron usuarios con los criterios de búsqueda</p>
+                <p className="text-gray-500">
+                  No se encontraron usuarios con los criterios de búsqueda
+                </p>
               </div>
             ) : (
               <div className="space-y-4">
                 {filteredUsers.map((user) => (
-                  <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow">
+                  <div
+                    key={user.id}
+                    className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow"
+                  >
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <h3 className="font-semibold">{user.nombre} {user.apellido}</h3>
-                        <Badge variant={user.tipo === 'ADMINISTRADOR' ? 'default' : 'secondary'}>
+                        <h3 className="font-semibold">
+                          {user.nombre} {user.apellido}
+                        </h3>
+                        <Badge
+                          variant={
+                            user.tipo === "ADMINISTRADOR"
+                              ? "default"
+                              : "secondary"
+                          }
+                        >
                           {user.tipo}
                         </Badge>
-                        <Badge variant={
-                          user.estado === 'APROBADO' ? 'default' :
-                          user.estado === 'PENDIENTE' ? 'secondary' : 'destructive'
-                        }>
+                        <Badge
+                          variant={
+                            user.estado === "APROBADO"
+                              ? "default"
+                              : user.estado === "PENDIENTE"
+                              ? "secondary"
+                              : "destructive"
+                          }
+                        >
                           {user.estado}
                         </Badge>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
                         <div>
-                          <p><strong>Cédula:</strong> {user.cedula}</p>
-                          <p><strong>Teléfono:</strong> {user.telefono}</p>
-                          <p><strong>Email:</strong> {user.correoElectronico}</p>
+                          <p>
+                            <strong>Cédula:</strong> {user.cedula}
+                          </p>
+                          <p>
+                            <strong>Teléfono:</strong> {user.telefono}
+                          </p>
+                          <p>
+                            <strong>Email:</strong> {user.correoElectronico}
+                          </p>
                         </div>
                         <div>
-                          <p><strong>Registro:</strong> {user.fechaRegistro.toLocaleDateString('es-ES')}</p>
+                          <p>
+                            <strong>Registro:</strong>{" "}
+                            {user.fechaRegistro.toLocaleDateString("es-ES")}
+                          </p>
                           {user.ultimoAcceso && (
-                            <p><strong>Último acceso:</strong> {user.ultimoAcceso.toLocaleDateString('es-ES')}</p>
+                            <p>
+                              <strong>Último acceso:</strong>{" "}
+                              {user.ultimoAcceso.toLocaleDateString("es-ES")}
+                            </p>
                           )}
                           {user.fechaAprobacion && (
-                            <p><strong>Aprobado:</strong> {user.fechaAprobacion.toLocaleDateString('es-ES')}</p>
+                            <p>
+                              <strong>Aprobado:</strong>{" "}
+                              {user.fechaAprobacion.toLocaleDateString("es-ES")}
+                            </p>
                           )}
                         </div>
                       </div>
@@ -654,7 +779,8 @@ const AdminDashboard = () => {
                           <DialogContent className="max-w-2xl">
                             <DialogHeader>
                               <DialogTitle>
-                                Documento de Identidad - {user.nombre} {user.apellido}
+                                Documento de Identidad - {user.nombre}{" "}
+                                {user.apellido}
                               </DialogTitle>
                               <DialogDescription>
                                 Cédula de identidad del usuario
@@ -667,8 +793,9 @@ const AdminDashboard = () => {
                                 className="max-w-full max-h-96 object-contain rounded-lg shadow-md"
                                 onError={(e) => {
                                   const target = e.target as HTMLImageElement;
-                                  target.src = 'https://via.placeholder.com/400x300/f3f4f6/9ca3af?text=Imagen+no+disponible';
-                                  target.alt = 'Imagen no disponible';
+                                  target.src =
+                                    "https://via.placeholder.com/400x300/f3f4f6/9ca3af?text=Imagen+no+disponible";
+                                  target.alt = "Imagen no disponible";
                                 }}
                               />
                             </div>
@@ -677,7 +804,7 @@ const AdminDashboard = () => {
                       )}
 
                       {/* Acciones adicionales según el estado */}
-                      {user.estado === 'PENDIENTE' && (
+                      {user.estado === "PENDIENTE" && (
                         <>
                           <Button
                             onClick={() => handleApproveUser(user.id)}
@@ -686,7 +813,7 @@ const AdminDashboard = () => {
                             size="sm"
                           >
                             <UserCheck className="h-4 w-4 mr-1" />
-                            {processingUser === user.id ? '...' : 'Aprobar'}
+                            {processingUser === user.id ? "..." : "Aprobar"}
                           </Button>
                           <Button
                             onClick={() => handleRejectUser(user.id)}
@@ -700,17 +827,18 @@ const AdminDashboard = () => {
                         </>
                       )}
 
-                      {user.estado === 'APROBADO' && user.tipo !== 'ADMINISTRADOR' && (
-                        <Button
-                          onClick={() => handleRejectUser(user.id)}
-                          disabled={processingUser === user.id}
-                          variant="destructive"
-                          size="sm"
-                        >
-                          <UserX className="h-4 w-4 mr-1" />
-                          Suspender
-                        </Button>
-                      )}
+                      {user.estado === "APROBADO" &&
+                        user.tipo !== "ADMINISTRADOR" && (
+                          <Button
+                            onClick={() => handleRejectUser(user.id)}
+                            disabled={processingUser === user.id}
+                            variant="destructive"
+                            size="sm"
+                          >
+                            <UserX className="h-4 w-4 mr-1" />
+                            Suspender
+                          </Button>
+                        )}
                     </div>
                   </div>
                 ))}
@@ -725,9 +853,7 @@ const AdminDashboard = () => {
   const renderGroupsView = () => (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">
-          Gestión de Grupos
-        </h1>
+        <h1 className="text-3xl font-bold text-gray-900">Gestión de Grupos</h1>
         <p className="text-gray-600 mt-1">
           Administra los grupos de ahorro colaborativo
         </p>
@@ -748,7 +874,10 @@ const AdminDashboard = () => {
           ) : (
             <div className="space-y-4">
               {grupos.map((grupo) => (
-                <div key={grupo.id} className="flex items-center justify-between p-4 border rounded-lg">
+                <div
+                  key={grupo.id}
+                  className="flex items-center justify-between p-4 border rounded-lg"
+                >
                   <div>
                     <h3 className="font-semibold">{grupo.nombre}</h3>
                     <p className="text-sm text-gray-600">
@@ -759,8 +888,12 @@ const AdminDashboard = () => {
                     </p>
                   </div>
                   <div className="text-right">
-                    <Badge variant={grupo.estado === 'EN_MARCHA' ? 'default' : 'secondary'}>
-                      {grupo.estado.replace('_', ' ')}
+                    <Badge
+                      variant={
+                        grupo.estado === "EN_MARCHA" ? "default" : "secondary"
+                      }
+                    >
+                      {grupo.estado.replace("_", " ")}
                     </Badge>
                   </div>
                 </div>
@@ -774,18 +907,26 @@ const AdminDashboard = () => {
 
   const renderContent = () => {
     switch (activeView) {
-      case 'dashboard':
+      case "dashboard":
         return renderDashboardView();
-      case 'approvals':
+      case "approvals":
         return renderApprovalsView();
-      case 'users':
+      case "users":
         return renderUsersView();
-      case 'groups':
+      case "groups":
         return renderGroupsView();
-      case 'products':
-        return <div className="p-8 text-center text-gray-500">Vista de productos en desarrollo</div>;
-      case 'reports':
-        return <div className="p-8 text-center text-gray-500">Vista de reportes en desarrollo</div>;
+      case "products":
+        return (
+          <div className="p-8 text-center text-gray-500">
+            Vista de productos en desarrollo
+          </div>
+        );
+      case "reports":
+        return (
+          <div className="p-8 text-center text-gray-500">
+            Vista de reportes en desarrollo
+          </div>
+        );
       default:
         return renderDashboardView();
     }
@@ -802,8 +943,8 @@ const AdminDashboard = () => {
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton
-                isActive={activeView === 'dashboard'}
-                onClick={() => setActiveView('dashboard')}
+                isActive={activeView === "dashboard"}
+                onClick={() => setActiveView("dashboard")}
               >
                 <LayoutDashboard className="h-4 w-4" />
                 Dashboard
@@ -811,8 +952,8 @@ const AdminDashboard = () => {
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton
-                isActive={activeView === 'approvals'}
-                onClick={() => setActiveView('approvals')}
+                isActive={activeView === "approvals"}
+                onClick={() => setActiveView("approvals")}
               >
                 <UserCheck className="h-4 w-4" />
                 Aprobaciones
@@ -825,8 +966,8 @@ const AdminDashboard = () => {
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton
-                isActive={activeView === 'users'}
-                onClick={() => setActiveView('users')}
+                isActive={activeView === "users"}
+                onClick={() => setActiveView("users")}
               >
                 <Users className="h-4 w-4" />
                 Usuarios
@@ -834,8 +975,8 @@ const AdminDashboard = () => {
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton
-                isActive={activeView === 'groups'}
-                onClick={() => setActiveView('groups')}
+                isActive={activeView === "groups"}
+                onClick={() => setActiveView("groups")}
               >
                 <Users className="h-4 w-4" />
                 Grupos
@@ -843,8 +984,8 @@ const AdminDashboard = () => {
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton
-                isActive={activeView === 'products'}
-                onClick={() => setActiveView('products')}
+                isActive={activeView === "products"}
+                onClick={() => setActiveView("products")}
               >
                 <Package className="h-4 w-4" />
                 Productos
@@ -852,8 +993,8 @@ const AdminDashboard = () => {
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton
-                isActive={activeView === 'reports'}
-                onClick={() => setActiveView('reports')}
+                isActive={activeView === "reports"}
+                onClick={() => setActiveView("reports")}
               >
                 <BarChart3 className="h-4 w-4" />
                 Reportes
@@ -870,9 +1011,7 @@ const AdminDashboard = () => {
             <h1 className="text-lg font-semibold">Panel de Administración</h1>
           </div>
         </header>
-        <div className="flex-1 p-6">
-          {renderContent()}
-        </div>
+        <div className="flex-1 p-6">{renderContent()}</div>
       </SidebarInset>
     </SidebarProvider>
   );
