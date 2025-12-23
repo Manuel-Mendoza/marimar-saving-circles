@@ -157,6 +157,26 @@ class ApiClient {
   async getProduct(productId: number) {
     return this.request<{ product: any }>(`/products/${productId}`);
   }
+
+  async createProduct(productData: any) {
+    return this.request('/products', {
+      method: 'POST',
+      body: JSON.stringify(productData),
+    });
+  }
+
+  async updateProduct(productId: number, productData: any) {
+    return this.request(`/products/${productId}`, {
+      method: 'PUT',
+      body: JSON.stringify(productData),
+    });
+  }
+
+  async deleteProduct(productId: number) {
+    return this.request(`/products/${productId}`, {
+      method: 'DELETE',
+    });
+  }
 }
 
 export const apiClient = new ApiClient(API_BASE_URL);

@@ -72,9 +72,27 @@ import {
   Edit,
   Trash2,
   Trash,
+  Plus,
+  X,
 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { apiClient } from "@/lib/api";
+import { getTagColor, getAvailableTags } from "@/lib/tagUtils";
 import { useToast } from "@/hooks/use-toast";
+
+interface Producto {
+  id: number;
+  nombre: string;
+  precioUsd: number;
+  precioVes: number;
+  tiempoDuracion: number;
+  imagen?: string;
+  descripcion: string;
+  tags?: string[];
+  activo: boolean;
+}
 
 interface PendingUser {
   id: number;
@@ -113,6 +131,28 @@ const AdminDashboard = () => {
   const [userToReject, setUserToReject] = useState<any>(null);
   const [reason, setReason] = useState("");
 
+  // Products state
+  const [allProducts, setAllProducts] = useState<Producto[]>([]);
+  const [productsLoading, setProductsLoading] = useState(false);
+  const [productSearchTerm, setProductSearchTerm] = useState("");
+  const [productStatusFilter, setProductStatusFilter] = useState<string>("all");
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Producto | null>(null);
+  const [productToDelete, setProductToDelete] = useState<Producto | null>(null);
+
+  // Product form state
+  const [productForm, setProductForm] = useState({
+    nombre: "",
+    precioUsd: "",
+    precioVes: "",
+    tiempoDuracion: "",
+    descripcion: "",
+    imagen: "",
+    tags: [] as string[],
+    activo: true
+  });
+
   // Cargar usuarios pendientes
   useEffect(() => {
     if (activeView === "approvals" || activeView === "dashboard") {
@@ -124,6 +164,13 @@ const AdminDashboard = () => {
   useEffect(() => {
     if (activeView === "users") {
       fetchAllUsers();
+    }
+  }, [activeView]);
+
+  // Cargar productos cuando se selecciona la vista de productos
+  useEffect(() => {
+    if (activeView === "products") {
+      fetchAllProducts();
     }
   }, [activeView]);
 
@@ -507,6 +554,214 @@ const AdminDashboard = () => {
       setProcessingUser(null);
     }
   };
+
+  // Product management functions
+  const fetchAllProducts = async () => {
+    setProductsLoading(true);
+    try {
+      const response = await apiClient.getProducts();
+      if (response.success && response.data) {
+        setAllProducts(response.data.products);
+      } else {
+        setAllProducts([]);
+      }
+    } catch (error) {
+      console.error("Error cargando productos:", error);
+      setAllProducts([]);
+    } finally {
+      setProductsLoading(false);
+    }
+  };
+
+  const resetProductForm = () => {
+    setProductForm({
+      nombre: "",
+      precioUsd: "",
+      precioVes: "",
+      tiempoDuracion: "",
+      descripcion: "",
+      imagen: "",
+      tags: [],
+      activo: true
+    });
+  };
+
+  const openCreateDialog = () => {
+    resetProductForm();
+    setIsCreateDialogOpen(true);
+  };
+
+  const openEditDialog = (product: Producto) => {
+    setProductForm({
+      nombre: product.nombre,
+      precioUsd: product.precioUsd.toString(),
+      precioVes: product.precioVes.toString(),
+      tiempoDuracion: product.tiempoDuracion.toString(),
+      descripcion: product.descripcion,
+      imagen: product.imagen || "",
+      tags: product.tags || [],
+      activo: product.activo
+    });
+    setEditingProduct(product);
+    setIsEditDialogOpen(true);
+  };
+
+  const closeCreateDialog = () => {
+    setIsCreateDialogOpen(false);
+    resetProductForm();
+  };
+
+  const closeEditDialog = () => {
+    setIsEditDialogOpen(false);
+    setEditingProduct(null);
+    resetProductForm();
+  };
+
+  const openDeleteProductDialog = (product: Producto) => {
+    setProductToDelete(product);
+  };
+
+  const closeDeleteProductDialog = () => {
+    setProductToDelete(null);
+  };
+
+  const handleCreateProduct = async () => {
+    if (!productForm.nombre || !productForm.precioUsd || !productForm.precioVes ||
+        !productForm.tiempoDuracion || !productForm.descripcion) {
+      toast({
+        title: "Campos requeridos",
+        description: "Por favor completa todos los campos obligatorios.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const response = await apiClient.createProduct({
+        nombre: productForm.nombre,
+        precioUsd: parseFloat(productForm.precioUsd),
+        precioVes: parseFloat(productForm.precioVes),
+        tiempoDuracion: parseInt(productForm.tiempoDuracion),
+        descripcion: productForm.descripcion,
+        imagen: productForm.imagen || undefined,
+        tags: productForm.tags,
+        activo: productForm.activo
+      });
+
+      if (response.success) {
+        closeCreateDialog();
+        fetchAllProducts();
+        toast({
+          title: "Producto creado",
+          description: "El producto ha sido creado exitosamente.",
+        });
+      } else {
+        toast({
+          title: "Error al crear producto",
+          description: response.message || "No se pudo crear el producto.",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      console.error("Error creando producto:", error);
+      toast({
+        title: "Error al crear producto",
+        description: error.message || "No se pudo crear el producto.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUpdateProduct = async () => {
+    if (!editingProduct) return;
+
+    if (!productForm.nombre || !productForm.precioUsd || !productForm.precioVes ||
+        !productForm.tiempoDuracion || !productForm.descripcion) {
+      toast({
+        title: "Campos requeridos",
+        description: "Por favor completa todos los campos obligatorios.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const response = await apiClient.updateProduct(editingProduct.id, {
+        nombre: productForm.nombre,
+        precioUsd: parseFloat(productForm.precioUsd),
+        precioVes: parseFloat(productForm.precioVes),
+        tiempoDuracion: parseInt(productForm.tiempoDuracion),
+        descripcion: productForm.descripcion,
+        imagen: productForm.imagen || undefined,
+        tags: productForm.tags,
+        activo: productForm.activo
+      });
+
+      if (response.success) {
+        closeEditDialog();
+        fetchAllProducts();
+        toast({
+          title: "Producto actualizado",
+          description: "El producto ha sido actualizado exitosamente.",
+        });
+      } else {
+        toast({
+          title: "Error al actualizar producto",
+          description: response.message || "No se pudo actualizar el producto.",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      console.error("Error actualizando producto:", error);
+      toast({
+        title: "Error al actualizar producto",
+        description: error.message || "No se pudo actualizar el producto.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteProduct = async () => {
+    if (!productToDelete) return;
+
+    try {
+      const response = await apiClient.deleteProduct(productToDelete.id);
+
+      if (response.success) {
+        closeDeleteProductDialog();
+        fetchAllProducts();
+        toast({
+          title: "Producto eliminado",
+          description: "El producto ha sido eliminado exitosamente.",
+        });
+      } else {
+        toast({
+          title: "Error al eliminar producto",
+          description: response.message || "No se pudo eliminar el producto.",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      console.error("Error eliminando producto:", error);
+      toast({
+        title: "Error al eliminar producto",
+        description: error.message || "No se pudo eliminar el producto.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleTagToggle = (tag: string) => {
+    setProductForm(prev => ({
+      ...prev,
+      tags: prev.tags.includes(tag)
+        ? prev.tags.filter(t => t !== tag)
+        : [...prev.tags, tag]
+    }));
+  };
+
+  // Available tags from centralized utilities
+  const availableTags = getAvailableTags();
 
   const chartData = [
     { month: "Ene", usuarios: 12, contribuciones: 2450, grupos: 3 },
@@ -1059,7 +1314,516 @@ const AdminDashboard = () => {
       case "approvals": return renderApprovalsView();
       case "users": return renderUsersView();
       case "groups": return renderGroupsView();
-      case "products": return <div className="p-8 text-center text-gray-500">Vista de productos en desarrollo</div>;
+      case "products": return (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Gestión de Productos</h1>
+              <p className="text-gray-600 mt-1">Administra el catálogo de productos para círculos de ahorro</p>
+            </div>
+            <Button onClick={openCreateDialog} className="bg-green-600 hover:bg-green-700">
+              <Plus className="h-4 w-4 mr-2" />
+              Nuevo Producto
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Productos</CardTitle>
+                <Package className="h-4 w-4 text-blue-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-blue-600">{allProducts.length}</div>
+                <p className="text-xs text-muted-foreground">En catálogo</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Productos Activos</CardTitle>
+                <CheckCircle className="h-4 w-4 text-green-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-600">
+                  {allProducts.filter(p => p.activo).length}
+                </div>
+                <p className="text-xs text-muted-foreground">Disponibles para usuarios</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Productos Inactivos</CardTitle>
+                <X className="h-4 w-4 text-red-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-red-600">
+                  {allProducts.filter(p => !p.activo).length}
+                </div>
+                <p className="text-xs text-muted-foreground">Ocultos del catálogo</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Categorías</CardTitle>
+                <MoreHorizontal className="h-4 w-4 text-purple-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-purple-600">
+                  {new Set(allProducts.flatMap(p => p.tags || [])).size}
+                </div>
+                <p className="text-xs text-muted-foreground">Tags únicos</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Buscar y Filtrar Productos</CardTitle>
+              <CardDescription>Utiliza los controles para encontrar productos específicos</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-1">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                    <Input
+                      placeholder="Buscar por nombre o descripción..."
+                      value={productSearchTerm}
+                      onChange={(e) => setProductSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+                <Select value={productStatusFilter} onValueChange={setProductStatusFilter}>
+                  <SelectTrigger className="w-full sm:w-48">
+                    <Filter className="h-4 w-4 mr-2" />
+                    <SelectValue placeholder="Filtrar por estado" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos los productos</SelectItem>
+                    <SelectItem value="active">Solo activos</SelectItem>
+                    <SelectItem value="inactive">Solo inactivos</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Catálogo de Productos</CardTitle>
+              <CardDescription>
+                {allProducts.filter(p => {
+                  const matchesSearch = productSearchTerm === "" ||
+                    p.nombre.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
+                    p.descripcion.toLowerCase().includes(productSearchTerm.toLowerCase());
+
+                  const matchesStatus = productStatusFilter === "all" ||
+                    (productStatusFilter === "active" && p.activo) ||
+                    (productStatusFilter === "inactive" && !p.activo);
+
+                  return matchesSearch && matchesStatus;
+                }).length} producto{allProducts.filter(p => {
+                  const matchesSearch = productSearchTerm === "" ||
+                    p.nombre.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
+                    p.descripcion.toLowerCase().includes(productSearchTerm.toLowerCase());
+
+                  const matchesStatus = productStatusFilter === "all" ||
+                    (productStatusFilter === "active" && p.activo) ||
+                    (productStatusFilter === "inactive" && !p.activo);
+
+                  return matchesSearch && matchesStatus;
+                }).length !== 1 ? "s" : ""} encontrado{allProducts.filter(p => {
+                  const matchesSearch = productSearchTerm === "" ||
+                    p.nombre.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
+                    p.descripcion.toLowerCase().includes(productSearchTerm.toLowerCase());
+
+                  const matchesStatus = productStatusFilter === "all" ||
+                    (productStatusFilter === "active" && p.activo) ||
+                    (productStatusFilter === "inactive" && !p.activo);
+
+                  return matchesSearch && matchesStatus;
+                }).length !== 1 ? "s" : ""}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {productsLoading ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="mt-4 text-gray-600">Cargando productos...</p>
+                </div>
+              ) : allProducts.filter(p => {
+                const matchesSearch = productSearchTerm === "" ||
+                  p.nombre.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
+                  p.descripcion.toLowerCase().includes(productSearchTerm.toLowerCase());
+
+                const matchesStatus = productStatusFilter === "all" ||
+                  (productStatusFilter === "active" && p.activo) ||
+                  (productStatusFilter === "inactive" && !p.activo);
+
+                return matchesSearch && matchesStatus;
+              }).length === 0 ? (
+                <div className="text-center py-8">
+                  <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500">No se encontraron productos con los criterios de búsqueda</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {allProducts.filter(p => {
+                    const matchesSearch = productSearchTerm === "" ||
+                      p.nombre.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
+                      p.descripcion.toLowerCase().includes(productSearchTerm.toLowerCase());
+
+                    const matchesStatus = productStatusFilter === "all" ||
+                      (productStatusFilter === "active" && p.activo) ||
+                      (productStatusFilter === "inactive" && !p.activo);
+
+                    return matchesSearch && matchesStatus;
+                  }).map((product) => (
+                    <div key={product.id} className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="font-semibold">{product.nombre}</h3>
+                          <Badge variant={product.activo ? "default" : "secondary"}>
+                            {product.activo ? "Activo" : "Inactivo"}
+                          </Badge>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600 mb-2">
+                          <div>
+                            <p><strong>USD:</strong> ${product.precioUsd}</p>
+                            <p><strong>VES:</strong> Bs. {product.precioVes.toLocaleString()}</p>
+                          </div>
+                          <div>
+                            <p><strong>Duración:</strong> {product.tiempoDuracion} meses</p>
+                            <p><strong>Pago mensual:</strong> ${(product.precioUsd / product.tiempoDuracion).toFixed(2)}</p>
+                          </div>
+                        </div>
+                        {product.tags && product.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {product.tags.map((tag, index) => (
+                              <Badge key={index} className={`text-xs border ${getTagColor(tag)}`}>
+                                {tag}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 ml-4">
+                        <Button
+                          onClick={() => openEditDialog(product)}
+                          variant="outline"
+                          size="sm"
+                        >
+                          <Edit className="h-4 w-4 mr-1" />
+                          Editar
+                        </Button>
+                        <Button
+                          onClick={() => openDeleteProductDialog(product)}
+                          variant="destructive"
+                          size="sm"
+                        >
+                          <Trash className="h-4 w-4 mr-1" />
+                          Eliminar
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Create Product Dialog */}
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Plus className="h-5 w-5 text-green-600" />
+                  Crear Nuevo Producto
+                </DialogTitle>
+                <DialogDescription>
+                  Agrega un nuevo producto al catálogo de ahorro colaborativo
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-4 py-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="create-nombre">Nombre del Producto *</Label>
+                    <Input
+                      id="create-nombre"
+                      value={productForm.nombre}
+                      onChange={(e) => setProductForm(prev => ({ ...prev, nombre: e.target.value }))}
+                      placeholder="Ej: Lavadora Samsung 15kg"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="create-duracion">Duración (meses) *</Label>
+                    <Input
+                      id="create-duracion"
+                      type="number"
+                      value={productForm.tiempoDuracion}
+                      onChange={(e) => setProductForm(prev => ({ ...prev, tiempoDuracion: e.target.value }))}
+                      placeholder="Ej: 8"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="create-precio-usd">Precio USD *</Label>
+                    <Input
+                      id="create-precio-usd"
+                      type="number"
+                      step="0.01"
+                      value={productForm.precioUsd}
+                      onChange={(e) => setProductForm(prev => ({ ...prev, precioUsd: e.target.value }))}
+                      placeholder="Ej: 450.00"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="create-precio-ves">Precio VES *</Label>
+                    <Input
+                      id="create-precio-ves"
+                      type="number"
+                      step="0.01"
+                      value={productForm.precioVes}
+                      onChange={(e) => setProductForm(prev => ({ ...prev, precioVes: e.target.value }))}
+                      placeholder="Ej: 12500000"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="create-descripcion">Descripción *</Label>
+                  <Textarea
+                    id="create-descripcion"
+                    value={productForm.descripcion}
+                    onChange={(e) => setProductForm(prev => ({ ...prev, descripcion: e.target.value }))}
+                    placeholder="Describe las características del producto..."
+                    rows={3}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="create-imagen">URL de Imagen (opcional)</Label>
+                  <Input
+                    id="create-imagen"
+                    value={productForm.imagen}
+                    onChange={(e) => setProductForm(prev => ({ ...prev, imagen: e.target.value }))}
+                    placeholder="https://ejemplo.com/imagen.jpg"
+                  />
+                </div>
+
+                <div>
+                  <Label>Categorías (Tags)</Label>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
+                    {availableTags.map((tag) => (
+                      <div key={tag} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`create-${tag}`}
+                          checked={productForm.tags.includes(tag)}
+                          onCheckedChange={() => handleTagToggle(tag)}
+                        />
+                        <Label htmlFor={`create-${tag}`} className="text-sm">
+                          {tag}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="create-activo"
+                    checked={productForm.activo}
+                    onCheckedChange={(checked) => setProductForm(prev => ({ ...prev, activo: !!checked }))}
+                  />
+                  <Label htmlFor="create-activo">Producto activo (visible para usuarios)</Label>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={closeCreateDialog}>
+                  Cancelar
+                </Button>
+                <Button onClick={handleCreateProduct} className="bg-green-600 hover:bg-green-700">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Crear Producto
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* Edit Product Dialog */}
+          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Edit className="h-5 w-5 text-blue-600" />
+                  Editar Producto
+                </DialogTitle>
+                <DialogDescription>
+                  Modifica la información del producto seleccionado
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-4 py-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="edit-nombre">Nombre del Producto *</Label>
+                    <Input
+                      id="edit-nombre"
+                      value={productForm.nombre}
+                      onChange={(e) => setProductForm(prev => ({ ...prev, nombre: e.target.value }))}
+                      placeholder="Ej: Lavadora Samsung 15kg"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-duracion">Duración (meses) *</Label>
+                    <Input
+                      id="edit-duracion"
+                      type="number"
+                      value={productForm.tiempoDuracion}
+                      onChange={(e) => setProductForm(prev => ({ ...prev, tiempoDuracion: e.target.value }))}
+                      placeholder="Ej: 8"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="edit-precio-usd">Precio USD *</Label>
+                    <Input
+                      id="edit-precio-usd"
+                      type="number"
+                      step="0.01"
+                      value={productForm.precioUsd}
+                      onChange={(e) => setProductForm(prev => ({ ...prev, precioUsd: e.target.value }))}
+                      placeholder="Ej: 450.00"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-precio-ves">Precio VES *</Label>
+                    <Input
+                      id="edit-precio-ves"
+                      type="number"
+                      step="0.01"
+                      value={productForm.precioVes}
+                      onChange={(e) => setProductForm(prev => ({ ...prev, precioVes: e.target.value }))}
+                      placeholder="Ej: 12500000"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="edit-descripcion">Descripción *</Label>
+                  <Textarea
+                    id="edit-descripcion"
+                    value={productForm.descripcion}
+                    onChange={(e) => setProductForm(prev => ({ ...prev, descripcion: e.target.value }))}
+                    placeholder="Describe las características del producto..."
+                    rows={3}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="edit-imagen">URL de Imagen (opcional)</Label>
+                  <Input
+                    id="edit-imagen"
+                    value={productForm.imagen}
+                    onChange={(e) => setProductForm(prev => ({ ...prev, imagen: e.target.value }))}
+                    placeholder="https://ejemplo.com/imagen.jpg"
+                  />
+                </div>
+
+                <div>
+                  <Label>Categorías (Tags)</Label>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
+                    {availableTags.map((tag) => (
+                      <div key={tag} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`edit-${tag}`}
+                          checked={productForm.tags.includes(tag)}
+                          onCheckedChange={() => handleTagToggle(tag)}
+                        />
+                        <Label htmlFor={`edit-${tag}`} className="text-sm">
+                          {tag}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="edit-activo"
+                    checked={productForm.activo}
+                    onCheckedChange={(checked) => setProductForm(prev => ({ ...prev, activo: !!checked }))}
+                  />
+                  <Label htmlFor="edit-activo">Producto activo (visible para usuarios)</Label>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={closeEditDialog}>
+                  Cancelar
+                </Button>
+                <Button onClick={handleUpdateProduct} className="bg-blue-600 hover:bg-blue-700">
+                  <Edit className="h-4 w-4 mr-2" />
+                  Actualizar Producto
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* Delete Product Dialog */}
+          <Dialog open={!!productToDelete} onOpenChange={(open) => !open && closeDeleteProductDialog()}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 text-red-600">
+                  <Trash className="h-5 w-5" />
+                  Confirmar Eliminación
+                </DialogTitle>
+                <DialogDescription>
+                  ¿Estás seguro de que deseas eliminar este producto? Esta acción no se puede deshacer.
+                </DialogDescription>
+              </DialogHeader>
+
+              {productToDelete && (
+                <div className="py-4">
+                  <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg mb-4">
+                    <div className="flex-1">
+                      <h4 className="font-semibold">{productToDelete.nombre}</h4>
+                      <p className="text-sm text-gray-600">USD: ${productToDelete.precioUsd} | VES: Bs. {productToDelete.precioVes.toLocaleString()}</p>
+                      <p className="text-sm text-gray-600">Duración: {productToDelete.tiempoDuracion} meses</p>
+                    </div>
+                    <Badge variant={productToDelete.activo ? "default" : "secondary"}>
+                      {productToDelete.activo ? "Activo" : "Inactivo"}
+                    </Badge>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={closeDeleteProductDialog}>
+                  Cancelar
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleDeleteProduct}
+                >
+                  <Trash className="h-4 w-4 mr-2" />
+                  Eliminar Producto
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+      );
       case "reports": return <div className="p-8 text-center text-gray-500">Vista de reportes en desarrollo</div>;
       default: return renderDashboardView();
     }
