@@ -13,6 +13,30 @@ const UserDashboard = () => {
   const { user } = useAuth();
   const { grupos, productos, userGroups, contributions, deliveries } = useAppState();
 
+  // Color mapping for tags - ensuring all colors are distinct
+  const getTagColor = (tag: string) => {
+    const tagColors: Record<string, string> = {
+      'electrodomésticos': 'bg-blue-100 text-blue-800 border-blue-200',
+      'aires acondicionados': 'bg-cyan-100 text-cyan-800 border-cyan-200',
+      'neveras': 'bg-emerald-100 text-emerald-800 border-emerald-200',
+      'congeladores': 'bg-teal-100 text-teal-800 border-teal-200',
+      'ollas': 'bg-orange-100 text-orange-800 border-orange-200',
+      'máquinas de coser': 'bg-pink-100 text-pink-800 border-pink-200',
+      'tv': 'bg-purple-100 text-purple-800 border-purple-200',
+      'smart tv': 'bg-violet-100 text-violet-800 border-violet-200',
+      'celulares': 'bg-green-100 text-green-800 border-green-200',
+      'smartphones': 'bg-lime-100 text-lime-800 border-lime-200',
+      'línea blanca': 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      'lavadoras': 'bg-amber-100 text-amber-800 border-amber-200',
+      'cama': 'bg-indigo-100 text-indigo-800 border-indigo-200',
+      'colchones': 'bg-rose-100 text-rose-800 border-rose-200',
+      'ortopédicos': 'bg-fuchsia-100 text-fuchsia-800 border-fuchsia-200',
+      'computación': 'bg-sky-100 text-sky-800 border-sky-200',
+      'computadoras': 'bg-red-100 text-red-800 border-red-200',
+    };
+    return tagColors[tag] || 'bg-gray-100 text-gray-800 border-gray-200';
+  };
+
   // Find user's group memberships
   const myUserGroups = userGroups.filter(ug => ug.userId === user?.id);
   const myGroups = grupos.filter(g => myUserGroups.some(ug => ug.groupId === g.id));
@@ -281,7 +305,7 @@ const UserDashboard = () => {
                           {producto.tags && producto.tags.length > 0 && (
                             <div className="flex flex-wrap gap-1">
                               {producto.tags.map((tag, index) => (
-                                <Badge key={index} variant="secondary" className="text-xs">
+                                <Badge key={index} className={`text-xs border ${getTagColor(tag)}`}>
                                   {tag}
                                 </Badge>
                               ))}
@@ -330,7 +354,7 @@ const UserDashboard = () => {
                           {producto.tags && producto.tags.length > 0 && (
                             <div className="flex flex-wrap gap-1">
                               {producto.tags.map((tag, index) => (
-                                <Badge key={index} variant="secondary" className="text-xs">
+                                <Badge key={index} className={`text-xs border ${getTagColor(tag)}`}>
                                   {tag}
                                 </Badge>
                               ))}
@@ -379,7 +403,7 @@ const UserDashboard = () => {
                           {producto.tags && producto.tags.length > 0 && (
                             <div className="flex flex-wrap gap-1">
                               {producto.tags.map((tag, index) => (
-                                <Badge key={index} variant="secondary" className="text-xs">
+                                <Badge key={index} className={`text-xs border ${getTagColor(tag)}`}>
                                   {tag}
                                 </Badge>
                               ))}
@@ -428,7 +452,7 @@ const UserDashboard = () => {
                           {producto.tags && producto.tags.length > 0 && (
                             <div className="flex flex-wrap gap-1">
                               {producto.tags.map((tag, index) => (
-                                <Badge key={index} variant="secondary" className="text-xs">
+                                <Badge key={index} className={`text-xs border ${getTagColor(tag)}`}>
                                   {tag}
                                 </Badge>
                               ))}
@@ -477,7 +501,7 @@ const UserDashboard = () => {
                           {producto.tags && producto.tags.length > 0 && (
                             <div className="flex flex-wrap gap-1">
                               {producto.tags.map((tag, index) => (
-                                <Badge key={index} variant="secondary" className="text-xs">
+                                <Badge key={index} className={`text-xs border ${getTagColor(tag)}`}>
                                   {tag}
                                 </Badge>
                               ))}
@@ -526,7 +550,7 @@ const UserDashboard = () => {
                           {producto.tags && producto.tags.length > 0 && (
                             <div className="flex flex-wrap gap-1">
                               {producto.tags.map((tag, index) => (
-                                <Badge key={index} variant="secondary" className="text-xs">
+                                <Badge key={index} className={`text-xs border ${getTagColor(tag)}`}>
                                   {tag}
                                 </Badge>
                               ))}
