@@ -9,9 +9,15 @@ interface ApiResponse<T = any> {
 
 class ApiClient {
   private baseURL: string;
+  private token: string | null = null;
 
   constructor(baseURL: string) {
     this.baseURL = baseURL;
+    this.token = localStorage.getItem('auth_token');
+  }
+
+  setToken(token: string | null) {
+    this.token = token;
   }
 
   private async request<T>(
@@ -29,11 +35,10 @@ class ApiClient {
     };
 
     // Include auth token if available
-    const token = localStorage.getItem('auth_token');
-    if (token) {
+    if (this.token) {
       config.headers = {
         ...config.headers,
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${this.token}`,
       };
     }
 
@@ -65,6 +70,7 @@ class ApiClient {
     // Store token
     if (response.success && response.data?.token) {
       localStorage.setItem('auth_token', response.data.token);
+      this.token = response.data.token;
     }
 
     return response;
@@ -85,6 +91,7 @@ class ApiClient {
     // Store token
     if (response.success && response.data?.token) {
       localStorage.setItem('auth_token', response.data.token);
+      this.token = response.data.token;
     }
 
     return response;
@@ -97,6 +104,7 @@ class ApiClient {
 
     // Clear token
     localStorage.removeItem('auth_token');
+    this.token = null;
 
     return response;
   }

@@ -3,6 +3,7 @@ import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAppState } from '@/contexts/AppStateContext';
 import { getTagColor } from '@/lib/tagUtils';
+import { SimplePriceDisplay } from '@/components/ui/price-display';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -291,22 +292,11 @@ const UserDashboard = () => {
                         </div>
                         <p className="text-gray-600 mb-3">{producto.descripcion}</p>
 
-                        <div className="space-y-2 mb-4">
-                          <div className="flex justify-between">
-                            <span className="text-sm">Precio USD:</span>
-                            <span className="font-semibold">${producto.precioUsd}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-sm">Precio VES:</span>
-                            <span className="font-semibold">Bs. {producto.precioVes.toLocaleString()}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-sm">Pago mensual:</span>
-                            <span className="font-semibold">${pagoMensual}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-sm">Duración:</span>
-                            <span className="font-semibold">{producto.tiempoDuracion} meses</span>
+                        <div className="space-y-3 mb-4">
+                          <SimplePriceDisplay vesPrice={producto.precioVes} usdPrice={producto.precioUsd} />
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-medium text-gray-700">Duración del plan:</span>
+                            <span className="font-semibold text-purple-600">{producto.tiempoDuracion} meses</span>
                           </div>
                         </div>
 
@@ -340,22 +330,11 @@ const UserDashboard = () => {
                         </div>
                         <p className="text-gray-600 mb-3">{producto.descripcion}</p>
 
-                        <div className="space-y-2 mb-4">
-                          <div className="flex justify-between">
-                            <span className="text-sm">Precio USD:</span>
-                            <span className="font-semibold">${producto.precioUsd}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-sm">Precio VES:</span>
-                            <span className="font-semibold">Bs. {producto.precioVes.toLocaleString()}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-sm">Pago mensual:</span>
-                            <span className="font-semibold">${pagoMensual}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-sm">Duración:</span>
-                            <span className="font-semibold">{producto.tiempoDuracion} meses</span>
+                        <div className="space-y-3 mb-4">
+                          <SimplePriceDisplay vesPrice={producto.precioVes} usdPrice={producto.precioUsd} />
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-medium text-gray-700">Duración del plan:</span>
+                            <span className="font-semibold text-purple-600">{producto.tiempoDuracion} meses</span>
                           </div>
                         </div>
 
@@ -389,22 +368,11 @@ const UserDashboard = () => {
                         </div>
                         <p className="text-gray-600 mb-3">{producto.descripcion}</p>
 
-                        <div className="space-y-2 mb-4">
-                          <div className="flex justify-between">
-                            <span className="text-sm">Precio USD:</span>
-                            <span className="font-semibold">${producto.precioUsd}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-sm">Precio VES:</span>
-                            <span className="font-semibold">Bs. {producto.precioVes.toLocaleString()}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-sm">Pago mensual:</span>
-                            <span className="font-semibold">${pagoMensual}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-sm">Duración:</span>
-                            <span className="font-semibold">{producto.tiempoDuracion} meses</span>
+                        <div className="space-y-3 mb-4">
+                          <SimplePriceDisplay vesPrice={producto.precioVes} usdPrice={producto.precioUsd} />
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-medium text-gray-700">Duración del plan:</span>
+                            <span className="font-semibold text-purple-600">{producto.tiempoDuracion} meses</span>
                           </div>
                         </div>
 
@@ -438,22 +406,11 @@ const UserDashboard = () => {
                         </div>
                         <p className="text-gray-600 mb-3">{producto.descripcion}</p>
 
-                        <div className="space-y-2 mb-4">
-                          <div className="flex justify-between">
-                            <span className="text-sm">Precio USD:</span>
-                            <span className="font-semibold">${producto.precioUsd}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-sm">Precio VES:</span>
-                            <span className="font-semibold">Bs. {producto.precioVes.toLocaleString()}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-sm">Pago mensual:</span>
-                            <span className="font-semibold">${pagoMensual}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-sm">Duración:</span>
-                            <span className="font-semibold">{producto.tiempoDuracion} meses</span>
+                        <div className="space-y-3 mb-4">
+                          <SimplePriceDisplay vesPrice={producto.precioVes} usdPrice={producto.precioUsd} />
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-medium text-gray-700">Duración del plan:</span>
+                            <span className="font-semibold text-purple-600">{producto.tiempoDuracion} meses</span>
                           </div>
                         </div>
 
@@ -487,22 +444,11 @@ const UserDashboard = () => {
                         </div>
                         <p className="text-gray-600 mb-3">{producto.descripcion}</p>
 
-                        <div className="space-y-2 mb-4">
-                          <div className="flex justify-between">
-                            <span className="text-sm">Precio USD:</span>
-                            <span className="font-semibold">${producto.precioUsd}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-sm">Precio VES:</span>
-                            <span className="font-semibold">Bs. {producto.precioVes.toLocaleString()}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-sm">Pago mensual:</span>
-                            <span className="font-semibold">${pagoMensual}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-sm">Duración:</span>
-                            <span className="font-semibold">{producto.tiempoDuracion} meses</span>
+                        <div className="space-y-3 mb-4">
+                          <SimplePriceDisplay vesPrice={producto.precioVes} usdPrice={producto.precioUsd} />
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-medium text-gray-700">Duración del plan:</span>
+                            <span className="font-semibold text-purple-600">{producto.tiempoDuracion} meses</span>
                           </div>
                         </div>
 
@@ -536,22 +482,11 @@ const UserDashboard = () => {
                         </div>
                         <p className="text-gray-600 mb-3">{producto.descripcion}</p>
 
-                        <div className="space-y-2 mb-4">
-                          <div className="flex justify-between">
-                            <span className="text-sm">Precio USD:</span>
-                            <span className="font-semibold">${producto.precioUsd}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-sm">Precio VES:</span>
-                            <span className="font-semibold">Bs. {producto.precioVes.toLocaleString()}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-sm">Pago mensual:</span>
-                            <span className="font-semibold">${pagoMensual}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-sm">Duración:</span>
-                            <span className="font-semibold">{producto.tiempoDuracion} meses</span>
+                        <div className="space-y-3 mb-4">
+                          <SimplePriceDisplay vesPrice={producto.precioVes} usdPrice={producto.precioUsd} />
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-medium text-gray-700">Duración del plan:</span>
+                            <span className="font-semibold text-purple-600">{producto.tiempoDuracion} meses</span>
                           </div>
                         </div>
 
