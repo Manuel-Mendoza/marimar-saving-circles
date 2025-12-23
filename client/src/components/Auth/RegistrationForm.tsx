@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff, CheckCircle } from 'lucide-react';
 
 interface RegistrationFormProps {
   onBack: () => void;
@@ -25,6 +25,7 @@ const RegistrationForm = ({ onBack }: RegistrationFormProps) => {
   const [imagenCedula, setImagenCedula] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -63,8 +64,9 @@ const RegistrationForm = ({ onBack }: RegistrationFormProps) => {
       const data = await response.json();
 
       if (data.success) {
-        // Auto-login después del registro
-        await login(formData.correoElectronico, formData.password);
+        // Mostrar mensaje de éxito - cuenta creada y pendiente de aprobación
+        setSuccessMessage('¡Cuenta creada exitosamente! Su registro está pendiente de aprobación por un administrador. Recibirá una notificación cuando sea aprobado.');
+        setError('');
       } else {
         setError(data.message || 'Error al registrar usuario');
       }
@@ -232,13 +234,33 @@ const RegistrationForm = ({ onBack }: RegistrationFormProps) => {
               </div>
             )}
 
-            <Button
-              type="submit"
-              className="w-full bg-green-600 hover:bg-green-700"
-              disabled={isLoading}
-            >
-              {isLoading ? 'Creando cuenta...' : 'Crear Cuenta'}
-            </Button>
+            {successMessage && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  <span className="text-green-800 font-semibold">¡Registro Exitoso!</span>
+                </div>
+                <p className="text-green-700 text-sm">
+                  {successMessage}
+                </p>
+                <Button
+                  onClick={onBack}
+                  className="mt-4 bg-blue-600 hover:bg-blue-700"
+                >
+                  Ir al Login
+                </Button>
+              </div>
+            )}
+
+            {!successMessage && (
+              <Button
+                type="submit"
+                className="w-full bg-green-600 hover:bg-green-700"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Creando cuenta...' : 'Crear Cuenta'}
+              </Button>
+            )}
           </form>
         </CardContent>
       </Card>
