@@ -30,11 +30,14 @@ auth.post('/login', async (c) => {
     const body = await c.req.json();
     const { correoElectronico, password } = loginSchema.parse(body);
 
+    // Convertir email a minúsculas para búsqueda case-insensitive
+    const emailLower = correoElectronico.toLowerCase();
+
     // Buscar usuario por email
     const [user] = await db
       .select()
       .from(users)
-      .where(eq(users.correoElectronico, correoElectronico))
+      .where(eq(users.correoElectronico, emailLower))
       .limit(1);
 
     if (!user) {
@@ -124,11 +127,14 @@ auth.post('/register', async (c) => {
     // Validar datos
     const validatedData = registerSchema.parse(userData);
 
+    // Convertir email a minúsculas para consistencia
+    const emailLower = validatedData.correoElectronico.toLowerCase();
+
     // Verificar si el email ya existe
     const [existingUser] = await db
       .select()
       .from(users)
-      .where(eq(users.correoElectronico, validatedData.correoElectronico))
+      .where(eq(users.correoElectronico, emailLower))
       .limit(1);
 
     if (existingUser) {
@@ -226,7 +232,7 @@ auth.post('/register', async (c) => {
         cedula: validatedData.cedula,
         telefono: validatedData.telefono,
         direccion: validatedData.direccion,
-        correoElectronico: validatedData.correoElectronico,
+        correoElectronico: emailLower,
         password: hashedPassword,
         tipo: 'USUARIO', // Por defecto todos los registros son usuarios
         imagenCedula: imageUrl
