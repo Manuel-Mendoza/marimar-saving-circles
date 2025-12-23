@@ -16,7 +16,7 @@ interface User {
   direccion: string;
   correoElectronico: string;
   tipo: 'USUARIO' | 'ADMINISTRADOR';
-  estado: 'PENDIENTE' | 'APROBADO' | 'RECHAZADO';
+  estado: 'PENDIENTE' | 'APROBADO' | 'RECHAZADO' | 'SUSPENDIDO' | 'REACTIVADO';
   imagenCedula?: string;
   fechaRegistro: Date;
   ultimoAcceso?: Date;
@@ -103,11 +103,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
           if (response.success && response.data) {
             const currentUser = response.data.user;
-            // Verificar que el usuario esté aprobado
-            if (currentUser.estado === 'APROBADO') {
+            // Verificar que el usuario esté aprobado o reactivado (no suspendido, rechazado o pendiente)
+            if (currentUser.estado === 'APROBADO' || currentUser.estado === 'REACTIVADO') {
               setUser(currentUser);
             } else {
-              // Usuario no aprobado, limpiar datos
+              // Usuario no aprobado, suspendido o pendiente, limpiar datos y forzar logout
               localStorage.removeItem("auth_token");
               localStorage.removeItem("sanmarimar_user");
               setUser(null);

@@ -127,6 +127,26 @@ class ApiClient {
       body: JSON.stringify({ action: 'reject' }),
     });
   }
+
+  async suspendUser(userId: number) {
+    return this.request<{ user: any }>(`/users/${userId}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ action: 'suspend' }),
+    });
+  }
+
+  async reactivateUser(userId: number) {
+    return this.request<{ user: any }>(`/users/${userId}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ action: 'reactivate' }),
+    });
+  }
+
+  async deleteUser(userId: number) {
+    return this.request(`/users/${userId}`, {
+      method: 'DELETE',
+    });
+  }
 }
 
 export const apiClient = new ApiClient(API_BASE_URL);

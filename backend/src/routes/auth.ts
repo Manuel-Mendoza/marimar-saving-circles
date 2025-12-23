@@ -58,12 +58,15 @@ auth.post('/login', async (c) => {
     }
 
     // Verificar estado de aprobación
-    if (user.estado !== 'APROBADO') {
+    if (user.estado !== 'APROBADO' && user.estado !== 'REACTIVADO') {
+      const messages = {
+        'PENDIENTE': 'Tu cuenta está pendiente de aprobación por un administrador',
+        'RECHAZADO': 'Tu cuenta ha sido rechazada',
+        'SUSPENDIDO': 'Tu cuenta ha sido suspendida temporalmente'
+      };
       return c.json({
         success: false,
-        message: user.estado === 'PENDIENTE'
-          ? 'Tu cuenta está pendiente de aprobación por un administrador'
-          : 'Tu cuenta ha sido rechazada'
+        message: messages[user.estado as keyof typeof messages] || 'Tu cuenta no tiene acceso autorizado'
       }, 403);
     }
 

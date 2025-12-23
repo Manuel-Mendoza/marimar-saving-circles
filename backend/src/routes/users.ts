@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, or } from 'drizzle-orm';
 import { users } from '../db/tables/users.js';
 import { db } from '../config/database.js';
 import { authenticate } from '../middleware/auth.js';
@@ -98,7 +98,7 @@ usersRoute.get('/pending', authenticate, async (c) => {
   }
 });
 
-// Approve or reject user - Admin only
+// Approve, reject, suspend or reactivate user - Admin only
 usersRoute.put('/:id/status', authenticate, async (c) => {
   try {
     const userPayload = c.get('user') as any;
@@ -112,16 +112,44 @@ usersRoute.put('/:id/status', authenticate, async (c) => {
     }
 
     const body = await c.req.json();
-    const { action } = body; // 'approve' or 'reject'
+    const { action } = body; // 'approve', 'reject', 'suspend', or 'reactivate'
 
-    if (!['approve', 'reject'].includes(action)) {
+    if (!['approve', 'reject', 'suspend', 'reactivate'].includes(action)) {
       return c.json({
         success: false,
         message: 'Acción inválida'
       }, 400);
     }
 
-    const status = action === 'approve' ? 'APROBADO' : 'RECHAZADO';
+    let status: string;
+    let whereCondition: any;
+
+    switch (action) {
+      case 'approve':
+        status = 'APROBADO';
+        whereCondition = and(eq(users.id, userId), eq(users.estado, 'PENDIENTE'));
+        break;
+      case 'reject':
+        status = 'RECHAZADO';
+        whereCondition = and(eq(users.id, userId), eq(users.estado, 'PENDIENTE'));
+        break;
+      case 'suspend':
+        status = 'SUSPENDIDO';
+        whereCondition = and(
+          eq(users.id, userId),
+          or(eq(users.estado, 'APROBADO'), eq(users.estado, 'REACTIVADO'))
+        );
+        break;
+      case 'reactivate':
+        status = 'REACTIVADO';
+        whereCondition = and(eq(users.id, userId), eq(users.estado, 'SUSPENDIDO'));
+        break;
+      default:
+        return c.json({
+          success: false,
+          message: 'Acción inválida'
+        }, 400);
+    }
 
     const updatedUsers = await db
       .update(users)
@@ -130,10 +158,7 @@ usersRoute.put('/:id/status', authenticate, async (c) => {
         aprobadoPor: userPayload.id,
         fechaAprobacion: new Date()
       })
-      .where(and(
-        eq(users.id, userId),
-        eq(users.estado, 'PENDIENTE')
-      ))
+      .where(whereCondition)
       .returning();
 
     if (updatedUsers.length === 0) {
@@ -143,9 +168,13 @@ usersRoute.put('/:id/status', authenticate, async (c) => {
       }, 404);
     }
 
+    const actionText = action === 'approve' ? 'aprobado' :
+                      action === 'reject' ? 'rechazado' :
+                      action === 'suspend' ? 'suspendido' : 'reactivado';
+
     return c.json({
       success: true,
-      message: `Usuario ${action === 'approve' ? 'aprobado' : 'rechazado'} exitosamente`,
+      message: `Usuario ${actionText} exitosamente`,
       data: {
         user: updatedUsers[0]
       }
@@ -210,6 +239,59 @@ usersRoute.get('/:id', authenticate, async (c) => {
 
   } catch (error) {
     console.error('Error obteniendo usuario:', error);
+    return c.json({
+      success: false,
+      message: 'Error interno del servidor'
+    }, 500);
+  }
+});
+
+// Delete user - Admin only
+usersRoute.delete('/:id', authenticate, async (c) => {
+  try {
+    const userPayload = c.get('user') as any;
+    const userId = parseInt(c.req.param('id'));
+
+    if (userPayload.tipo !== 'ADMINISTRADOR') {
+      return c.json({
+        success: false,
+        message: 'Acceso denegado'
+      }, 403);
+    }
+
+    // Don't allow deleting admin users
+    const [userToDelete] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    if (!userToDelete) {
+      return c.json({
+        success: false,
+        message: 'Usuario no encontrado'
+      }, 404);
+    }
+
+    if (userToDelete.tipo === 'ADMINISTRADOR') {
+      return c.json({
+        success: false,
+        message: 'No se pueden eliminar usuarios administradores'
+      }, 403);
+    }
+
+    // Delete the user
+    await db
+      .delete(users)
+      .where(eq(users.id, userId));
+
+    return c.json({
+      success: true,
+      message: 'Usuario eliminado exitosamente'
+    });
+
+  } catch (error) {
+    console.error('Error eliminando usuario:', error);
     return c.json({
       success: false,
       message: 'Error interno del servidor'

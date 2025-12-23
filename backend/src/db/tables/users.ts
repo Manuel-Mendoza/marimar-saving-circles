@@ -11,7 +11,7 @@ export const users = pgTable('users', {
   correoElectronico: text('correo_electronico').notNull().unique(),
   password: text('password').notNull(),
   tipo: text('tipo').notNull().default('USUARIO'),
-  estado: text('estado').notNull().default('PENDIENTE'), // PENDIENTE, APROBADO, RECHAZADO
+  estado: text('estado').notNull().default('PENDIENTE'), // PENDIENTE, APROBADO, RECHAZADO, SUSPENDIDO, REACTIVADO
   imagenCedula: text('imagen_cedula'),
   fechaRegistro: timestamp('fecha_registro').notNull().defaultNow(),
   ultimoAcceso: timestamp('ultimo_acceso'),
