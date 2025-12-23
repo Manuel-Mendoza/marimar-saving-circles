@@ -26,7 +26,7 @@ const LandingPage = ({ onGetStarted }: LandingPageProps) => {
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-16 text-center">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-5xl font-bold text-gray-900 mb-6">
+          <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-6">
             Ahorro Colaborativo <span className="text-blue-600">Inteligente</span>
           </h2>
           <p className="text-xl text-gray-600 mb-8 leading-relaxed">

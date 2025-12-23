@@ -5,7 +5,36 @@ import { useAppState } from '@/contexts/AppStateContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Users, Package, CheckCircle, Clock, UserCheck, UserX, AlertCircle, Eye } from 'lucide-react';
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarProvider,
+  SidebarInset,
+  SidebarTrigger,
+} from '@/components/ui/sidebar';
+import { Separator } from '@/components/ui/separator';
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from '@/components/ui/chart';
+import {
+  Bar,
+  BarChart,
+  Line,
+  LineChart,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  ResponsiveContainer
+} from 'recharts';
+import { Users, Package, CheckCircle, Clock, UserCheck, UserX, AlertCircle, Eye, LayoutDashboard, Settings, BarChart3, TrendingUp } from 'lucide-react';
+import { apiClient } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
 
 interface PendingUser {
   id: number;
@@ -20,51 +49,39 @@ interface PendingUser {
   fechaRegistro: Date;
 }
 
+type ActiveView = 'dashboard' | 'approvals' | 'groups' | 'products' | 'reports';
+
 const AdminDashboard = () => {
   const { user } = useAuth();
   const { grupos, productos } = useAppState();
+  const { toast } = useToast();
+  const [activeView, setActiveView] = useState<ActiveView>('dashboard');
   const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingUser, setProcessingUser] = useState<number | null>(null);
 
   // Cargar usuarios pendientes
   useEffect(() => {
-    fetchPendingUsers();
-  }, []);
+    if (activeView === 'approvals' || activeView === 'dashboard') {
+      fetchPendingUsers();
+    }
+  }, [activeView]);
 
   const fetchPendingUsers = async () => {
     try {
-      // TODO: Implementar llamada a API real
-      // const response = await apiClient.getPendingUsers();
-      // setPendingUsers(response.data.users);
-
-      // Mock data por ahora
-      setPendingUsers([
-        {
-          id: 2,
-          nombre: 'María',
-          apellido: 'González',
-          cedula: '12345678',
-          telefono: '+58424123456',
-          correoElectronico: 'maria@example.com',
-          tipo: 'USUARIO',
-          estado: 'PENDIENTE',
-          fechaRegistro: new Date('2025-12-20')
-        },
-        {
-          id: 3,
-          nombre: 'Carlos',
-          apellido: 'Rodríguez',
-          cedula: '87654321',
-          telefono: '+58424567890',
-          correoElectronico: 'carlos@example.com',
-          tipo: 'USUARIO',
-          estado: 'PENDIENTE',
-          fechaRegistro: new Date('2025-12-21')
-        }
-      ]);
+      const response = await apiClient.getPendingUsers();
+      if (response.success && response.data) {
+        // Convertir fechaRegistro strings a Date objects
+        const usersWithDates = response.data.users.map((user: any) => ({
+          ...user,
+          fechaRegistro: new Date(user.fechaRegistro)
+        }));
+        setPendingUsers(usersWithDates);
+      }
     } catch (error) {
       console.error('Error cargando usuarios pendientes:', error);
+      // En caso de error, mantener lista vacía
+      setPendingUsers([]);
     } finally {
       setLoading(false);
     }
@@ -73,14 +90,22 @@ const AdminDashboard = () => {
   const handleApproveUser = async (userId: number) => {
     setProcessingUser(userId);
     try {
-      // TODO: Implementar llamada a API real
-      // await apiClient.approveUser(userId, 'approve');
-
-      // Mock update
-      setPendingUsers(prev => prev.filter(u => u.id !== userId));
-      console.log(`Usuario ${userId} aprobado`);
-    } catch (error) {
+      const response = await apiClient.approveUser(userId);
+      if (response.success) {
+        // Remover usuario de la lista de pendientes
+        setPendingUsers(prev => prev.filter(u => u.id !== userId));
+        toast({
+          title: "Usuario aprobado",
+          description: "El usuario ha sido aprobado exitosamente y ahora puede acceder al sistema.",
+        });
+      }
+    } catch (error: any) {
       console.error('Error aprobando usuario:', error);
+      toast({
+        title: "Error al aprobar usuario",
+        description: error.message || "No se pudo aprobar al usuario. Inténtalo de nuevo.",
+        variant: "destructive",
+      });
     } finally {
       setProcessingUser(null);
     }
@@ -89,21 +114,54 @@ const AdminDashboard = () => {
   const handleRejectUser = async (userId: number) => {
     setProcessingUser(userId);
     try {
-      // TODO: Implementar llamada a API real
-      // await apiClient.approveUser(userId, 'reject');
-
-      // Mock update
-      setPendingUsers(prev => prev.filter(u => u.id !== userId));
-      console.log(`Usuario ${userId} rechazado`);
-    } catch (error) {
+      const response = await apiClient.rejectUser(userId);
+      if (response.success) {
+        // Remover usuario de la lista de pendientes
+        setPendingUsers(prev => prev.filter(u => u.id !== userId));
+        toast({
+          title: "Usuario rechazado",
+          description: "El usuario ha sido rechazado y no podrá acceder al sistema.",
+        });
+      }
+    } catch (error: any) {
       console.error('Error rechazando usuario:', error);
+      toast({
+        title: "Error al rechazar usuario",
+        description: error.message || "No se pudo rechazar al usuario. Inténtalo de nuevo.",
+        variant: "destructive",
+      });
     } finally {
       setProcessingUser(null);
     }
   };
 
-  return (
-    <div className="container mx-auto px-4 py-8 space-y-6">
+  // Datos para la gráfica (mock data)
+  const chartData = [
+    { month: 'Ene', usuarios: 12, contribuciones: 2450, grupos: 3 },
+    { month: 'Feb', usuarios: 19, contribuciones: 3200, grupos: 5 },
+    { month: 'Mar', usuarios: 28, contribuciones: 4100, grupos: 7 },
+    { month: 'Abr', usuarios: 35, contribuciones: 5800, grupos: 9 },
+    { month: 'May', usuarios: 42, contribuciones: 7200, grupos: 11 },
+    { month: 'Jun', usuarios: 51, contribuciones: 8900, grupos: 13 },
+  ];
+
+  const chartConfig = {
+    usuarios: {
+      label: 'Nuevos Usuarios',
+      color: 'hsl(var(--chart-1))',
+    },
+    contribuciones: {
+      label: 'Contribuciones ($)',
+      color: 'hsl(var(--chart-2))',
+    },
+    grupos: {
+      label: 'Grupos Activos',
+      color: 'hsl(var(--chart-3))',
+    },
+  };
+
+  const renderDashboardView = () => (
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">
@@ -170,7 +228,84 @@ const AdminDashboard = () => {
         </Card>
       </div>
 
-      {/* Usuarios Pendientes de Aprobación */}
+      {/* Gráfica de crecimiento */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-blue-600" />
+            Crecimiento del Sistema
+          </CardTitle>
+          <CardDescription>
+            Estadísticas mensuales de usuarios, contribuciones y grupos activos
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+        <ChartContainer config={chartConfig} className="h-[300px] w-full">
+            <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" />
+              <YAxis />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Bar dataKey="usuarios" fill="var(--color-usuarios)" radius={4} />
+              <Bar dataKey="contribuciones" fill="var(--color-contribuciones)" radius={4} />
+              <Bar dataKey="grupos" fill="var(--color-grupos)" radius={4} />
+            </BarChart>
+          </ChartContainer>
+        </CardContent>
+      </Card>
+
+      {/* Resumen de métricas */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Crecimiento Mensual</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">+19%</div>
+            <p className="text-sm text-muted-foreground">
+              Más usuarios que el mes anterior
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Contribuciones Totales</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">$31,650</div>
+            <p className="text-sm text-muted-foreground">
+              Acumuladas en los últimos 6 meses
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Grupos Creados</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-purple-600">48</div>
+            <p className="text-sm text-muted-foreground">
+              Grupos activos en total
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+
+  const renderApprovalsView = () => (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">
+          Aprobación de Usuarios
+        </h1>
+        <p className="text-gray-600 mt-1">
+          Gestiona las solicitudes de registro de nuevos usuarios
+        </p>
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -244,8 +379,20 @@ const AdminDashboard = () => {
           )}
         </CardContent>
       </Card>
+    </div>
+  );
 
-      {/* Grupos Activos */}
+  const renderGroupsView = () => (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">
+          Gestión de Grupos
+        </h1>
+        <p className="text-gray-600 mt-1">
+          Administra los grupos de ahorro colaborativo
+        </p>
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle>Grupos Activos</CardTitle>
@@ -283,6 +430,100 @@ const AdminDashboard = () => {
         </CardContent>
       </Card>
     </div>
+  );
+
+  const renderContent = () => {
+    switch (activeView) {
+      case 'dashboard':
+        return renderDashboardView();
+      case 'approvals':
+        return renderApprovalsView();
+      case 'groups':
+        return renderGroupsView();
+      case 'products':
+        return <div className="p-8 text-center text-gray-500">Vista de productos en desarrollo</div>;
+      case 'reports':
+        return <div className="p-8 text-center text-gray-500">Vista de reportes en desarrollo</div>;
+      default:
+        return renderDashboardView();
+    }
+  };
+
+  return (
+    <SidebarProvider>
+      <Sidebar>
+        <SidebarHeader className="p-4">
+          <h2 className="text-lg font-semibold">Admin Panel</h2>
+          <p className="text-sm text-gray-500">Marimar Saving Circles</p>
+        </SidebarHeader>
+        <SidebarContent>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                isActive={activeView === 'dashboard'}
+                onClick={() => setActiveView('dashboard')}
+              >
+                <LayoutDashboard className="h-4 w-4" />
+                Dashboard
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                isActive={activeView === 'approvals'}
+                onClick={() => setActiveView('approvals')}
+              >
+                <UserCheck className="h-4 w-4" />
+                Aprobaciones
+                {pendingUsers.length > 0 && (
+                  <Badge variant="destructive" className="ml-auto">
+                    {pendingUsers.length}
+                  </Badge>
+                )}
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                isActive={activeView === 'groups'}
+                onClick={() => setActiveView('groups')}
+              >
+                <Users className="h-4 w-4" />
+                Grupos
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                isActive={activeView === 'products'}
+                onClick={() => setActiveView('products')}
+              >
+                <Package className="h-4 w-4" />
+                Productos
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                isActive={activeView === 'reports'}
+                onClick={() => setActiveView('reports')}
+              >
+                <BarChart3 className="h-4 w-4" />
+                Reportes
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarContent>
+      </Sidebar>
+      <SidebarInset>
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+          <SidebarTrigger className="-ml-1" />
+          <Separator orientation="vertical" className="mr-2 h-4" />
+          <div className="flex items-center gap-2">
+            <h1 className="text-lg font-semibold">Panel de Administración</h1>
+          </div>
+        </header>
+        <div className="flex-1 p-6">
+          {renderContent()}
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 };
 

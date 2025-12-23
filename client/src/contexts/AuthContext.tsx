@@ -95,17 +95,26 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       if (token && savedUser) {
         try {
-          // Verificar que el token sea válido haciendo una llamada a /me
+          // Verificar que el token sea válido y el usuario esté aprobado
           const response = await apiClient.getCurrentUser();
           if (response.success && response.data) {
-            setUser(response.data.user);
+            const currentUser = response.data.user;
+            // Verificar que el usuario esté aprobado
+            if (currentUser.estado === 'APROBADO') {
+              setUser(currentUser);
+            } else {
+              // Usuario no aprobado, limpiar datos
+              localStorage.removeItem("auth_token");
+              localStorage.removeItem("sanmarimar_user");
+              setUser(null);
+            }
           } else {
             // Token inválido, limpiar
             localStorage.removeItem("auth_token");
             localStorage.removeItem("sanmarimar_user");
           }
         } catch (error) {
-          // Token inválido, limpiar
+          // Token inválido o error, limpiar
           localStorage.removeItem("auth_token");
           localStorage.removeItem("sanmarimar_user");
         }

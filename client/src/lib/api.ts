@@ -104,6 +104,25 @@ class ApiClient {
   async getCurrentUser() {
     return this.request<{ user: any }>('/auth/me');
   }
+
+  // User management endpoints (Admin only)
+  async getPendingUsers() {
+    return this.request<{ users: any[] }>('/users/pending');
+  }
+
+  async approveUser(userId: number) {
+    return this.request<{ user: any }>(`/users/${userId}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ action: 'approve' }),
+    });
+  }
+
+  async rejectUser(userId: number) {
+    return this.request<{ user: any }>(`/users/${userId}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ action: 'reject' }),
+    });
+  }
 }
 
 export const apiClient = new ApiClient(API_BASE_URL);

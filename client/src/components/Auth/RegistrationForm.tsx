@@ -81,7 +81,7 @@ const RegistrationForm = ({ onBack }: RegistrationFormProps) => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-100 p-4">
-      <Card className="w-full max-w-lg shadow-xl">
+      <Card className="w-full max-w-md shadow-xl">
         <CardHeader>
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="sm" onClick={onBack}>
@@ -100,7 +100,7 @@ const RegistrationForm = ({ onBack }: RegistrationFormProps) => {
         
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="nombre">Nombre *</Label>
                 <Input
