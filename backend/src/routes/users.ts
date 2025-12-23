@@ -112,7 +112,7 @@ usersRoute.put('/:id/status', authenticate, async (c) => {
     }
 
     const body = await c.req.json();
-    const { action } = body; // 'approve', 'reject', 'suspend', or 'reactivate'
+    const { action, reason } = body; // 'approve', 'reject', 'suspend', or 'reactivate', and optional reason
 
     if (!['approve', 'reject', 'suspend', 'reactivate'].includes(action)) {
       return c.json({
@@ -151,13 +151,20 @@ usersRoute.put('/:id/status', authenticate, async (c) => {
         }, 400);
     }
 
+    let updateData: any = {
+      estado: status,
+      aprobadoPor: userPayload.id,
+      fechaAprobacion: new Date()
+    };
+
+    // Add reason for reject action
+    if (action === 'reject' && reason) {
+      updateData.motivo = reason;
+    }
+
     const updatedUsers = await db
       .update(users)
-      .set({
-        estado: status,
-        aprobadoPor: userPayload.id,
-        fechaAprobacion: new Date()
-      })
+      .set(updateData)
       .where(whereCondition)
       .returning();
 
@@ -259,6 +266,9 @@ usersRoute.delete('/:id', authenticate, async (c) => {
       }, 403);
     }
 
+    const body = await c.req.json();
+    const { reason } = body; // Optional reason for deletion
+
     // Don't allow deleting admin users
     const [userToDelete] = await db
       .select()
@@ -279,6 +289,16 @@ usersRoute.delete('/:id', authenticate, async (c) => {
         message: 'No se pueden eliminar usuarios administradores'
       }, 403);
     }
+
+    // Update the user with deletion reason before deleting (for audit purposes)
+    await db
+      .update(users)
+      .set({
+        motivo: reason,
+        aprobadoPor: userPayload.id,
+        fechaAprobacion: new Date()
+      })
+      .where(eq(users.id, userId));
 
     // Delete the user
     await db

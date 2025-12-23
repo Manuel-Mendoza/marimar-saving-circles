@@ -110,6 +110,8 @@ const AdminDashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [userToDelete, setUserToDelete] = useState<any>(null);
+  const [userToReject, setUserToReject] = useState<any>(null);
+  const [reason, setReason] = useState("");
 
   // Cargar usuarios pendientes
   useEffect(() => {
@@ -421,6 +423,89 @@ const AdminDashboard = () => {
 
   const closeDeleteDialog = () => {
     setUserToDelete(null);
+    setReason("");
+  };
+
+  const openRejectDialog = (user: any) => {
+    setUserToReject(user);
+    setReason("");
+  };
+
+  const closeRejectDialog = () => {
+    setUserToReject(null);
+    setReason("");
+  };
+
+  const handleRejectUserWithReason = async () => {
+    if (!userToReject || !reason.trim()) return;
+
+    setProcessingUser(userToReject.id);
+    try {
+      const response = await apiClient.rejectUser(userToReject.id, reason.trim());
+      if (response.success) {
+        setPendingUsers((prev) => prev.filter((u) => u.id !== userToReject.id));
+        setAllUsers((prev) =>
+          prev.map((user) =>
+            user.id === userToReject.id
+              ? { ...user, estado: "RECHAZADO", fechaAprobacion: new Date() }
+              : user
+          )
+        );
+        closeRejectDialog();
+        toast({
+          title: "Usuario rechazado",
+          description: "El usuario ha sido rechazado y no podrá acceder al sistema.",
+        });
+      }
+    } catch (error: any) {
+      console.error("Error rechazando usuario:", error);
+      const errorMessage = error.message?.includes("ya procesado") || error.message?.includes("no encontrado")
+        ? "Este usuario ya ha sido procesado anteriormente o no existe."
+        : error.message || "No se pudo rechazar al usuario. Inténtalo de nuevo.";
+
+      fetchPendingUsers();
+      fetchAllUsers();
+
+      toast({
+        title: "Error al rechazar usuario",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setProcessingUser(null);
+    }
+  };
+
+  const handleDeleteUserWithReason = async () => {
+    if (!userToDelete || !reason.trim()) return;
+
+    setProcessingUser(userToDelete.id);
+    try {
+      const response = await apiClient.deleteUser(userToDelete.id, reason.trim());
+      if (response.success) {
+        setAllUsers((prev) => prev.filter((user) => user.id !== userToDelete.id));
+        closeDeleteDialog();
+        toast({
+          title: "Usuario eliminado",
+          description: "El usuario ha sido eliminado permanentemente del sistema.",
+        });
+      }
+    } catch (error: any) {
+      console.error("Error eliminando usuario:", error);
+      const errorMessage = error.message?.includes("no encontrado")
+        ? "Este usuario ya no existe."
+        : error.message || "No se pudo eliminar al usuario. Inténtalo de nuevo.";
+
+      fetchAllUsers();
+
+      toast({
+        title: "Error al eliminar usuario",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setProcessingUser(null);
+    }
   };
 
   const chartData = [
@@ -644,7 +729,7 @@ const AdminDashboard = () => {
                       {processingUser === pendingUser.id ? "Procesando..." : "Aprobar"}
                     </Button>
                     <Button
-                      onClick={() => handleRejectUser(pendingUser.id)}
+                      onClick={() => openRejectDialog(pendingUser)}
                       disabled={processingUser === pendingUser.id}
                       variant="destructive"
                       size="sm"
@@ -982,6 +1067,75 @@ const AdminDashboard = () => {
 
   return (
     <>
+      {/* Reject User Dialog */}
+      <Dialog open={!!userToReject} onOpenChange={(open) => !open && closeRejectDialog()}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <UserX className="h-5 w-5" />
+              Rechazar Usuario
+            </DialogTitle>
+            <DialogDescription>
+              Proporciona una exposición de motivos para rechazar a este usuario.
+              Esta acción no se puede deshacer.
+            </DialogDescription>
+          </DialogHeader>
+
+          {userToReject && (
+            <div className="py-4">
+              <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg mb-4">
+                <div className="flex-1">
+                  <h4 className="font-semibold">{userToReject.nombre} {userToReject.apellido}</h4>
+                  <p className="text-sm text-gray-600">{userToReject.correoElectronico}</p>
+                  <p className="text-sm text-gray-600">Cédula: {userToReject.cedula}</p>
+                </div>
+                <Badge variant="secondary">
+                  Pendiente
+                </Badge>
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="reason" className="text-sm font-medium">
+                  Exposición de Motivos <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  id="reason"
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  placeholder="Describe las razones para rechazar a este usuario..."
+                  className="w-full min-h-[100px] p-3 border rounded-md resize-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                  required
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={closeRejectDialog} disabled={processingUser === userToReject?.id}>
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleRejectUserWithReason}
+              disabled={processingUser === userToReject?.id || !reason.trim()}
+            >
+              {processingUser === userToReject?.id ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Rechazando...
+                </>
+              ) : (
+                <>
+                  <UserX className="h-4 w-4 mr-2" />
+                  Rechazar Usuario
+                </>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete User Dialog */}
       <Dialog open={!!userToDelete} onOpenChange={(open) => !open && closeDeleteDialog()}>
         <DialogContent>
           <DialogHeader>
@@ -990,14 +1144,14 @@ const AdminDashboard = () => {
               Confirmar Eliminación
             </DialogTitle>
             <DialogDescription>
-              ¿Estás seguro de que quieres eliminar permanentemente a este usuario?
+              Proporciona una exposición de motivos para eliminar permanentemente a este usuario.
               Esta acción no se puede deshacer.
             </DialogDescription>
           </DialogHeader>
 
           {userToDelete && (
             <div className="py-4">
-              <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg mb-4">
                 <div className="flex-1">
                   <h4 className="font-semibold">{userToDelete.nombre} {userToDelete.apellido}</h4>
                   <p className="text-sm text-gray-600">{userToDelete.correoElectronico}</p>
@@ -1006,6 +1160,20 @@ const AdminDashboard = () => {
                 <Badge variant="outline" className="border-orange-500 text-orange-700 bg-orange-50">
                   Suspendido
                 </Badge>
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="delete-reason" className="text-sm font-medium">
+                  Exposición de Motivos <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  id="delete-reason"
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  placeholder="Describe las razones para eliminar permanentemente a este usuario..."
+                  className="w-full min-h-[100px] p-3 border rounded-md resize-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                  required
+                />
               </div>
             </div>
           )}
@@ -1016,8 +1184,8 @@ const AdminDashboard = () => {
             </Button>
             <Button
               variant="destructive"
-              onClick={handleDeleteUser}
-              disabled={processingUser === userToDelete?.id}
+              onClick={handleDeleteUserWithReason}
+              disabled={processingUser === userToDelete?.id || !reason.trim()}
             >
               {processingUser === userToDelete?.id ? (
                 <>

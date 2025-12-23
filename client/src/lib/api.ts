@@ -121,10 +121,10 @@ class ApiClient {
     });
   }
 
-  async rejectUser(userId: number) {
+  async rejectUser(userId: number, reason?: string) {
     return this.request<{ user: any }>(`/users/${userId}/status`, {
       method: 'PUT',
-      body: JSON.stringify({ action: 'reject' }),
+      body: JSON.stringify({ action: 'reject', reason }),
     });
   }
 
@@ -142,9 +142,10 @@ class ApiClient {
     });
   }
 
-  async deleteUser(userId: number) {
+  async deleteUser(userId: number, reason?: string) {
     return this.request(`/users/${userId}`, {
       method: 'DELETE',
+      body: JSON.stringify({ reason }),
     });
   }
 }

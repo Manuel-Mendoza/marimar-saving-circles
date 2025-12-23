@@ -17,6 +17,7 @@ export const users = pgTable('users', {
   ultimoAcceso: timestamp('ultimo_acceso'),
   aprobadoPor: integer('aprobado_por'), // ID del admin que aprobó
   fechaAprobacion: timestamp('fecha_aprobacion'),
+  motivo: text('motivo'), // Razón del rechazo o eliminación
 });
 
 // Types
