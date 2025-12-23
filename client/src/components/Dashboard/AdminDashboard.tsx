@@ -1,18 +1,106 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAppState } from '@/contexts/AppStateContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, Package, CheckCircle, Clock, Dice6 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Users, Package, CheckCircle, Clock, UserCheck, UserX, AlertCircle, Eye } from 'lucide-react';
+
+interface PendingUser {
+  id: number;
+  nombre: string;
+  apellido: string;
+  cedula: string;
+  telefono: string;
+  correoElectronico: string;
+  tipo: 'USUARIO' | 'ADMINISTRADOR';
+  estado: 'PENDIENTE' | 'APROBADO' | 'RECHAZADO';
+  imagenCedula?: string;
+  fechaRegistro: Date;
+}
 
 const AdminDashboard = () => {
   const { user } = useAuth();
   const { grupos, productos } = useAppState();
+  const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [processingUser, setProcessingUser] = useState<number | null>(null);
 
-  const gruposSinCompletar = grupos.filter(g => g.estado === 'sin-completar');
-  const gruposLlenos = grupos.filter(g => g.estado === 'lleno');
-  const gruposEnMarcha = grupos.filter(g => g.estado === 'en-marcha');
+  // Cargar usuarios pendientes
+  useEffect(() => {
+    fetchPendingUsers();
+  }, []);
+
+  const fetchPendingUsers = async () => {
+    try {
+      // TODO: Implementar llamada a API real
+      // const response = await apiClient.getPendingUsers();
+      // setPendingUsers(response.data.users);
+
+      // Mock data por ahora
+      setPendingUsers([
+        {
+          id: 2,
+          nombre: 'María',
+          apellido: 'González',
+          cedula: '12345678',
+          telefono: '+58424123456',
+          correoElectronico: 'maria@example.com',
+          tipo: 'USUARIO',
+          estado: 'PENDIENTE',
+          fechaRegistro: new Date('2025-12-20')
+        },
+        {
+          id: 3,
+          nombre: 'Carlos',
+          apellido: 'Rodríguez',
+          cedula: '87654321',
+          telefono: '+58424567890',
+          correoElectronico: 'carlos@example.com',
+          tipo: 'USUARIO',
+          estado: 'PENDIENTE',
+          fechaRegistro: new Date('2025-12-21')
+        }
+      ]);
+    } catch (error) {
+      console.error('Error cargando usuarios pendientes:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleApproveUser = async (userId: number) => {
+    setProcessingUser(userId);
+    try {
+      // TODO: Implementar llamada a API real
+      // await apiClient.approveUser(userId, 'approve');
+
+      // Mock update
+      setPendingUsers(prev => prev.filter(u => u.id !== userId));
+      console.log(`Usuario ${userId} aprobado`);
+    } catch (error) {
+      console.error('Error aprobando usuario:', error);
+    } finally {
+      setProcessingUser(null);
+    }
+  };
+
+  const handleRejectUser = async (userId: number) => {
+    setProcessingUser(userId);
+    try {
+      // TODO: Implementar llamada a API real
+      // await apiClient.approveUser(userId, 'reject');
+
+      // Mock update
+      setPendingUsers(prev => prev.filter(u => u.id !== userId));
+      console.log(`Usuario ${userId} rechazado`);
+    } catch (error) {
+      console.error('Error rechazando usuario:', error);
+    } finally {
+      setProcessingUser(null);
+    }
+  };
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-6">
@@ -22,170 +110,171 @@ const AdminDashboard = () => {
             Panel de Administración
           </h1>
           <p className="text-gray-600 mt-1">
-            Gestión completa del sistema San Marimar
+            Gestión de usuarios y sistema de ahorro colaborativo
           </p>
         </div>
       </div>
 
-      {/* Resumen de Todos los Grupos */}
+      {/* Estadísticas principales */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Grupos</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Usuarios Pendientes</CardTitle>
+            <AlertCircle className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{grupos.length}</div>
+            <div className="text-2xl font-bold text-orange-600">{pendingUsers.length}</div>
             <p className="text-xs text-muted-foreground">
-              Grupos creados
+              Esperando aprobación
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Sin Completar</CardTitle>
-            <Clock className="h-4 w-4 text-yellow-500" />
+            <CardTitle className="text-sm font-medium">Grupos Activos</CardTitle>
+            <Users className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{gruposSinCompletar.length}</div>
+            <div className="text-2xl font-bold text-blue-600">{grupos.length}</div>
             <p className="text-xs text-muted-foreground">
-              Esperando participantes
+              Grupos de ahorro
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Grupos Llenos</CardTitle>
-            <CheckCircle className="h-4 w-4 text-blue-500" />
+            <CardTitle className="text-sm font-medium">Productos</CardTitle>
+            <Package className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{gruposLlenos.length}</div>
+            <div className="text-2xl font-bold text-green-600">{productos.length}</div>
             <p className="text-xs text-muted-foreground">
-              Listos para sorteo
+              Disponibles
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">En Marcha</CardTitle>
-            <Dice6 className="h-4 w-4 text-green-500" />
+            <CardTitle className="text-sm font-medium">Entregas Hoy</CardTitle>
+            <CheckCircle className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{gruposEnMarcha.length}</div>
+            <div className="text-2xl font-bold text-purple-600">0</div>
             <p className="text-xs text-muted-foreground">
-              Activos con sorteos
+              Productos entregados
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Grupos Sin Completar */}
+      {/* Usuarios Pendientes de Aprobación */}
       <Card>
         <CardHeader>
-          <CardTitle>Grupos Sin Completar</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <AlertCircle className="h-5 w-5 text-orange-500" />
+            Usuarios Pendientes de Aprobación
+          </CardTitle>
           <CardDescription>
-            Grupos que necesitan más participantes
+            Revisar y aprobar solicitudes de registro de nuevos usuarios
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {gruposSinCompletar.length === 0 ? (
+          {loading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="mt-4 text-gray-600">Cargando usuarios pendientes...</p>
+            </div>
+          ) : pendingUsers.length === 0 ? (
+            <div className="text-center py-8">
+              <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
+              <p className="text-gray-500">No hay usuarios pendientes de aprobación</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {pendingUsers.map((pendingUser) => (
+                <div key={pendingUser.id} className="flex items-center justify-between p-4 border rounded-lg bg-orange-50">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h3 className="font-semibold">{pendingUser.nombre} {pendingUser.apellido}</h3>
+                      <Badge variant="secondary">Pendiente</Badge>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
+                      <div>
+                        <p><strong>Cédula:</strong> {pendingUser.cedula}</p>
+                        <p><strong>Teléfono:</strong> {pendingUser.telefono}</p>
+                      </div>
+                      <div>
+                        <p><strong>Email:</strong> {pendingUser.correoElectronico}</p>
+                        <p><strong>Registro:</strong> {pendingUser.fechaRegistro.toLocaleDateString('es-ES')}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {pendingUser.imagenCedula && (
+                      <Button variant="outline" size="sm">
+                        <Eye className="h-4 w-4 mr-1" />
+                        Ver Cédula
+                      </Button>
+                    )}
+                    <Button
+                      onClick={() => handleApproveUser(pendingUser.id)}
+                      disabled={processingUser === pendingUser.id}
+                      className="bg-green-600 hover:bg-green-700"
+                      size="sm"
+                    >
+                      <UserCheck className="h-4 w-4 mr-1" />
+                      {processingUser === pendingUser.id ? 'Procesando...' : 'Aprobar'}
+                    </Button>
+                    <Button
+                      onClick={() => handleRejectUser(pendingUser.id)}
+                      disabled={processingUser === pendingUser.id}
+                      variant="destructive"
+                      size="sm"
+                    >
+                      <UserX className="h-4 w-4 mr-1" />
+                      Rechazar
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Grupos Activos */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Grupos Activos</CardTitle>
+          <CardDescription>
+            Grupos de ahorro colaborativo en funcionamiento
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {grupos.length === 0 ? (
             <p className="text-center text-gray-500 py-4">
-              No hay grupos sin completar
+              No hay grupos activos
             </p>
           ) : (
             <div className="space-y-4">
-              {gruposSinCompletar.map((grupo) => (
+              {grupos.map((grupo) => (
                 <div key={grupo.id} className="flex items-center justify-between p-4 border rounded-lg">
                   <div>
                     <h3 className="font-semibold">{grupo.nombre}</h3>
                     <p className="text-sm text-gray-600">
-                      Participantes: {grupo.participantes.length}
-                    </p>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm text-yellow-600 font-medium">
-                      Esperando participantes
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Grupos Llenos - Listos para Sorteo */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Grupos Llenos - Realizar Sorteo</CardTitle>
-          <CardDescription>
-            Grupos completos listos para iniciar sorteos
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {gruposLlenos.length === 0 ? (
-            <p className="text-center text-gray-500 py-4">
-              No hay grupos listos para sorteo
-            </p>
-          ) : (
-            <div className="space-y-4">
-              {gruposLlenos.map((grupo) => (
-                <div key={grupo.id} className="flex items-center justify-between p-4 border rounded-lg bg-blue-50">
-                  <div>
-                    <h3 className="font-semibold">{grupo.nombre}</h3>
-                    <p className="text-sm text-gray-600">
-                      Participantes: {grupo.participantes.length}
-                    </p>
-                    <p className="text-sm font-medium text-green-600">
-                      Valor: ${grupo.valor.toLocaleString()}
-                    </p>
-                  </div>
-                  <Button className="bg-blue-600 hover:bg-blue-700">
-                    Realizar Sorteo
-                  </Button>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Grupos en Marcha */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Grupos en Marcha</CardTitle>
-          <CardDescription>
-            Grupos activos con sorteos programados
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {gruposEnMarcha.length === 0 ? (
-            <p className="text-center text-gray-500 py-4">
-              No hay grupos en marcha
-            </p>
-          ) : (
-            <div className="space-y-4">
-              {gruposEnMarcha.map((grupo) => (
-                <div key={grupo.id} className="flex items-center justify-between p-4 border rounded-lg bg-green-50">
-                  <div>
-                    <h3 className="font-semibold">{grupo.nombre}</h3>
-                    <p className="text-sm text-gray-600">
-                      Semana/Mes actual: {grupo.semana || 1}/{grupo.mes || 1}
+                      Duración: {grupo.duracionMeses} meses
                     </p>
                     <p className="text-sm text-gray-600">
-                      Turno actual: {grupo.turnoActual || 'Por definir'}
+                      Mes actual: {grupo.turnoActual}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold text-green-600">
-                      ${grupo.valor.toLocaleString()}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      Valor del grupo
-                    </p>
+                    <Badge variant={grupo.estado === 'EN_MARCHA' ? 'default' : 'secondary'}>
+                      {grupo.estado.replace('_', ' ')}
+                    </Badge>
                   </div>
                 </div>
               ))}

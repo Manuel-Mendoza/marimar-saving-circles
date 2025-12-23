@@ -57,6 +57,16 @@ auth.post('/login', async (c) => {
       }, 401);
     }
 
+    // Verificar estado de aprobación
+    if (user.estado !== 'APROBADO') {
+      return c.json({
+        success: false,
+        message: user.estado === 'PENDIENTE'
+          ? 'Tu cuenta está pendiente de aprobación por un administrador'
+          : 'Tu cuenta ha sido rechazada'
+      }, 403);
+    }
+
     // Generar token
     const token = await generateToken(
       {
@@ -64,7 +74,8 @@ auth.post('/login', async (c) => {
         nombre: user.nombre,
         apellido: user.apellido,
         correoElectronico: user.correoElectronico,
-        tipo: user.tipo
+        tipo: user.tipo,
+        estado: user.estado
       },
       process.env.PASETO_SECRET!
     );

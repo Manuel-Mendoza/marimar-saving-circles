@@ -10,9 +10,9 @@
     "start": "bun run dist/server.js",
     "lint": "eslint src/**/*.ts",
     "test": "jest",
-    "db:generate": "drizzle-kit generate:pg",
-    "db:push": "drizzle-kit push:pg",
-    "db:migrate": "drizzle-kit migrate:pg",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {

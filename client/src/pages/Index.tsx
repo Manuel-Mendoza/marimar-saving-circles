@@ -9,9 +9,10 @@ import RegistrationForm from '@/components/Auth/RegistrationForm';
 import UserDashboard from '@/components/Dashboard/UserDashboard';
 import AdminDashboard from '@/components/Dashboard/AdminDashboard';
 import LandingPage from '@/components/Landing/LandingPage';
+import PendingApproval from '@/components/Auth/PendingApproval';
 
 const AppContent = () => {
-  const { isAuthenticated, isAdmin, isLoading } = useAuth();
+  const { user, isAuthenticated, isAdmin, isLoading } = useAuth();
   const [showRegistration, setShowRegistration] = useState(false);
   const [showAuthSection, setShowAuthSection] = useState(false);
 
@@ -40,7 +41,12 @@ const AppContent = () => {
     return <LoginForm onNewUser={() => setShowRegistration(true)} />;
   }
 
-  // Si está autenticado, mostrar dashboard correspondiente
+  // Si está autenticado pero pendiente de aprobación, mostrar vista de espera
+  if (user?.estado === 'PENDIENTE') {
+    return <PendingApproval />;
+  }
+
+  // Si está aprobado, mostrar dashboard correspondiente
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />

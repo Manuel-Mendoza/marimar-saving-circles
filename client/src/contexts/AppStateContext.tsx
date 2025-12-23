@@ -23,13 +23,30 @@ interface Producto {
   activo: boolean;
 }
 
+interface User {
+  id: number;
+  nombre: string;
+  apellido: string;
+  cedula: string;
+  telefono: string;
+  direccion: string;
+  correoElectronico: string;
+  tipo: 'USUARIO' | 'ADMINISTRADOR';
+  estado: 'PENDIENTE' | 'APROBADO' | 'RECHAZADO';
+  imagenCedula?: string;
+  fechaRegistro: Date;
+  ultimoAcceso?: Date;
+  aprobadoPor?: number;
+  fechaAprobacion?: Date;
+}
+
 interface UserGroup {
   id: number;
   userId: number;
   groupId: number;
   posicion: number;
   fechaUnion: Date;
-  user?: any;
+  user?: User;
   group?: Grupo;
 }
 

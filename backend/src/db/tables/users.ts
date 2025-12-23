@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, serial } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, serial, integer } from 'drizzle-orm/pg-core';
 
 // Users table with numeric auto-increment ID
 export const users = pgTable('users', {
@@ -11,9 +11,12 @@ export const users = pgTable('users', {
   correoElectronico: text('correo_electronico').notNull().unique(),
   password: text('password').notNull(),
   tipo: text('tipo').notNull().default('USUARIO'),
+  estado: text('estado').notNull().default('PENDIENTE'), // PENDIENTE, APROBADO, RECHAZADO
   imagenCedula: text('imagen_cedula'),
   fechaRegistro: timestamp('fecha_registro').notNull().defaultNow(),
   ultimoAcceso: timestamp('ultimo_acceso'),
+  aprobadoPor: integer('aprobado_por'), // ID del admin que aprobó
+  fechaAprobacion: timestamp('fecha_aprobacion'),
 });
 
 // Types
