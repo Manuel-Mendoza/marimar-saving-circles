@@ -148,6 +148,15 @@ class ApiClient {
       body: JSON.stringify({ reason }),
     });
   }
+
+  // Products endpoints
+  async getProducts() {
+    return this.request<{ products: any[] }>('/products');
+  }
+
+  async getProduct(productId: number) {
+    return this.request<{ product: any }>(`/products/${productId}`);
+  }
 }
 
 export const apiClient = new ApiClient(API_BASE_URL);

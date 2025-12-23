@@ -5,6 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { ArrowLeft, Eye, EyeOff, CheckCircle } from 'lucide-react';
 
 interface RegistrationFormProps {
@@ -27,6 +34,7 @@ const RegistrationForm = ({ onBack }: RegistrationFormProps) => {
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,6 +74,7 @@ const RegistrationForm = ({ onBack }: RegistrationFormProps) => {
       if (data.success) {
         // Mostrar mensaje de éxito - cuenta creada y pendiente de aprobación
         setSuccessMessage('¡Cuenta creada exitosamente! Su registro está pendiente de aprobación por un administrador. Recibirá una notificación cuando sea aprobado.');
+        setShowSuccessDialog(true);
         setError('');
       } else {
         setError(data.message || 'Error al registrar usuario');
@@ -234,36 +243,44 @@ const RegistrationForm = ({ onBack }: RegistrationFormProps) => {
               </div>
             )}
 
-            {successMessage && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
-                <div className="flex items-center justify-center gap-2 mb-2">
-                  <CheckCircle className="h-5 w-5 text-green-600" />
-                  <span className="text-green-800 font-semibold">¡Registro Exitoso!</span>
-                </div>
-                <p className="text-green-700 text-sm">
-                  {successMessage}
-                </p>
-                <Button
-                  onClick={onBack}
-                  className="mt-4 bg-blue-600 hover:bg-blue-700"
-                >
-                  Ir al Login
-                </Button>
-              </div>
-            )}
 
-            {!successMessage && (
-              <Button
-                type="submit"
-                className="w-full bg-green-600 hover:bg-green-700"
-                disabled={isLoading}
-              >
-                {isLoading ? 'Creando cuenta...' : 'Crear Cuenta'}
-              </Button>
-            )}
+
+            <Button
+              type="submit"
+              className="w-full bg-green-600 hover:bg-green-700"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Creando cuenta...' : 'Crear Cuenta'}
+            </Button>
           </form>
         </CardContent>
       </Card>
+
+      {/* Success Dialog */}
+      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-center gap-2 text-green-800">
+              <CheckCircle className="h-6 w-6 text-green-600" />
+              ¡Registro Exitoso!
+            </DialogTitle>
+            <DialogDescription className="text-center">
+              {successMessage}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-center">
+            <Button
+              onClick={() => {
+                setShowSuccessDialog(false);
+                onBack();
+              }}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              Ir al Login
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

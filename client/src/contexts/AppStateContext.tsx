@@ -1,5 +1,6 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { apiClient } from '@/lib/api';
 
 // Local type definitions for coherence with analysis
 interface Grupo {
@@ -121,44 +122,24 @@ export const AppStateProvider = ({ children }: AppStateProviderProps) => {
     }
   ]);
 
-  const [productos] = useState<Producto[]>([
-    {
-      id: 1,
-      nombre: 'Lavadora Samsung',
-      precioUsd: 450,
-      precioVes: 12500000,
-      tiempoDuracion: 8,
-      descripcion: 'Lavadora automática con capacidad de 15kg',
-      activo: true
-    },
-    {
-      id: 2,
-      nombre: 'Refrigerador LG',
-      precioUsd: 600,
-      precioVes: 16666667,
-      tiempoDuracion: 8,
-      descripcion: 'Refrigerador side by side de 500L',
-      activo: true
-    },
-    {
-      id: 3,
-      nombre: 'TV LED 55"',
-      precioUsd: 300,
-      precioVes: 8333333,
-      tiempoDuracion: 10,
-      descripcion: 'Smart TV LED 4K con Android TV',
-      activo: true
-    },
-    {
-      id: 4,
-      nombre: 'Microondas Panasonic',
-      precioUsd: 150,
-      precioVes: 4166667,
-      tiempoDuracion: 10,
-      descripcion: 'Microondas digital de 1.2 cu ft',
-      activo: true
-    }
-  ]);
+  const [productos, setProductos] = useState<Producto[]>([]);
+
+  // Fetch products from API on mount
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await apiClient.getProducts();
+        if (response.success && response.data?.products) {
+          setProductos(response.data.products);
+        }
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        // Keep empty array or show error
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   const [userGroups] = useState<UserGroup[]>([
     {

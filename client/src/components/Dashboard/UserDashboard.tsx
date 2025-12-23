@@ -34,6 +34,8 @@ const UserDashboard = () => {
     ? new Date(currentGroup.fechaInicio.getTime() + monthsUntilDelivery * 30 * 24 * 60 * 60 * 1000)
     : null;
 
+  const hasChosenProduct = myUserGroups.length > 0;
+
   return (
     <div className="container mx-auto px-4 py-8 space-y-6">
       <div className="flex items-center justify-between">
@@ -42,13 +44,18 @@ const UserDashboard = () => {
             ¡Bienvenido, {user?.nombre}!
           </h1>
           <p className="text-gray-600 mt-1">
-            Tu progreso en círculos de ahorro colaborativo
+            {hasChosenProduct
+              ? 'Tu progreso en círculos de ahorro colaborativo'
+              : 'Elige un producto para comenzar tu ahorro colaborativo'
+            }
           </p>
         </div>
       </div>
 
-      {/* Estadísticas principales */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      {hasChosenProduct ? (
+        <>
+          {/* Estadísticas principales */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Mi Posición</CardTitle>
@@ -195,53 +202,6 @@ const UserDashboard = () => {
         </CardContent>
       </Card>
 
-      {/* Productos Disponibles */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Elegir Producto</CardTitle>
-          <CardDescription>
-            Selecciona el producto que deseas adquirir mediante ahorro colaborativo
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {productos.filter(p => p.activo).map((producto) => {
-              const pagoMensual = Math.round(producto.precioUsd / producto.tiempoDuracion);
-              return (
-                <div key={producto.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                  <h3 className="font-semibold text-lg mb-2">{producto.nombre}</h3>
-                  <p className="text-gray-600 mb-3">{producto.descripcion}</p>
-
-                  <div className="space-y-2 mb-4">
-                    <div className="flex justify-between">
-                      <span className="text-sm">Precio USD:</span>
-                      <span className="font-semibold">${producto.precioUsd}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">Precio VES:</span>
-                      <span className="font-semibold">Bs. {producto.precioVes.toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">Pago mensual:</span>
-                      <span className="font-semibold">${pagoMensual}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">Duración:</span>
-                      <span className="font-semibold">{producto.tiempoDuracion} meses</span>
-                    </div>
-                  </div>
-
-                  <Button className="w-full bg-green-600 hover:bg-green-700">
-                    <Package className="h-4 w-4 mr-2" />
-                    Unirme al Grupo de {producto.tiempoDuracion} meses
-                  </Button>
-                </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Notificaciones/Próximas acciones */}
       <Card>
         <CardHeader>
@@ -288,6 +248,55 @@ const UserDashboard = () => {
           </div>
         </CardContent>
       </Card>
+        </>
+      ) : (
+        /* Productos Disponibles */
+        <Card>
+          <CardHeader>
+            <CardTitle>Elegir Producto</CardTitle>
+            <CardDescription>
+              Selecciona el producto que deseas adquirir mediante ahorro colaborativo
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {productos.filter(p => p.activo).map((producto) => {
+                const pagoMensual = Math.round(producto.precioUsd / producto.tiempoDuracion);
+                return (
+                  <div key={producto.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <h3 className="font-semibold text-lg mb-2">{producto.nombre}</h3>
+                    <p className="text-gray-600 mb-3">{producto.descripcion}</p>
+
+                    <div className="space-y-2 mb-4">
+                      <div className="flex justify-between">
+                        <span className="text-sm">Precio USD:</span>
+                        <span className="font-semibold">${producto.precioUsd}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Precio VES:</span>
+                        <span className="font-semibold">Bs. {producto.precioVes.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Pago mensual:</span>
+                        <span className="font-semibold">${pagoMensual}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Duración:</span>
+                        <span className="font-semibold">{producto.tiempoDuracion} meses</span>
+                      </div>
+                    </div>
+
+                    <Button className="w-full bg-green-600 hover:bg-green-700">
+                      <Package className="h-4 w-4 mr-2" />
+                      Unirme al Grupo de {producto.tiempoDuracion} meses
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
