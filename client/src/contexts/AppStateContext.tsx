@@ -21,6 +21,7 @@ interface Producto {
   tiempoDuracion: number;
   imagen?: string;
   descripcion: string;
+  tags?: string[];
   activo: boolean;
 }
 

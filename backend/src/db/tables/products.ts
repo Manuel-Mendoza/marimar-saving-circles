@@ -9,6 +9,7 @@ export const products = pgTable('products', {
   tiempoDuracion: integer('tiempo_duracion').notNull(), // Duración en meses
   imagen: text('imagen'),
   descripcion: text('descripcion').notNull(),
+  tags: text('tags').array(), // Array of tags for categorization (e.g., ['electrodomésticos', 'lavadoras'])
   activo: boolean('activo').notNull().default(true), // Producto disponible
 });
 

@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Users, Package, Calendar, TrendingUp, MapPin, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 
 const UserDashboard = () => {
@@ -259,41 +260,210 @@ const UserDashboard = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {productos.filter(p => p.activo).map((producto) => {
-                const pagoMensual = Math.round(producto.precioUsd / producto.tiempoDuracion);
-                return (
-                  <div key={producto.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                    <h3 className="font-semibold text-lg mb-2">{producto.nombre}</h3>
-                    <p className="text-gray-600 mb-3">{producto.descripcion}</p>
+            <Tabs defaultValue="todos" className="w-full">
+              <TabsList className="grid w-full grid-cols-4 mb-6">
+                <TabsTrigger value="todos">Todos</TabsTrigger>
+                <TabsTrigger value="electrodomésticos">Electrodomésticos</TabsTrigger>
+                <TabsTrigger value="celulares">Celulares</TabsTrigger>
+                <TabsTrigger value="tv">TV</TabsTrigger>
+              </TabsList>
 
-                    <div className="space-y-2 mb-4">
-                      <div className="flex justify-between">
-                        <span className="text-sm">Precio USD:</span>
-                        <span className="font-semibold">${producto.precioUsd}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm">Precio VES:</span>
-                        <span className="font-semibold">Bs. {producto.precioVes.toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm">Pago mensual:</span>
-                        <span className="font-semibold">${pagoMensual}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm">Duración:</span>
-                        <span className="font-semibold">{producto.tiempoDuracion} meses</span>
-                      </div>
-                    </div>
+              <TabsContent value="todos">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {productos.filter(p => p.activo).map((producto) => {
+                    const pagoMensual = Math.round(producto.precioUsd / producto.tiempoDuracion);
+                    return (
+                      <div key={producto.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div className="flex justify-between items-start mb-2">
+                          <h3 className="font-semibold text-lg">{producto.nombre}</h3>
+                          {producto.tags && producto.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              {producto.tags.map((tag, index) => (
+                                <Badge key={index} variant="secondary" className="text-xs">
+                                  {tag}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-gray-600 mb-3">{producto.descripcion}</p>
 
-                    <Button className="w-full bg-green-600 hover:bg-green-700">
-                      <Package className="h-4 w-4 mr-2" />
-                      Unirme al Grupo de {producto.tiempoDuracion} meses
-                    </Button>
-                  </div>
-                );
-              })}
-            </div>
+                        <div className="space-y-2 mb-4">
+                          <div className="flex justify-between">
+                            <span className="text-sm">Precio USD:</span>
+                            <span className="font-semibold">${producto.precioUsd}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm">Precio VES:</span>
+                            <span className="font-semibold">Bs. {producto.precioVes.toLocaleString()}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm">Pago mensual:</span>
+                            <span className="font-semibold">${pagoMensual}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm">Duración:</span>
+                            <span className="font-semibold">{producto.tiempoDuracion} meses</span>
+                          </div>
+                        </div>
+
+                        <Button className="w-full bg-green-600 hover:bg-green-700">
+                          <Package className="h-4 w-4 mr-2" />
+                          Unirme al Grupo de {producto.tiempoDuracion} meses
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="electrodomésticos">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {productos.filter(p => p.activo && p.tags?.includes('electrodomésticos')).map((producto) => {
+                    const pagoMensual = Math.round(producto.precioUsd / producto.tiempoDuracion);
+                    return (
+                      <div key={producto.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div className="flex justify-between items-start mb-2">
+                          <h3 className="font-semibold text-lg">{producto.nombre}</h3>
+                          {producto.tags && producto.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              {producto.tags.map((tag, index) => (
+                                <Badge key={index} variant="secondary" className="text-xs">
+                                  {tag}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-gray-600 mb-3">{producto.descripcion}</p>
+
+                        <div className="space-y-2 mb-4">
+                          <div className="flex justify-between">
+                            <span className="text-sm">Precio USD:</span>
+                            <span className="font-semibold">${producto.precioUsd}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm">Precio VES:</span>
+                            <span className="font-semibold">Bs. {producto.precioVes.toLocaleString()}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm">Pago mensual:</span>
+                            <span className="font-semibold">${pagoMensual}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm">Duración:</span>
+                            <span className="font-semibold">{producto.tiempoDuracion} meses</span>
+                          </div>
+                        </div>
+
+                        <Button className="w-full bg-green-600 hover:bg-green-700">
+                          <Package className="h-4 w-4 mr-2" />
+                          Unirme al Grupo de {producto.tiempoDuracion} meses
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="celulares">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {productos.filter(p => p.activo && p.tags?.includes('celulares')).map((producto) => {
+                    const pagoMensual = Math.round(producto.precioUsd / producto.tiempoDuracion);
+                    return (
+                      <div key={producto.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div className="flex justify-between items-start mb-2">
+                          <h3 className="font-semibold text-lg">{producto.nombre}</h3>
+                          {producto.tags && producto.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              {producto.tags.map((tag, index) => (
+                                <Badge key={index} variant="secondary" className="text-xs">
+                                  {tag}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-gray-600 mb-3">{producto.descripcion}</p>
+
+                        <div className="space-y-2 mb-4">
+                          <div className="flex justify-between">
+                            <span className="text-sm">Precio USD:</span>
+                            <span className="font-semibold">${producto.precioUsd}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm">Precio VES:</span>
+                            <span className="font-semibold">Bs. {producto.precioVes.toLocaleString()}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm">Pago mensual:</span>
+                            <span className="font-semibold">${pagoMensual}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm">Duración:</span>
+                            <span className="font-semibold">{producto.tiempoDuracion} meses</span>
+                          </div>
+                        </div>
+
+                        <Button className="w-full bg-green-600 hover:bg-green-700">
+                          <Package className="h-4 w-4 mr-2" />
+                          Unirme al Grupo de {producto.tiempoDuracion} meses
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="tv">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {productos.filter(p => p.activo && p.tags?.includes('tv')).map((producto) => {
+                    const pagoMensual = Math.round(producto.precioUsd / producto.tiempoDuracion);
+                    return (
+                      <div key={producto.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div className="flex justify-between items-start mb-2">
+                          <h3 className="font-semibold text-lg">{producto.nombre}</h3>
+                          {producto.tags && producto.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              {producto.tags.map((tag, index) => (
+                                <Badge key={index} variant="secondary" className="text-xs">
+                                  {tag}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-gray-600 mb-3">{producto.descripcion}</p>
+
+                        <div className="space-y-2 mb-4">
+                          <div className="flex justify-between">
+                            <span className="text-sm">Precio USD:</span>
+                            <span className="font-semibold">${producto.precioUsd}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm">Precio VES:</span>
+                            <span className="font-semibold">Bs. {producto.precioVes.toLocaleString()}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm">Pago mensual:</span>
+                            <span className="font-semibold">${pagoMensual}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm">Duración:</span>
+                            <span className="font-semibold">{producto.tiempoDuracion} meses</span>
+                          </div>
+                        </div>
+
+                        <Button className="w-full bg-green-600 hover:bg-green-700">
+                          <Package className="h-4 w-4 mr-2" />
+                          Unirme al Grupo de {producto.tiempoDuracion} meses
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
       )}

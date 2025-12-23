@@ -18,6 +18,7 @@ productsRoute.get('/', async (c) => {
         tiempoDuracion: products.tiempoDuracion,
         imagen: products.imagen,
         descripcion: products.descripcion,
+        tags: products.tags,
         activo: products.activo
       })
       .from(products)
@@ -54,6 +55,7 @@ productsRoute.get('/:id', async (c) => {
         tiempoDuracion: products.tiempoDuracion,
         imagen: products.imagen,
         descripcion: products.descripcion,
+        tags: products.tags,
         activo: products.activo
       })
       .from(products)
@@ -96,12 +98,12 @@ productsRoute.post('/', authenticate, async (c) => {
     }
 
     const body = await c.req.json();
-    const { nombre, precioUsd, precioVes, tiempoDuracion, imagen, descripcion } = body;
+    const { nombre, precioUsd, precioVes, tiempoDuracion, imagen, descripcion, tags } = body;
 
     if (!nombre || !precioUsd || !precioVes || !tiempoDuracion || !descripcion) {
       return c.json({
         success: false,
-        message: 'Todos los campos son requeridos'
+        message: 'Nombre, precios, duración y descripción son requeridos'
       }, 400);
     }
 
@@ -114,6 +116,7 @@ productsRoute.post('/', authenticate, async (c) => {
         tiempoDuracion: parseInt(tiempoDuracion),
         imagen,
         descripcion,
+        tags: tags || [],
         activo: true
       })
       .returning();
@@ -149,7 +152,7 @@ productsRoute.put('/:id', authenticate, async (c) => {
     }
 
     const body = await c.req.json();
-    const { nombre, precioUsd, precioVes, tiempoDuracion, imagen, descripcion, activo } = body;
+    const { nombre, precioUsd, precioVes, tiempoDuracion, imagen, descripcion, tags, activo } = body;
 
     const updateData: any = {};
     if (nombre !== undefined) updateData.nombre = nombre;
@@ -158,6 +161,7 @@ productsRoute.put('/:id', authenticate, async (c) => {
     if (tiempoDuracion !== undefined) updateData.tiempoDuracion = parseInt(tiempoDuracion);
     if (imagen !== undefined) updateData.imagen = imagen;
     if (descripcion !== undefined) updateData.descripcion = descripcion;
+    if (tags !== undefined) updateData.tags = tags;
     if (activo !== undefined) updateData.activo = activo;
 
     const updatedProducts = await db
