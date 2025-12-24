@@ -18,7 +18,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Users, Package, Calendar, TrendingUp, MapPin, Clock, CheckCircle, AlertCircle, Menu, Home, ShoppingCart } from 'lucide-react';
+import { Users, Package, Calendar, TrendingUp, MapPin, Clock, CheckCircle, AlertCircle, Menu, Home, ShoppingCart, DollarSign } from 'lucide-react';
 
 const UserDashboard = () => {
   const { user } = useAuth();
@@ -216,38 +216,38 @@ const UserDashboard = () => {
 
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Pagado</CardTitle>
+                    <CardTitle className="text-sm font-medium">Valor Mensual</CardTitle>
                     <TrendingUp className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">${totalPaid.toLocaleString()}</div>
+                    <div className="text-2xl font-bold">
+                      ${(() => {
+                        const myUserGroup = myUserGroups.find(ug => ug.groupId === currentGroup?.id);
+                        const selectedProduct = productos.find(p => p.nombre === myUserGroup?.productoSeleccionado);
+                        const price = selectedProduct ? (myUserGroup?.monedaPago === 'USD' ? selectedProduct.precioUsd : selectedProduct.precioVes) : 0;
+                        return price.toLocaleString();
+                      })()}
+                    </div>
                     <p className="text-xs text-muted-foreground">
-                      En contribuciones
+                      Pago mensual
                     </p>
                   </CardContent>
                 </Card>
 
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Próxima Entrega</CardTitle>
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <CardTitle className="text-sm font-medium">Moneda de Pago</CardTitle>
+                    <DollarSign className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
-                      {isGroupInStandby
-                        ? 'Pendiente'
-                        : estimatedDeliveryDate
-                          ? estimatedDeliveryDate.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })
-                          : 'N/A'
-                      }
+                      {(() => {
+                        const myUserGroup = myUserGroups.find(ug => ug.groupId === currentGroup?.id);
+                        return myUserGroup?.monedaPago === 'USD' ? 'Dólares' : 'Bolívares';
+                      })()}
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      {isGroupInStandby
-                        ? 'El grupo debe ser iniciado'
-                        : monthsUntilDelivery > 0
-                          ? `En ${monthsUntilDelivery} meses`
-                          : '¡Pronto!'
-                      }
+                      Opción seleccionada
                     </p>
                   </CardContent>
                 </Card>
@@ -332,14 +332,14 @@ const UserDashboard = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {myContributions.length === 0 ? (
+                  {currentGroupContributions.length === 0 ? (
                     <div className="text-center py-8">
                       <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-500">No hay contribuciones registradas aún</p>
+                      <p className="text-gray-500">No hay contribuciones para este grupo aún</p>
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      {myContributions.slice().reverse().map((contribution) => (
+                      {currentGroupContributions.slice().reverse().map((contribution) => (
                         <div key={contribution.id} className="flex items-center justify-between p-3 border rounded-lg">
                           <div className="flex items-center gap-3">
                             <CheckCircle className={`h-5 w-5 ${contribution.estado === 'CONFIRMADO' ? 'text-green-500' : 'text-yellow-500'}`} />

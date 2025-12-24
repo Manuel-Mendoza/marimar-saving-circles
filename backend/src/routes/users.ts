@@ -413,10 +413,13 @@ usersRoute.post('/join', authenticate, async (c) => {
 
     const position = currentMembers.length + 1;
 
-    // Calculate monthly payment
+    // Use price directly as monthly payment (stored as monthly amount in database)
     const monthlyPayment = currency === 'USD'
-      ? product.precioUsd / product.tiempoDuracion
-      : product.precioVes / product.tiempoDuracion;
+      ? product.precioUsd
+      : product.precioVes;
+
+    console.log('Product prices:', { precioUsd: product.precioUsd, precioVes: product.precioVes });
+    console.log('Calculated monthly payment:', monthlyPayment, 'for currency:', currency);
 
     // Add user to group
     await db
