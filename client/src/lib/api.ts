@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
 interface ApiResponse<T = any> {
   success: boolean;
@@ -208,6 +208,20 @@ class ApiClient {
   async deleteProduct(productId: number) {
     return this.request(`/products/${productId}`, {
       method: 'DELETE',
+    });
+  }
+
+  async selectProduct(productId: number) {
+    return this.request<{
+      groupId: number;
+      groupName: string;
+      position: number;
+      productName: string;
+      participantsNeeded: number;
+      currentParticipants: number;
+      groupStarted: boolean;
+    }>(`/products/${productId}/select`, {
+      method: 'POST',
     });
   }
 

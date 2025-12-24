@@ -2,13 +2,10 @@ import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users } from "lucide-react";
+import { useGroups } from "@/hooks/useGroups";
 
-interface GroupsViewProps {
-  allGroups: any[];
-  groupsLoading: boolean;
-}
-
-const GroupsView: React.FC<GroupsViewProps> = ({ allGroups, groupsLoading }) => {
+const GroupsView: React.FC = () => {
+  const { allGroups, groupsLoading } = useGroups();
   return (
     <div className="space-y-6">
       <div>
