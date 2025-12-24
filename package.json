@@ -19,8 +19,8 @@
     "test": "bun run test --cwd backend && bun run test --cwd client",
     "test:backend": "bun run test --cwd backend",
     "test:client": "bun run test --cwd client",
-    "db:seed": "bun run --cwd backend src/seed.ts",
-    "db:simulate": "bun run --cwd backend src/simulate-selections.ts"
+    "db:seed": "bun run --cwd backend scripts/seed.ts",
+    "db:simulate": "bun run --cwd backend scripts/simulate-selections.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

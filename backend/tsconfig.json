@@ -26,6 +26,6 @@
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true
   },
-  "include": ["src/**/*", "temporal/remove-tag.ts", "temporal/seed.ts", "temporal/simulate-demo.ts", "temporal/simulate-selections.ts"],
+  "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "**/*.test.ts"]
 }
