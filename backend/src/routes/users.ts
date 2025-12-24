@@ -4,6 +4,8 @@ import { users } from '../db/tables/users.js';
 import { groups } from '../db/tables/groups.js';
 import { products } from '../db/tables/products.js';
 import { userGroups } from '../db/tables/user-groups.js';
+import { contributions } from '../db/tables/contributions.js';
+import { deliveries } from '../db/tables/deliveries.js';
 import { db } from '../config/database.js';
 import { authenticate } from '../middleware/auth.js';
 
@@ -329,32 +331,28 @@ usersRoute.post('/join', authenticate, async (c) => {
     const body = await c.req.json();
     const { productId, currency } = body;
 
-    if (!productId || !currency || !['VES', 'USD'].includes(currency)) {
+    console.log('Join request body:', { productId, currency, type: typeof productId });
+
+    // Ensure productId is a number
+    const parsedProductId = parseInt(productId);
+    console.log('Parsed productId:', parsedProductId, 'isNaN:', isNaN(parsedProductId));
+
+    if (!parsedProductId || isNaN(parsedProductId) || !currency || !['VES', 'USD'].includes(currency)) {
+      console.log('Validation failed:', { parsedProductId, currency });
       return c.json({
         success: false,
         message: 'Datos inválidos'
       }, 400);
     }
 
-    // Check if user is already in a group
-    const existingUserGroup = await db
-      .select()
-      .from(userGroups)
-      .where(eq(userGroups.userId, userPayload.id))
-      .limit(1);
-
-    if (existingUserGroup.length > 0) {
-      return c.json({
-        success: false,
-        message: 'Ya estás en un grupo'
-      }, 400);
-    }
+    // Users can join multiple groups, so no check for existing groups
+    console.log('User can join multiple groups, proceeding...');
 
     // Get product details
     const [product] = await db
       .select()
       .from(products)
-      .where(eq(products.id, productId))
+      .where(eq(products.id, parsedProductId))
       .limit(1);
 
     if (!product) {
@@ -415,6 +413,11 @@ usersRoute.post('/join', authenticate, async (c) => {
 
     const position = currentMembers.length + 1;
 
+    // Calculate monthly payment
+    const monthlyPayment = currency === 'USD'
+      ? product.precioUsd / product.tiempoDuracion
+      : product.precioVes / product.tiempoDuracion;
+
     // Add user to group
     await db
       .insert(userGroups)
@@ -426,6 +429,26 @@ usersRoute.post('/join', authenticate, async (c) => {
         monedaPago: currency
       });
 
+    // Create pending contributions for each month
+    const contributionsData = [];
+    for (let month = 1; month <= product.tiempoDuracion; month++) {
+      contributionsData.push({
+        userId: userPayload.id,
+        groupId: group.id,
+        monto: Math.round(monthlyPayment * 100) / 100, // Round to 2 decimal places
+        moneda: currency,
+        fechaPago: null, // Will be set when payment is made
+        periodo: `Mes ${month}`,
+        metodoPago: null,
+        estado: 'PENDIENTE',
+        referenciaPago: null
+      });
+    }
+
+    await db
+      .insert(contributions)
+      .values(contributionsData);
+
     // Check if group is now full (assuming max 10 members for example)
     // For now, let's assume groups can have unlimited members or update logic later
 
@@ -435,12 +458,133 @@ usersRoute.post('/join', authenticate, async (c) => {
       data: {
         groupId: group.id,
         position: position,
-        currency: currency
+        currency: currency,
+        monthlyPayment: Math.round(monthlyPayment * 100) / 100
       }
     });
 
   } catch (error) {
     console.error('Error joining group:', error);
+    return c.json({
+      success: false,
+      message: 'Error interno del servidor'
+    }, 500);
+  }
+});
+
+// Get current user's groups
+usersRoute.get('/me/groups', authenticate, async (c) => {
+  try {
+    const userPayload = c.get('user') as any;
+
+    const userGroupsData = await db
+      .select({
+        id: userGroups.id,
+        userId: userGroups.userId,
+        groupId: userGroups.groupId,
+        posicion: userGroups.posicion,
+        fechaUnion: userGroups.fechaUnion,
+        productoSeleccionado: userGroups.productoSeleccionado,
+        monedaPago: userGroups.monedaPago,
+        group: {
+          id: groups.id,
+          nombre: groups.nombre,
+          duracionMeses: groups.duracionMeses,
+          estado: groups.estado,
+          fechaInicio: groups.fechaInicio,
+          fechaFinal: groups.fechaFinal,
+          turnoActual: groups.turnoActual
+        }
+      })
+      .from(userGroups)
+      .innerJoin(groups, eq(userGroups.groupId, groups.id))
+      .where(eq(userGroups.userId, userPayload.id))
+      .orderBy(userGroups.fechaUnion);
+
+    return c.json({
+      success: true,
+      data: {
+        userGroups: userGroupsData
+      }
+    });
+
+  } catch (error) {
+    console.error('Error obteniendo grupos del usuario:', error);
+    return c.json({
+      success: false,
+      message: 'Error interno del servidor'
+    }, 500);
+  }
+});
+
+// Get current user's contributions
+usersRoute.get('/me/contributions', authenticate, async (c) => {
+  try {
+    const userPayload = c.get('user') as any;
+
+    const contributionsData = await db
+      .select({
+        id: contributions.id,
+        userId: contributions.userId,
+        groupId: contributions.groupId,
+        monto: contributions.monto,
+        moneda: contributions.moneda,
+        fechaPago: contributions.fechaPago,
+        periodo: contributions.periodo,
+        metodoPago: contributions.metodoPago,
+        estado: contributions.estado,
+        referenciaPago: contributions.referenciaPago
+      })
+      .from(contributions)
+      .where(eq(contributions.userId, userPayload.id))
+      .orderBy(contributions.id);
+
+    return c.json({
+      success: true,
+      data: {
+        contributions: contributionsData
+      }
+    });
+
+  } catch (error) {
+    console.error('Error obteniendo contribuciones del usuario:', error);
+    return c.json({
+      success: false,
+      message: 'Error interno del servidor'
+    }, 500);
+  }
+});
+
+// Get current user's deliveries
+usersRoute.get('/me/deliveries', authenticate, async (c) => {
+  try {
+    const userPayload = c.get('user') as any;
+
+    const deliveriesData = await db
+      .select({
+        id: deliveries.id,
+        userId: deliveries.userId,
+        groupId: deliveries.groupId,
+        productName: deliveries.productName,
+        productValue: deliveries.productValue,
+        fechaEntrega: deliveries.fechaEntrega,
+        mesEntrega: deliveries.mesEntrega,
+        estado: deliveries.estado,
+        notas: deliveries.notas
+      })
+      .from(deliveries)
+      .where(eq(deliveries.userId, userPayload.id))
+      .orderBy(deliveries.fechaEntrega);
+
+    return c.json({
+      success: true,
+      data: {
+        deliveries: deliveriesData
+      }
+    });
+
+  } catch (error) {
+    console.error('Error obteniendo entregas del usuario:', error);
     return c.json({
       success: false,
       message: 'Error interno del servidor'

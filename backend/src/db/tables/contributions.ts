@@ -9,7 +9,7 @@ export const contributions = pgTable('contributions', {
   groupId: integer('group_id').notNull().references(() => groups.id, { onDelete: 'cascade' }),
   monto: real('monto').notNull(),
   moneda: text('moneda').notNull().default('USD'), // USD o VES
-  fechaPago: timestamp('fecha_pago').notNull().defaultNow(),
+  fechaPago: timestamp('fecha_pago'),
   periodo: text('periodo').notNull(), // ej: "2025-01", "mes-1", etc.
   metodoPago: text('metodo_pago'), // referencia a paymentOptions
   estado: text('estado').notNull().default('PENDIENTE'), // PENDIENTE, CONFIRMADO, RECHAZADO

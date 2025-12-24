@@ -22,7 +22,16 @@ import { Users, Package, Calendar, TrendingUp, MapPin, Clock, CheckCircle, Alert
 
 const UserDashboard = () => {
   const { user } = useAuth();
-  const { grupos, productos, userGroups, contributions, deliveries, addUserGroup } = useAppState();
+  const { grupos, productos, userGroups, contributions, deliveries, addUserGroup, refreshData } = useAppState();
+
+  // State declarations first
+  const [showCurrencyModal, setShowCurrencyModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  // Users can switch between products and their groups
+  const [currentView, setCurrentView] = useState<'products' | 'groups' | 'group'>('products');
+  const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
 
   // Find user's group memberships
   const myUserGroups = userGroups.filter(ug => ug.userId === user?.id);
@@ -35,10 +44,16 @@ const UserDashboard = () => {
     .filter(c => c.estado === 'CONFIRMADO')
     .reduce((sum, c) => sum + c.monto, 0);
 
-  // Get current group info
-  const currentGroup = myGroups[0]; // Assuming user is in one group for now
+  // Get current group info - use selectedGroupId if set, otherwise first group
+  const currentGroup = selectedGroupId
+    ? myGroups.find(g => g.id === selectedGroupId) || myGroups[0]
+    : myGroups[0];
   const myPosition = myUserGroups.find(ug => ug.groupId === currentGroup?.id)?.posicion;
   const groupProgress = currentGroup ? (currentGroup.turnoActual / currentGroup.duracionMeses) * 100 : 0;
+
+  // Filter contributions and deliveries for current group
+  const currentGroupContributions = contributions.filter(c => c.groupId === currentGroup?.id);
+  const currentGroupDeliveries = deliveries.filter(d => d.groupId === currentGroup?.id);
 
   // Calculate when user will receive product
   const monthsUntilDelivery = myPosition ? myPosition - (currentGroup?.turnoActual || 0) : 0;
@@ -46,15 +61,10 @@ const UserDashboard = () => {
     ? new Date(currentGroup.fechaInicio.getTime() + monthsUntilDelivery * 30 * 24 * 60 * 60 * 1000)
     : null;
 
-  const hasChosenProduct = myUserGroups.length > 0;
-  const isGroupInStandby = currentGroup?.estado === 'SIN_COMPLETAR';
+  const hasGroups = myUserGroups.length > 0;
   const hasAvailableGroups = grupos.length > 0; // Grupos disponibles para unirse
-  const [showCurrencyModal, setShowCurrencyModal] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<any>(null);
-  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
-  // Si el usuario ya está en un grupo, solo mostrar 'group', de lo contrario mostrar 'products'
-  const [currentView, setCurrentView] = useState<'products' | 'groups' | 'group'>(hasChosenProduct ? 'group' : 'products');
+
+  const isGroupInStandby = currentGroup?.estado === 'SIN_COMPLETAR';
 
   const handleProductSelect = (producto: any) => {
     setSelectedProduct(producto);
@@ -63,6 +73,10 @@ const UserDashboard = () => {
 
   const handleCurrencySelect = async (currency: 'VES' | 'USD') => {
     if (!selectedProduct || !user) return;
+
+    console.log('Selected product:', selectedProduct);
+    console.log('Currency:', currency);
+    console.log('Product ID:', selectedProduct.id, 'Type:', typeof selectedProduct.id);
 
     try {
       const response = await apiClient.joinGroup(selectedProduct.id, currency);
@@ -79,6 +93,9 @@ const UserDashboard = () => {
           fechaUnion: new Date()
         };
         addUserGroup(newUserGroup);
+
+        // Refresh all data to ensure UI is updated
+        await refreshData();
 
         setShowCurrencyModal(false);
         setSelectedProduct(null);
@@ -109,34 +126,22 @@ const UserDashboard = () => {
         </SheetTrigger>
         <SheetContent side="left" className="w-64">
           <div className="flex flex-col space-y-4 mt-6">
-            {!hasChosenProduct && (
-              <Button
-                variant={currentView === 'products' ? 'default' : 'ghost'}
-                className="justify-start"
-                onClick={() => setCurrentView('products')}
-              >
-                <ShoppingCart className="h-4 w-4 mr-2" />
-                Ver Productos
-              </Button>
-            )}
-            {!hasChosenProduct && hasAvailableGroups && (
+            <Button
+              variant={currentView === 'products' ? 'default' : 'ghost'}
+              className="justify-start"
+              onClick={() => setCurrentView('products')}
+            >
+              <ShoppingCart className="h-4 w-4 mr-2" />
+              Ver Productos
+            </Button>
+            {hasGroups && (
               <Button
                 variant={currentView === 'groups' ? 'default' : 'ghost'}
                 className="justify-start"
                 onClick={() => setCurrentView('groups')}
               >
                 <Users className="h-4 w-4 mr-2" />
-                Grupos
-              </Button>
-            )}
-            {hasChosenProduct && (
-              <Button
-                variant={currentView === 'group' ? 'default' : 'ghost'}
-                className="justify-start"
-                disabled
-              >
-                <Home className="h-4 w-4 mr-2" />
-                Mi Grupo
+                Mis Grupos
               </Button>
             )}
           </div>
@@ -151,34 +156,22 @@ const UserDashboard = () => {
           </div>
           <div className="mt-8 flex-grow flex flex-col">
             <nav className="flex-1 px-2 space-y-1">
-              {!hasChosenProduct && (
-                <Button
-                  variant={currentView === 'products' ? 'default' : 'ghost'}
-                  className="w-full justify-start"
-                  onClick={() => setCurrentView('products')}
-                >
-                  <ShoppingCart className="h-4 w-4 mr-2" />
-                  Ver Productos
-                </Button>
-              )}
-              {!hasChosenProduct && hasAvailableGroups && (
+              <Button
+                variant={currentView === 'products' ? 'default' : 'ghost'}
+                className="w-full justify-start"
+                onClick={() => setCurrentView('products')}
+              >
+                <ShoppingCart className="h-4 w-4 mr-2" />
+                Ver Productos
+              </Button>
+              {hasGroups && (
                 <Button
                   variant={currentView === 'groups' ? 'default' : 'ghost'}
                   className="w-full justify-start"
                   onClick={() => setCurrentView('groups')}
                 >
                   <Users className="h-4 w-4 mr-2" />
-                  Grupos
-                </Button>
-              )}
-              {hasChosenProduct && (
-                <Button
-                  variant={currentView === 'group' ? 'default' : 'ghost'}
-                  className="w-full justify-start"
-                  disabled
-                >
-                  <Home className="h-4 w-4 mr-2" />
-                  Mi Grupo
+                  Mis Grupos
                 </Button>
               )}
             </nav>
@@ -189,59 +182,20 @@ const UserDashboard = () => {
       {/* Main Content */}
       <div className="flex-1 md:ml-64">
         <div className="container mx-auto px-4 py-8">
-          {/* Header with Navigation */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 space-y-4 md:space-y-0">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                ¡Bienvenido, {user?.nombre}!
-              </h1>
-              <p className="text-gray-600 mt-1">
-                {currentView === 'products'
-                  ? hasChosenProduct
-                    ? 'Explora más productos disponibles'
-                    : 'Elige un producto para comenzar tu ahorro colaborativo'
-                  : 'Tu progreso en círculos de ahorro colaborativo'
-                }
-              </p>
-            </div>
-
-            {/* Navigation Buttons */}
-            <div className="flex space-x-2">
-              {!hasChosenProduct && (
-                <Button
-                  variant={currentView === 'products' ? 'default' : 'outline'}
-                  onClick={() => setCurrentView('products')}
-                  className="flex items-center gap-2"
-                >
-                  <ShoppingCart className="h-4 w-4" />
-                  Productos
-                </Button>
-              )}
-              {!hasChosenProduct && hasAvailableGroups && (
-                <Button
-                  variant={currentView === 'groups' ? 'default' : 'outline'}
-                  onClick={() => setCurrentView('groups')}
-                  className="flex items-center gap-2"
-                >
-                  <Users className="h-4 w-4" />
-                  Grupos
-                </Button>
-              )}
-              {hasChosenProduct && (
-                <Button
-                  variant={currentView === 'group' ? 'default' : 'outline'}
-                  onClick={() => setCurrentView('group')}
-                  className="flex items-center gap-2"
-                  disabled
-                >
-                  <Home className="h-4 w-4" />
-                  Mi Grupo
-                </Button>
-              )}
-            </div>
+          {/* Header */}
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold text-gray-900">
+              ¡Bienvenido, {user?.nombre}!
+            </h1>
+            <p className="text-gray-600 mt-1">
+              {currentView === 'products'
+                ? 'Elige un producto para comenzar tu ahorro colaborativo'
+                : 'Tu progreso en círculos de ahorro colaborativo'
+              }
+            </p>
           </div>
 
-          {currentView === 'group' && hasChosenProduct ? (
+          {currentView === 'group' ? (
             <>
               {/* Estadísticas principales */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
@@ -392,7 +346,7 @@ const UserDashboard = () => {
                             <div>
                               <p className="font-medium">{contribution.periodo}</p>
                               <p className="text-sm text-gray-600">
-                                {contribution.fechaPago.toLocaleDateString('es-ES')}
+                                {contribution.fechaPago ? contribution.fechaPago.toLocaleDateString('es-ES') : 'Pendiente'}
                               </p>
                             </div>
                           </div>
@@ -469,94 +423,86 @@ const UserDashboard = () => {
               </Card>
             </>
           ) : currentView === 'groups' ? (
-            /* Grupos Disponibles */
-            <Card>
-              <CardHeader>
-                <CardTitle>Grupos Disponibles</CardTitle>
-                <CardDescription>
-                  Únete a un grupo existente de ahorro colaborativo
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {grupos.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">No hay grupos disponibles en este momento</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {grupos.map((grupo) => {
-                      // Contar miembros actuales del grupo
-                      const currentMembers = userGroups.filter(ug => ug.groupId === grupo.id).length;
-                      const isUserInGroup = myUserGroups.some(ug => ug.groupId === grupo.id);
+            <div className="space-y-6">
+              {/* Mis Grupos */}
+              {hasGroups && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Mis Grupos</CardTitle>
+                    <CardDescription>
+                      Grupos a los que ya te has unido
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {myGroups.map((grupo) => {
+                        const myUserGroup = myUserGroups.find(ug => ug.groupId === grupo.id);
+                        const currentMembers = userGroups.filter(ug => ug.groupId === grupo.id).length;
 
-                      return (
-                        <div key={grupo.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                          <div className="flex justify-between items-start mb-2">
-                            <h3 className="font-semibold text-lg">{grupo.nombre}</h3>
-                            <Badge variant={
-                              grupo.estado === 'EN_MARCHA'
-                                ? 'default'
-                                : grupo.estado === 'SIN_COMPLETAR'
-                                  ? 'outline'
-                                  : 'secondary'
-                            }>
-                              {grupo.estado === 'SIN_COMPLETAR'
-                                ? 'En Espera'
-                                : grupo.estado?.replace('_', ' ') || 'Activo'
-                              }
-                            </Badge>
-                          </div>
-
-                          <div className="space-y-2 mb-4">
-                            <div className="flex justify-between items-center">
-                              <span className="text-sm font-medium text-gray-700">Duración:</span>
-                              <span className="font-semibold text-purple-600">{grupo.duracionMeses} meses</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-sm font-medium text-gray-700">Miembros:</span>
-                              <span className="font-semibold text-blue-600">{currentMembers}</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-sm font-medium text-gray-700">Estado:</span>
-                              <span className="font-semibold">
+                        return (
+                          <div key={grupo.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <div className="flex justify-between items-start mb-2">
+                              <h3 className="font-semibold text-lg">{grupo.nombre}</h3>
+                              <Badge variant={
+                                grupo.estado === 'EN_MARCHA'
+                                  ? 'default'
+                                  : grupo.estado === 'SIN_COMPLETAR'
+                                    ? 'outline'
+                                    : 'secondary'
+                              }>
                                 {grupo.estado === 'SIN_COMPLETAR'
-                                  ? 'Esperando inicio'
-                                  : `Mes ${grupo.turnoActual} de ${grupo.duracionMeses}`
+                                  ? 'En Espera'
+                                  : grupo.estado?.replace('_', ' ') || 'Activo'
                                 }
-                              </span>
+                              </Badge>
                             </div>
-                          </div>
 
-                          {isUserInGroup ? (
+                            <div className="space-y-2 mb-4">
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm font-medium text-gray-700">Producto:</span>
+                                <span className="font-semibold text-green-600">{myUserGroup?.productoSeleccionado}</span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm font-medium text-gray-700">Tu posición:</span>
+                                <span className="font-semibold text-blue-600">
+                                  {grupo.estado === 'SIN_COMPLETAR' ? 'Sin definir' : `#${myUserGroup?.posicion}`}
+                                </span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm font-medium text-gray-700">Duración:</span>
+                                <span className="font-semibold text-purple-600">{grupo.duracionMeses} meses</span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm font-medium text-gray-700">Estado:</span>
+                                <span className="font-semibold">
+                                  {grupo.estado === 'SIN_COMPLETAR'
+                                    ? 'Esperando inicio'
+                                    : `Mes ${grupo.turnoActual} de ${grupo.duracionMeses}`
+                                  }
+                                </span>
+                              </div>
+                            </div>
+
                             <Button
-                              className="w-full"
-                              variant="secondary"
-                              disabled
-                            >
-                              <CheckCircle className="h-4 w-4 mr-2" />
-                              Ya estás en este grupo
-                            </Button>
-                          ) : (
-                            <Button
-                              className="w-full bg-green-600 hover:bg-green-700"
+                              className="w-full bg-blue-600 hover:bg-blue-700"
                               onClick={() => {
-                                // Simply switch to group view - assuming user is already in this group
-                                // or this is just for viewing existing groups
+                                setSelectedGroupId(grupo.id);
                                 setCurrentView('group');
                               }}
                             >
-                              <Users className="h-4 w-4 mr-2" />
-                              Entrar
+                              <Home className="h-4 w-4 mr-2" />
+                              Ver Grupo
                             </Button>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+
+            </div>
           ) : (
             /* Productos Disponibles */
             <Card>

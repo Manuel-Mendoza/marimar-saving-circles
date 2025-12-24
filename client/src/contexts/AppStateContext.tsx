@@ -48,6 +48,8 @@ interface UserGroup {
   groupId: number;
   posicion: number;
   fechaUnion: Date;
+  productoSeleccionado?: string;
+  monedaPago?: string;
   user?: User;
   group?: Grupo;
 }
@@ -88,6 +90,7 @@ interface AppStateContextType {
   updateGrupo: (grupo: Grupo) => void;
   addGrupo: (grupo: Grupo) => void;
   addUserGroup: (userGroup: UserGroup) => void;
+  refreshData: () => Promise<void>;
 }
 
 const AppStateContext = createContext<AppStateContextType | undefined>(undefined);
@@ -143,61 +146,67 @@ export const AppStateProvider = ({ children }: AppStateProviderProps) => {
     fetchProducts();
   }, []);
 
-  const [userGroups, setUserGroups] = useState<UserGroup[]>([
-    {
-      id: 1,
-      userId: 1, // Assuming current user is 1
-      groupId: 1,
-      posicion: 2,
-      fechaUnion: new Date('2025-01-01')
-    }
-  ]);
+  const [userGroups, setUserGroups] = useState<UserGroup[]>([]);
 
-  const [contributions] = useState<Contribution[]>([
-    {
-      id: 1,
-      userId: 1,
-      groupId: 1,
-      monto: 75,
-      moneda: 'USD',
-      fechaPago: new Date('2025-01-15'),
-      periodo: '2025-01',
-      estado: 'CONFIRMADO'
-    },
-    {
-      id: 2,
-      userId: 1,
-      groupId: 1,
-      monto: 75,
-      moneda: 'USD',
-      fechaPago: new Date('2025-02-15'),
-      periodo: '2025-02',
-      estado: 'CONFIRMADO'
-    }
-  ]);
+  // Fetch user groups from API on mount
+  useEffect(() => {
+    const fetchUserGroups = async () => {
+      try {
+        console.log('Fetching user groups...');
+        const response = await apiClient.getMyGroups();
+        console.log('User groups response:', response);
+        if (response.success && response.data?.userGroups) {
+          console.log('Setting user groups:', response.data.userGroups);
+          setUserGroups(response.data.userGroups);
+        } else {
+          console.log('No user groups found or error:', response);
+        }
+      } catch (error) {
+        console.error('Error fetching user groups:', error);
+        // Keep empty array
+      }
+    };
 
-  const [deliveries] = useState<Delivery[]>([
-    {
-      id: 1,
-      userId: 2,
-      groupId: 1,
-      productName: 'Lavadora Samsung',
-      productValue: '$450',
-      fechaEntrega: new Date('2025-01-31'),
-      mesEntrega: '2025-01',
-      estado: 'ENTREGADO'
-    },
-    {
-      id: 2,
-      userId: 3,
-      groupId: 1,
-      productName: 'Refrigerador LG',
-      productValue: '$600',
-      fechaEntrega: new Date('2025-02-28'),
-      mesEntrega: '2025-02',
-      estado: 'ENTREGADO'
-    }
-  ]);
+    fetchUserGroups();
+  }, []);
+
+  const [contributions, setContributions] = useState<Contribution[]>([]);
+
+  // Fetch user contributions from API on mount
+  useEffect(() => {
+    const fetchContributions = async () => {
+      try {
+        const response = await apiClient.getMyContributions();
+        if (response.success && response.data?.contributions) {
+          setContributions(response.data.contributions);
+        }
+      } catch (error) {
+        console.error('Error fetching contributions:', error);
+        // Keep empty array
+      }
+    };
+
+    fetchContributions();
+  }, []);
+
+  const [deliveries, setDeliveries] = useState<Delivery[]>([]);
+
+  // Fetch user deliveries from API on mount
+  useEffect(() => {
+    const fetchDeliveries = async () => {
+      try {
+        const response = await apiClient.getMyDeliveries();
+        if (response.success && response.data?.deliveries) {
+          setDeliveries(response.data.deliveries);
+        }
+      } catch (error) {
+        console.error('Error fetching deliveries:', error);
+        // Keep empty array
+      }
+    };
+
+    fetchDeliveries();
+  }, []);
 
   const [selectedGroup, setSelectedGroup] = useState<Grupo | null>(null);
 
@@ -213,6 +222,44 @@ export const AppStateProvider = ({ children }: AppStateProviderProps) => {
     setUserGroups(prev => [...prev, userGroup]);
   };
 
+  const refreshData = async () => {
+    try {
+      // Refresh groups
+      const groupsResponse = await apiClient.getGroups();
+      if (groupsResponse.success && groupsResponse.data?.groups) {
+        setGrupos(groupsResponse.data.groups);
+      }
+
+      // Refresh products
+      const productsResponse = await apiClient.getProducts();
+      if (productsResponse.success && productsResponse.data?.products) {
+        setProductos(productsResponse.data.products);
+      }
+
+      // Refresh user groups
+      const userGroupsResponse = await apiClient.getMyGroups();
+      if (userGroupsResponse.success && userGroupsResponse.data?.userGroups) {
+        setUserGroups(userGroupsResponse.data.userGroups);
+      }
+
+      // Refresh contributions
+      const contributionsResponse = await apiClient.getMyContributions();
+      if (contributionsResponse.success && contributionsResponse.data?.contributions) {
+        setContributions(contributionsResponse.data.contributions);
+      }
+
+      // Refresh deliveries
+      const deliveriesResponse = await apiClient.getMyDeliveries();
+      if (deliveriesResponse.success && deliveriesResponse.data?.deliveries) {
+        setDeliveries(deliveriesResponse.data.deliveries);
+      }
+
+      console.log('Data refreshed successfully');
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+    }
+  };
+
   return (
     <AppStateContext.Provider value={{
       grupos,
@@ -224,7 +271,8 @@ export const AppStateProvider = ({ children }: AppStateProviderProps) => {
       setSelectedGroup,
       updateGrupo,
       addGrupo,
-      addUserGroup
+      addUserGroup,
+      refreshData
     }}>
       {children}
     </AppStateContext.Provider>

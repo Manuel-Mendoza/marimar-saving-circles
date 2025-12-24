@@ -162,10 +162,24 @@ class ApiClient {
       groupId: number;
       position: number;
       currency: string;
+      monthlyPayment: number;
     }>('/users/join', {
       method: 'POST',
       body: JSON.stringify({ productId, currency }),
     });
+  }
+
+  // User data endpoints
+  async getMyGroups() {
+    return this.request<{ userGroups: any[] }>('/users/me/groups');
+  }
+
+  async getMyContributions() {
+    return this.request<{ contributions: any[] }>('/users/me/contributions');
+  }
+
+  async getMyDeliveries() {
+    return this.request<{ deliveries: any[] }>('/users/me/deliveries');
   }
 
   // Products endpoints
