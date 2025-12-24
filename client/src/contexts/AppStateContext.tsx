@@ -105,24 +105,24 @@ interface AppStateProviderProps {
 }
 
 export const AppStateProvider = ({ children }: AppStateProviderProps) => {
-  const [grupos, setGrupos] = useState<Grupo[]>([
-    {
-      id: 1,
-      nombre: 'Grupo de 8 meses',
-      duracionMeses: 8,
-      estado: 'EN_MARCHA',
-      fechaInicio: new Date('2025-01-01'),
-      turnoActual: 3
-    },
-    {
-      id: 2,
-      nombre: 'Grupo de 10 meses',
-      duracionMeses: 10,
-      estado: 'LLENO',
-      fechaInicio: new Date('2025-02-01'),
-      turnoActual: 1
-    }
-  ]);
+  const [grupos, setGrupos] = useState<Grupo[]>([]);
+
+  // Fetch groups from API on mount
+  useEffect(() => {
+    const fetchGroups = async () => {
+      try {
+        const response = await apiClient.getGroups();
+        if (response.success && response.data?.groups) {
+          setGrupos(response.data.groups);
+        }
+      } catch (error) {
+        console.error('Error fetching groups:', error);
+        // Keep empty array or show error
+      }
+    };
+
+    fetchGroups();
+  }, []);
 
   const [productos, setProductos] = useState<Producto[]>([]);
 

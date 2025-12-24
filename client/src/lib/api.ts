@@ -196,6 +196,24 @@ class ApiClient {
       method: 'DELETE',
     });
   }
+
+  // Groups endpoints
+  async getGroups() {
+    return this.request<{ groups: any[] }>('/groups');
+  }
+
+  async getGroup(groupId: number) {
+    return this.request<{ group: any }>(`/groups/${groupId}`);
+  }
+
+  async joinGroupById(groupId: number) {
+    return this.request<{
+      groupId: number;
+      position: number;
+    }>(`/groups/${groupId}/join`, {
+      method: 'POST',
+    });
+  }
 }
 
 export const apiClient = new ApiClient(API_BASE_URL);
