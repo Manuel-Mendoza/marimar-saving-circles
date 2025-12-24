@@ -4,13 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -18,6 +11,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useProducts } from "@/hooks/useProducts";
+import ProductFilters from "./ProductFilters";
+import { getTagColor, getAvailableTags } from "@/lib/tagUtils";
 
 interface Producto {
   id: number;
@@ -34,7 +29,7 @@ interface Producto {
 const ProductsView: React.FC = () => {
   const { allProducts, productsLoading, handleCreateProduct, handleUpdateProduct, handleDeleteProduct } = useProducts();
   const [productSearchTerm, setProductSearchTerm] = useState("");
-  const [productStatusFilter, setProductStatusFilter] = useState<string>("all");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   // Dialog states
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -54,20 +49,7 @@ const ProductsView: React.FC = () => {
     activo: true
   });
 
-  const availableTags = [
-    "electrodomésticos",
-    "línea blanca",
-    "celulares",
-    "tv",
-    "computadoras",
-    "laptops",
-    "aires acondicionados",
-    "cocinas",
-    "microondas",
-    "lavadoras",
-    "neveras",
-    "refrigeradores"
-  ];
+  const availableTags = getAvailableTags();
 
   const filteredProducts = allProducts.filter((product) => {
     const matchesSearch =
@@ -75,12 +57,24 @@ const ProductsView: React.FC = () => {
       product.descripcion.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
       (product.tags && product.tags.some(tag => tag.toLowerCase().includes(productSearchTerm.toLowerCase())));
 
-    const matchesStatus = productStatusFilter === "all" ||
-      (productStatusFilter === "active" && product.activo) ||
-      (productStatusFilter === "inactive" && !product.activo);
+    const matchesTags = selectedTags.length === 0 ||
+      (product.tags && selectedTags.some(selectedTag => product.tags?.includes(selectedTag)));
 
-    return matchesSearch && matchesStatus;
+    return matchesSearch && matchesTags;
   });
+
+  const handleFilterTagToggle = (tag: string) => {
+    setSelectedTags(prev =>
+      prev.includes(tag)
+        ? prev.filter(t => t !== tag)
+        : [...prev, tag]
+    );
+  };
+
+  const handleClearFilters = () => {
+    setProductSearchTerm("");
+    setSelectedTags([]);
+  };
 
   const resetProductForm = () => {
     setProductForm({
@@ -211,27 +205,16 @@ const ProductsView: React.FC = () => {
           </Button>
         </div>
 
-        {/* Filters */}
+        {/* Product Filters */}
         <Card>
-          <CardContent className="p-4">
-            <div className="flex gap-4">
-              <Input
-                placeholder="Buscar productos..."
-                value={productSearchTerm}
-                onChange={(e) => setProductSearchTerm(e.target.value)}
-                className="max-w-sm"
-              />
-              <Select value={productStatusFilter} onValueChange={setProductStatusFilter}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Filtrar por estado" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos los productos</SelectItem>
-                  <SelectItem value="active">Activos</SelectItem>
-                  <SelectItem value="inactive">Inactivos</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <CardContent className="p-6">
+            <ProductFilters
+              searchTerm={productSearchTerm}
+              onSearchChange={setProductSearchTerm}
+              selectedTags={selectedTags}
+              onTagToggle={handleFilterTagToggle}
+              onClearFilters={handleClearFilters}
+            />
           </CardContent>
         </Card>
 
@@ -246,7 +229,7 @@ const ProductsView: React.FC = () => {
           <Card>
             <CardContent className="p-8 text-center">
               <p className="text-gray-500">
-                {productSearchTerm || productStatusFilter !== "all"
+                {productSearchTerm || selectedTags.length > 0
                   ? "No se encontraron productos con los filtros aplicados"
                   : "No hay productos registrados"}
               </p>
@@ -278,7 +261,7 @@ const ProductsView: React.FC = () => {
                   {product.tags && product.tags.length > 0 && (
                     <div className="flex flex-wrap gap-1 mb-4">
                       {product.tags.map((tag) => (
-                        <Badge key={tag} variant="outline" className="text-xs">
+                        <Badge key={tag} className={`text-xs border ${getTagColor(tag)}`}>
                           {tag}
                         </Badge>
                       ))}
@@ -396,6 +379,7 @@ const ProductsView: React.FC = () => {
                       variant={productForm.tags.includes(tag) ? "default" : "outline"}
                       size="sm"
                       onClick={() => handleTagToggle(tag)}
+                      className={productForm.tags.includes(tag) ? "" : getTagColor(tag)}
                     >
                       {tag}
                     </Button>
@@ -521,6 +505,7 @@ const ProductsView: React.FC = () => {
                       variant={productForm.tags.includes(tag) ? "default" : "outline"}
                       size="sm"
                       onClick={() => handleTagToggle(tag)}
+                      className={productForm.tags.includes(tag) ? "" : getTagColor(tag)}
                     >
                       {tag}
                     </Button>
