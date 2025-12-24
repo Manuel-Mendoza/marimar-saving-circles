@@ -27,60 +27,18 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
   SidebarProvider,
   SidebarInset,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
-import {
-  Bar,
-  BarChart,
-  Line,
-  LineChart,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  ResponsiveContainer,
-} from "recharts";
-import {
-  Users,
-  Package,
-  CheckCircle,
-  Clock,
-  UserCheck,
-  UserX,
-  AlertCircle,
-  Eye,
-  LayoutDashboard,
-  Settings,
-  BarChart3,
-  TrendingUp,
-  Search,
-  Filter,
-  MoreHorizontal,
-  Edit,
-  Trash2,
-  Trash,
-  Plus,
-  X,
-} from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { apiClient } from "@/lib/api";
-import { getTagColor, getAvailableTags } from "@/lib/tagUtils";
 import { useToast } from "@/hooks/use-toast";
+
+// Componentes separados
+import Sidebar from "./components/Sidebar";
+import DashboardView from "./components/DashboardView";
+import GroupsView from "./components/GroupsView";
 
 interface Producto {
   id: number;
@@ -117,7 +75,6 @@ type ActiveView =
 
 const AdminDashboard = () => {
   const { user } = useAuth();
-  const { grupos, productos } = useAppState();
   const { toast } = useToast();
   const [activeView, setActiveView] = useState<ActiveView>("dashboard");
   const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([]);
@@ -141,6 +98,10 @@ const AdminDashboard = () => {
   const [editingProduct, setEditingProduct] = useState<Producto | null>(null);
   const [productToDelete, setProductToDelete] = useState<Producto | null>(null);
 
+  // Groups state
+  const [allGroups, setAllGroups] = useState<any[]>([]);
+  const [groupsLoading, setGroupsLoading] = useState(false);
+
   // Product form state
   const [productForm, setProductForm] = useState({
     nombre: "",
@@ -153,10 +114,11 @@ const AdminDashboard = () => {
     activo: true
   });
 
-  // Cargar usuarios pendientes
+  // Cargar usuarios pendientes y total de usuarios para el dashboard
   useEffect(() => {
     if (activeView === "approvals" || activeView === "dashboard") {
       fetchPendingUsers();
+      fetchAllUsers(); // También cargar total de usuarios para el dashboard
     }
   }, [activeView]);
 
@@ -171,6 +133,13 @@ const AdminDashboard = () => {
   useEffect(() => {
     if (activeView === "products") {
       fetchAllProducts();
+    }
+  }, [activeView]);
+
+  // Cargar grupos cuando se selecciona la vista de grupos
+  useEffect(() => {
+    if (activeView === "groups") {
+      fetchAllGroups();
     }
   }, [activeView]);
 
@@ -219,6 +188,23 @@ const AdminDashboard = () => {
       setPendingUsers([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAllGroups = async () => {
+    setGroupsLoading(true);
+    try {
+      const response = await apiClient.getGroups();
+      if (response.success && response.data) {
+        setAllGroups(response.data.groups);
+      } else {
+        setAllGroups([]);
+      }
+    } catch (error) {
+      console.error("Error cargando grupos:", error);
+      setAllGroups([]);
+    } finally {
+      setGroupsLoading(false);
     }
   };
 
@@ -761,1073 +747,95 @@ const AdminDashboard = () => {
   };
 
   // Available tags from centralized utilities
-  const availableTags = getAvailableTags();
-
-  const chartData = [
-    { month: "Ene", usuarios: 12, contribuciones: 2450, grupos: 3 },
-    { month: "Feb", usuarios: 19, contribuciones: 3200, grupos: 5 },
-    { month: "Mar", usuarios: 28, contribuciones: 4100, grupos: 7 },
-    { month: "Abr", usuarios: 35, contribuciones: 5800, grupos: 9 },
-    { month: "May", usuarios: 42, contribuciones: 7200, grupos: 11 },
-    { month: "Jun", usuarios: 51, contribuciones: 8900, grupos: 13 },
+  const availableTags = [
+    "electrodomésticos",
+    "línea blanca",
+    "celulares",
+    "tv",
+    "computadoras",
+    "laptops",
+    "aires acondicionados",
+    "cocinas",
+    "microondas",
+    "lavadoras",
+    "neveras",
+    "refrigeradores"
   ];
 
-  const chartConfig = {
-    usuarios: {
-      label: "Nuevos Usuarios",
-      color: "hsl(var(--chart-1))",
-    },
-    contribuciones: {
-      label: "Contribuciones ($)",
-      color: "hsl(var(--chart-2))",
-    },
-    grupos: {
-      label: "Grupos Activos",
-      color: "hsl(var(--chart-3))",
-    },
+  const renderContent = () => {
+    switch (activeView) {
+      case "dashboard":
+        return <DashboardView
+          allUsersCount={allUsers.length}
+          groupsCount={allGroups.length}
+          productsCount={allProducts.length}
+        />;
+      case "approvals":
+        return renderApprovalsView();
+      case "users":
+        return renderUsersView();
+      case "groups":
+        return <GroupsView allGroups={allGroups} groupsLoading={groupsLoading} />;
+      case "products":
+        return renderProductsView();
+      case "reports":
+        return <div className="p-8 text-center text-gray-500">Vista de reportes en desarrollo</div>;
+      default:
+        return <DashboardView
+          allUsersCount={allUsers.length}
+          groupsCount={allGroups.length}
+          productsCount={allProducts.length}
+        />;
+    }
   };
 
-  const renderDashboardView = () => (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Panel de Administración</h1>
-          <p className="text-gray-600 mt-1">Gestión de usuarios y sistema de ahorro colaborativo</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Usuarios Pendientes</CardTitle>
-            <AlertCircle className="h-4 w-4 text-orange-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{pendingUsers.length}</div>
-            <p className="text-xs text-muted-foreground">Esperando aprobación</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Grupos Activos</CardTitle>
-            <Users className="h-4 w-4 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{grupos.length}</div>
-            <p className="text-xs text-muted-foreground">Grupos de ahorro</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Productos</CardTitle>
-            <Package className="h-4 w-4 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{productos.length}</div>
-            <p className="text-xs text-muted-foreground">Disponibles</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Entregas Hoy</CardTitle>
-            <CheckCircle className="h-4 w-4 text-purple-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-purple-600">0</div>
-            <p className="text-xs text-muted-foreground">Productos entregados</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-blue-600" />
-            Crecimiento del Sistema
-          </CardTitle>
-          <CardDescription>Estadísticas mensuales de usuarios, contribuciones y grupos activos</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ChartContainer config={chartConfig} className="h-[300px] w-full">
-            <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
-              <ChartTooltip content={<ChartTooltipContent />} />
-              <Bar dataKey="usuarios" fill="var(--color-usuarios)" radius={4} />
-              <Bar dataKey="contribuciones" fill="var(--color-contribuciones)" radius={4} />
-              <Bar dataKey="grupos" fill="var(--color-grupos)" radius={4} />
-            </BarChart>
-          </ChartContainer>
-        </CardContent>
-      </Card>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Crecimiento Mensual</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">+19%</div>
-            <p className="text-sm text-muted-foreground">Más usuarios que el mes anterior</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Contribuciones Totales</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">$31,650</div>
-            <p className="text-sm text-muted-foreground">Acumuladas en los últimos 6 meses</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Grupos Creados</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-purple-600">48</div>
-            <p className="text-sm text-muted-foreground">Grupos activos en total</p>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
-
+  // Placeholder functions for views not yet separated
   const renderApprovalsView = () => (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Aprobación de Usuarios</h1>
         <p className="text-gray-600 mt-1">Gestiona las solicitudes de registro de nuevos usuarios</p>
       </div>
-
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <AlertCircle className="h-5 w-5 text-orange-500" />
-            Usuarios Pendientes de Aprobación
-          </CardTitle>
-          <CardDescription>Revisar y aprobar solicitudes de registro de nuevos usuarios</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="mt-4 text-gray-600">Cargando usuarios pendientes...</p>
-            </div>
-          ) : pendingUsers.length === 0 ? (
-            <div className="text-center py-8">
-              <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
-              <p className="text-gray-500">No hay usuarios pendientes de aprobación</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {pendingUsers.map((pendingUser) => (
-                <div key={pendingUser.id} className="flex items-center justify-between p-4 border rounded-lg bg-orange-50">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-semibold">{pendingUser.nombre} {pendingUser.apellido}</h3>
-                      <Badge variant="secondary">Pendiente</Badge>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
-                      <div>
-                        <p><strong>Cédula:</strong> {pendingUser.cedula}</p>
-                        <p><strong>Teléfono:</strong> {pendingUser.telefono}</p>
-                      </div>
-                      <div>
-                        <p><strong>Email:</strong> {pendingUser.correoElectronico}</p>
-                        <p><strong>Registro:</strong> {pendingUser.fechaRegistro.toLocaleDateString("es-ES")}</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {pendingUser.imagenCedula && (
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" size="sm">
-                            <Eye className="h-4 w-4 mr-1" />
-                            Ver Cédula
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-2xl">
-                          <DialogHeader>
-                            <DialogTitle>Cédula de Identidad - {pendingUser.nombre} {pendingUser.apellido}</DialogTitle>
-                            <DialogDescription>Documento de identidad del usuario registrado</DialogDescription>
-                          </DialogHeader>
-                          <div className="flex justify-center">
-                            <img
-                              src={pendingUser.imagenCedula}
-                              alt={`Cédula de ${pendingUser.nombre} ${pendingUser.apellido}`}
-                              className="max-w-full max-h-96 object-contain rounded-lg shadow-md"
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                target.src = "https://via.placeholder.com/400x300/f3f4f6/9ca3af?text=Imagen+no+disponible";
-                                target.alt = "Imagen no disponible";
-                              }}
-                            />
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                    )}
-                    <Button
-                      onClick={() => handleApproveUser(pendingUser.id)}
-                      disabled={processingUser === pendingUser.id}
-                      className="bg-green-600 hover:bg-green-700"
-                      size="sm"
-                    >
-                      <UserCheck className="h-4 w-4 mr-1" />
-                      {processingUser === pendingUser.id ? "Procesando..." : "Aprobar"}
-                    </Button>
-                    <Button
-                      onClick={() => openRejectDialog(pendingUser)}
-                      disabled={processingUser === pendingUser.id}
-                      variant="destructive"
-                      size="sm"
-                    >
-                      <UserX className="h-4 w-4 mr-1" />
-                      Rechazar
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+        <CardContent className="p-8 text-center">
+          <p className="text-gray-500">Vista de aprobaciones en desarrollo</p>
         </CardContent>
       </Card>
     </div>
   );
 
-  const renderUsersView = () => {
-    const filteredUsers = allUsers.filter((user) => {
-      const matchesSearch =
-        searchTerm === "" ||
-        user.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.apellido.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.correoElectronico.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.cedula.includes(searchTerm);
-
-      const matchesStatus = statusFilter === "all" || user.estado === statusFilter;
-
-      return matchesSearch && matchesStatus;
-    });
-
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Gestión de Usuarios</h1>
-          <p className="text-gray-600 mt-1">Administra todos los usuarios registrados en el sistema</p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Usuarios</CardTitle>
-              <Users className="h-4 w-4 text-blue-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{allUsers.length}</div>
-              <p className="text-xs text-muted-foreground">Registrados</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Aprobados</CardTitle>
-              <UserCheck className="h-4 w-4 text-green-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">
-                {allUsers.filter((u) => u.estado === "APROBADO").length}
-              </div>
-              <p className="text-xs text-muted-foreground">Usuarios activos</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Suspendidos</CardTitle>
-              <AlertCircle className="h-4 w-4 text-red-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600">
-                {allUsers.filter((u) => u.estado === "SUSPENDIDO").length}
-              </div>
-              <p className="text-xs text-muted-foreground">Usuarios suspendidos</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Reactivados</CardTitle>
-              <UserCheck className="h-4 w-4 text-blue-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-600">
-                {allUsers.filter((u) => u.estado === "REACTIVADO").length}
-              </div>
-              <p className="text-xs text-muted-foreground">Usuarios con historial de suspensión</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Buscar y Filtrar Usuarios</CardTitle>
-            <CardDescription>Utiliza los controles para encontrar usuarios específicos</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <Input
-                    placeholder="Buscar por nombre, apellido, email o cédula..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-48">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Filtrar por estado" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos los estados</SelectItem>
-                  <SelectItem value="APROBADO">Aprobados</SelectItem>
-                  <SelectItem value="PENDIENTE">Pendientes</SelectItem>
-                  <SelectItem value="RECHAZADO">Rechazados</SelectItem>
-                  <SelectItem value="SUSPENDIDO">Suspendidos</SelectItem>
-                  <SelectItem value="REACTIVADO">Reactivados</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Usuarios Registrados</CardTitle>
-            <CardDescription>
-              {filteredUsers.length} usuario{filteredUsers.length !== 1 ? "s" : ""} encontrado{filteredUsers.length !== 1 ? "s" : ""}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {usersLoading ? (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                <p className="mt-4 text-gray-600">Cargando usuarios...</p>
-              </div>
-            ) : filteredUsers.length === 0 ? (
-              <div className="text-center py-8">
-                <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">No se encontraron usuarios con los criterios de búsqueda</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {filteredUsers.map((user) => (
-                  <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="font-semibold">{user.nombre} {user.apellido}</h3>
-                        <Badge variant={user.tipo === "ADMINISTRADOR" ? "default" : "secondary"}>
-                          {user.tipo}
-                        </Badge>
-                        <Badge
-                          variant={
-                            user.estado === "APROBADO" ? "default" :
-                            user.estado === "PENDIENTE" ? "secondary" :
-                            user.estado === "SUSPENDIDO" ? "outline" :
-                            user.estado === "REACTIVADO" ? "outline" : "destructive"
-                          }
-                          className={
-                            user.estado === "SUSPENDIDO" ? "border-orange-500 text-orange-700 bg-orange-50" :
-                            user.estado === "REACTIVADO" ? "border-blue-500 text-blue-700 bg-blue-50" : ""
-                          }
-                        >
-                          {user.estado === "SUSPENDIDO" ? "Suspendido" :
-                           user.estado === "REACTIVADO" ? "Reactivado" : user.estado}
-                        </Badge>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
-                        <div>
-                          <p><strong>Cédula:</strong> {user.cedula}</p>
-                          <p><strong>Teléfono:</strong> {user.telefono}</p>
-                          <p><strong>Email:</strong> {user.correoElectronico}</p>
-                        </div>
-                        <div>
-                          <p><strong>Registro:</strong> {user.fechaRegistro.toLocaleDateString("es-ES")}</p>
-                          {user.ultimoAcceso && (
-                            <p><strong>Último acceso:</strong> {user.ultimoAcceso.toLocaleDateString("es-ES")}</p>
-                          )}
-                          {user.fechaAprobacion && (
-                            <p><strong>Aprobado:</strong> {user.fechaAprobacion.toLocaleDateString("es-ES")}</p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 ml-4">
-                      {user.imagenCedula && (
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button variant="outline" size="sm">
-                              <Eye className="h-4 w-4 mr-1" />
-                              Ver ID
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-2xl">
-                            <DialogHeader>
-                              <DialogTitle>Documento de Identidad - {user.nombre} {user.apellido}</DialogTitle>
-                              <DialogDescription>Cédula de identidad del usuario</DialogDescription>
-                            </DialogHeader>
-                            <div className="flex justify-center">
-                              <img
-                                src={user.imagenCedula}
-                                alt={`Cédula de ${user.nombre} ${user.apellido}`}
-                                className="max-w-full max-h-96 object-contain rounded-lg shadow-md"
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement;
-                                  target.src = "https://via.placeholder.com/400x300/f3f4f6/9ca3af?text=Imagen+no+disponible";
-                                  target.alt = "Imagen no disponible";
-                                }}
-                              />
-                            </div>
-                          </DialogContent>
-                        </Dialog>
-                      )}
-
-                      {user.estado === "PENDIENTE" && (
-                        <>
-                          <Button
-                            onClick={() => handleApproveUser(user.id)}
-                            disabled={processingUser === user.id}
-                            className="bg-green-600 hover:bg-green-700"
-                            size="sm"
-                          >
-                            <UserCheck className="h-4 w-4 mr-1" />
-                            {processingUser === user.id ? "..." : "Aprobar"}
-                          </Button>
-                          <Button
-                            onClick={() => handleRejectUser(user.id)}
-                            disabled={processingUser === user.id}
-                            variant="destructive"
-                            size="sm"
-                          >
-                            <UserX className="h-4 w-4 mr-1" />
-                            Rechazar
-                          </Button>
-                        </>
-                      )}
-
-                      {(user.estado === "APROBADO" || user.estado === "REACTIVADO") && user.tipo !== "ADMINISTRADOR" && (
-                        <Button
-                          onClick={() => handleSuspendUser(user.id)}
-                          disabled={processingUser === user.id}
-                          variant="destructive"
-                          size="sm"
-                        >
-                          <UserX className="h-4 w-4 mr-1" />
-                          Suspender
-                        </Button>
-                      )}
-
-                      {user.estado === "SUSPENDIDO" && (
-                        <>
-                          <Button
-                            onClick={() => handleReactivateUser(user.id)}
-                            disabled={processingUser === user.id}
-                            className="bg-blue-600 hover:bg-blue-700"
-                            size="sm"
-                          >
-                            <UserCheck className="h-4 w-4 mr-1" />
-                            Reactivar
-                          </Button>
-                          <Button
-                            onClick={() => openDeleteDialog(user)}
-                            disabled={processingUser === user.id}
-                            variant="destructive"
-                            size="sm"
-                          >
-                            <Trash className="h-4 w-4 mr-1" />
-                            Eliminar
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    );
-  };
-
-  const renderGroupsView = () => (
+  const renderUsersView = () => (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Gestión de Grupos</h1>
-        <p className="text-gray-600 mt-1">Administra los grupos de ahorro colaborativo</p>
+        <h1 className="text-3xl font-bold text-gray-900">Gestión de Usuarios</h1>
+        <p className="text-gray-600 mt-1">Administra todos los usuarios registrados en el sistema</p>
       </div>
-
       <Card>
-        <CardHeader>
-          <CardTitle>Grupos Activos</CardTitle>
-          <CardDescription>Grupos de ahorro colaborativo en funcionamiento</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {grupos.length === 0 ? (
-            <p className="text-center text-gray-500 py-4">No hay grupos activos</p>
-          ) : (
-            <div className="space-y-4">
-              {grupos.map((grupo) => (
-                <div key={grupo.id} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div>
-                    <h3 className="font-semibold">{grupo.nombre}</h3>
-                    <p className="text-sm text-gray-600">Duración: {grupo.duracionMeses} meses</p>
-                    <p className="text-sm text-gray-600">Mes actual: {grupo.turnoActual}</p>
-                  </div>
-                  <div className="text-right">
-                    <Badge variant={grupo.estado === "EN_MARCHA" ? "default" : "secondary"}>
-                      {grupo.estado.replace("_", " ")}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+        <CardContent className="p-8 text-center">
+          <p className="text-gray-500">Vista de usuarios en desarrollo</p>
         </CardContent>
       </Card>
     </div>
   );
 
-  const renderContent = () => {
-    switch (activeView) {
-      case "dashboard": return renderDashboardView();
-      case "approvals": return renderApprovalsView();
-      case "users": return renderUsersView();
-      case "groups": return renderGroupsView();
-      case "products": return (
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Gestión de Productos</h1>
-              <p className="text-gray-600 mt-1">Administra el catálogo de productos para círculos de ahorro</p>
-            </div>
-            <Button onClick={openCreateDialog} className="bg-green-600 hover:bg-green-700">
-              <Plus className="h-4 w-4 mr-2" />
-              Nuevo Producto
-            </Button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Productos</CardTitle>
-                <Package className="h-4 w-4 text-blue-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-blue-600">{allProducts.length}</div>
-                <p className="text-xs text-muted-foreground">En catálogo</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Productos Activos</CardTitle>
-                <CheckCircle className="h-4 w-4 text-green-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-green-600">
-                  {allProducts.filter(p => p.activo).length}
-                </div>
-                <p className="text-xs text-muted-foreground">Disponibles para usuarios</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Productos Inactivos</CardTitle>
-                <X className="h-4 w-4 text-red-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-red-600">
-                  {allProducts.filter(p => !p.activo).length}
-                </div>
-                <p className="text-xs text-muted-foreground">Ocultos del catálogo</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Categorías</CardTitle>
-                <MoreHorizontal className="h-4 w-4 text-purple-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-purple-600">
-                  {new Set(allProducts.flatMap(p => p.tags || [])).size}
-                </div>
-                <p className="text-xs text-muted-foreground">Tags únicos</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Buscar y Filtrar Productos</CardTitle>
-              <CardDescription>Utiliza los controles para encontrar productos específicos</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <div className="flex-1">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                    <Input
-                      placeholder="Buscar por nombre o descripción..."
-                      value={productSearchTerm}
-                      onChange={(e) => setProductSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                </div>
-                <Select value={productStatusFilter} onValueChange={setProductStatusFilter}>
-                  <SelectTrigger className="w-full sm:w-48">
-                    <Filter className="h-4 w-4 mr-2" />
-                    <SelectValue placeholder="Filtrar por estado" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos los productos</SelectItem>
-                    <SelectItem value="active">Solo activos</SelectItem>
-                    <SelectItem value="inactive">Solo inactivos</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Catálogo de Productos</CardTitle>
-              <CardDescription>
-                {allProducts.filter(p => {
-                  const matchesSearch = productSearchTerm === "" ||
-                    p.nombre.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
-                    p.descripcion.toLowerCase().includes(productSearchTerm.toLowerCase());
-
-                  const matchesStatus = productStatusFilter === "all" ||
-                    (productStatusFilter === "active" && p.activo) ||
-                    (productStatusFilter === "inactive" && !p.activo);
-
-                  return matchesSearch && matchesStatus;
-                }).length} producto{allProducts.filter(p => {
-                  const matchesSearch = productSearchTerm === "" ||
-                    p.nombre.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
-                    p.descripcion.toLowerCase().includes(productSearchTerm.toLowerCase());
-
-                  const matchesStatus = productStatusFilter === "all" ||
-                    (productStatusFilter === "active" && p.activo) ||
-                    (productStatusFilter === "inactive" && !p.activo);
-
-                  return matchesSearch && matchesStatus;
-                }).length !== 1 ? "s" : ""} encontrado{allProducts.filter(p => {
-                  const matchesSearch = productSearchTerm === "" ||
-                    p.nombre.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
-                    p.descripcion.toLowerCase().includes(productSearchTerm.toLowerCase());
-
-                  const matchesStatus = productStatusFilter === "all" ||
-                    (productStatusFilter === "active" && p.activo) ||
-                    (productStatusFilter === "inactive" && !p.activo);
-
-                  return matchesSearch && matchesStatus;
-                }).length !== 1 ? "s" : ""}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {productsLoading ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                  <p className="mt-4 text-gray-600">Cargando productos...</p>
-                </div>
-              ) : allProducts.filter(p => {
-                const matchesSearch = productSearchTerm === "" ||
-                  p.nombre.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
-                  p.descripcion.toLowerCase().includes(productSearchTerm.toLowerCase());
-
-                const matchesStatus = productStatusFilter === "all" ||
-                  (productStatusFilter === "active" && p.activo) ||
-                  (productStatusFilter === "inactive" && !p.activo);
-
-                return matchesSearch && matchesStatus;
-              }).length === 0 ? (
-                <div className="text-center py-8">
-                  <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">No se encontraron productos con los criterios de búsqueda</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {allProducts.filter(p => {
-                    const matchesSearch = productSearchTerm === "" ||
-                      p.nombre.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
-                      p.descripcion.toLowerCase().includes(productSearchTerm.toLowerCase());
-
-                    const matchesStatus = productStatusFilter === "all" ||
-                      (productStatusFilter === "active" && p.activo) ||
-                      (productStatusFilter === "inactive" && !p.activo);
-
-                    return matchesSearch && matchesStatus;
-                  }).map((product) => (
-                    <div key={product.id} className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="font-semibold">{product.nombre}</h3>
-                          <Badge variant={product.activo ? "default" : "secondary"}>
-                            {product.activo ? "Activo" : "Inactivo"}
-                          </Badge>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600 mb-2">
-                          <div>
-                            <p><strong>USD:</strong> ${product.precioUsd}</p>
-                            <p><strong>VES:</strong> Bs. {product.precioVes.toLocaleString()}</p>
-                          </div>
-                          <div>
-                            <p><strong>Duración:</strong> {product.tiempoDuracion} meses</p>
-                            <p><strong>Pago mensual:</strong> ${(product.precioUsd / product.tiempoDuracion).toFixed(2)}</p>
-                          </div>
-                        </div>
-                        {product.tags && product.tags.length > 0 && (
-                          <div className="flex flex-wrap gap-1">
-                            {product.tags.map((tag, index) => (
-                              <Badge key={index} className={`text-xs border ${getTagColor(tag)}`}>
-                                {tag}
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2 ml-4">
-                        <Button
-                          onClick={() => openEditDialog(product)}
-                          variant="outline"
-                          size="sm"
-                        >
-                          <Edit className="h-4 w-4 mr-1" />
-                          Editar
-                        </Button>
-                        <Button
-                          onClick={() => openDeleteProductDialog(product)}
-                          variant="destructive"
-                          size="sm"
-                        >
-                          <Trash className="h-4 w-4 mr-1" />
-                          Eliminar
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Create Product Dialog */}
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <Plus className="h-5 w-5 text-green-600" />
-                  Crear Nuevo Producto
-                </DialogTitle>
-                <DialogDescription>
-                  Agrega un nuevo producto al catálogo de ahorro colaborativo
-                </DialogDescription>
-              </DialogHeader>
-
-              <div className="space-y-4 py-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="create-nombre">Nombre del Producto *</Label>
-                    <Input
-                      id="create-nombre"
-                      value={productForm.nombre}
-                      onChange={(e) => setProductForm(prev => ({ ...prev, nombre: e.target.value }))}
-                      placeholder="Ej: Lavadora Samsung 15kg"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="create-duracion">Duración (meses) *</Label>
-                    <Input
-                      id="create-duracion"
-                      type="number"
-                      value={productForm.tiempoDuracion}
-                      onChange={(e) => setProductForm(prev => ({ ...prev, tiempoDuracion: e.target.value }))}
-                      placeholder="Ej: 8"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="create-precio-usd">Precio USD *</Label>
-                    <Input
-                      id="create-precio-usd"
-                      type="number"
-                      step="0.01"
-                      value={productForm.precioUsd}
-                      onChange={(e) => setProductForm(prev => ({ ...prev, precioUsd: e.target.value }))}
-                      placeholder="Ej: 450.00"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="create-precio-ves">Precio VES *</Label>
-                    <Input
-                      id="create-precio-ves"
-                      type="number"
-                      step="0.01"
-                      value={productForm.precioVes}
-                      onChange={(e) => setProductForm(prev => ({ ...prev, precioVes: e.target.value }))}
-                      placeholder="Ej: 12500000"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="create-descripcion">Descripción *</Label>
-                  <Textarea
-                    id="create-descripcion"
-                    value={productForm.descripcion}
-                    onChange={(e) => setProductForm(prev => ({ ...prev, descripcion: e.target.value }))}
-                    placeholder="Describe las características del producto..."
-                    rows={3}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="create-imagen">URL de Imagen (opcional)</Label>
-                  <Input
-                    id="create-imagen"
-                    value={productForm.imagen}
-                    onChange={(e) => setProductForm(prev => ({ ...prev, imagen: e.target.value }))}
-                    placeholder="https://ejemplo.com/imagen.jpg"
-                  />
-                </div>
-
-                <div>
-                  <Label>Categorías (Tags)</Label>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
-                    {availableTags.map((tag) => (
-                      <div key={tag} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`create-${tag}`}
-                          checked={productForm.tags.includes(tag)}
-                          onCheckedChange={() => handleTagToggle(tag)}
-                        />
-                        <Label htmlFor={`create-${tag}`} className="text-sm">
-                          {tag}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="create-activo"
-                    checked={productForm.activo}
-                    onCheckedChange={(checked) => setProductForm(prev => ({ ...prev, activo: !!checked }))}
-                  />
-                  <Label htmlFor="create-activo">Producto activo (visible para usuarios)</Label>
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={closeCreateDialog}>
-                  Cancelar
-                </Button>
-                <Button onClick={handleCreateProduct} className="bg-green-600 hover:bg-green-700">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Crear Producto
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-
-          {/* Edit Product Dialog */}
-          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <Edit className="h-5 w-5 text-blue-600" />
-                  Editar Producto
-                </DialogTitle>
-                <DialogDescription>
-                  Modifica la información del producto seleccionado
-                </DialogDescription>
-              </DialogHeader>
-
-              <div className="space-y-4 py-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="edit-nombre">Nombre del Producto *</Label>
-                    <Input
-                      id="edit-nombre"
-                      value={productForm.nombre}
-                      onChange={(e) => setProductForm(prev => ({ ...prev, nombre: e.target.value }))}
-                      placeholder="Ej: Lavadora Samsung 15kg"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="edit-duracion">Duración (meses) *</Label>
-                    <Input
-                      id="edit-duracion"
-                      type="number"
-                      value={productForm.tiempoDuracion}
-                      onChange={(e) => setProductForm(prev => ({ ...prev, tiempoDuracion: e.target.value }))}
-                      placeholder="Ej: 8"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="edit-precio-usd">Precio USD *</Label>
-                    <Input
-                      id="edit-precio-usd"
-                      type="number"
-                      step="0.01"
-                      value={productForm.precioUsd}
-                      onChange={(e) => setProductForm(prev => ({ ...prev, precioUsd: e.target.value }))}
-                      placeholder="Ej: 450.00"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="edit-precio-ves">Precio VES *</Label>
-                    <Input
-                      id="edit-precio-ves"
-                      type="number"
-                      step="0.01"
-                      value={productForm.precioVes}
-                      onChange={(e) => setProductForm(prev => ({ ...prev, precioVes: e.target.value }))}
-                      placeholder="Ej: 12500000"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="edit-descripcion">Descripción *</Label>
-                  <Textarea
-                    id="edit-descripcion"
-                    value={productForm.descripcion}
-                    onChange={(e) => setProductForm(prev => ({ ...prev, descripcion: e.target.value }))}
-                    placeholder="Describe las características del producto..."
-                    rows={3}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="edit-imagen">URL de Imagen (opcional)</Label>
-                  <Input
-                    id="edit-imagen"
-                    value={productForm.imagen}
-                    onChange={(e) => setProductForm(prev => ({ ...prev, imagen: e.target.value }))}
-                    placeholder="https://ejemplo.com/imagen.jpg"
-                  />
-                </div>
-
-                <div>
-                  <Label>Categorías (Tags)</Label>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
-                    {availableTags.map((tag) => (
-                      <div key={tag} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`edit-${tag}`}
-                          checked={productForm.tags.includes(tag)}
-                          onCheckedChange={() => handleTagToggle(tag)}
-                        />
-                        <Label htmlFor={`edit-${tag}`} className="text-sm">
-                          {tag}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="edit-activo"
-                    checked={productForm.activo}
-                    onCheckedChange={(checked) => setProductForm(prev => ({ ...prev, activo: !!checked }))}
-                  />
-                  <Label htmlFor="edit-activo">Producto activo (visible para usuarios)</Label>
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={closeEditDialog}>
-                  Cancelar
-                </Button>
-                <Button onClick={handleUpdateProduct} className="bg-blue-600 hover:bg-blue-700">
-                  <Edit className="h-4 w-4 mr-2" />
-                  Actualizar Producto
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-
-          {/* Delete Product Dialog */}
-          <Dialog open={!!productToDelete} onOpenChange={(open) => !open && closeDeleteProductDialog()}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2 text-red-600">
-                  <Trash className="h-5 w-5" />
-                  Confirmar Eliminación
-                </DialogTitle>
-                <DialogDescription>
-                  ¿Estás seguro de que deseas eliminar este producto? Esta acción no se puede deshacer.
-                </DialogDescription>
-              </DialogHeader>
-
-              {productToDelete && (
-                <div className="py-4">
-                  <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg mb-4">
-                    <div className="flex-1">
-                      <h4 className="font-semibold">{productToDelete.nombre}</h4>
-                      <p className="text-sm text-gray-600">USD: ${productToDelete.precioUsd} | VES: Bs. {productToDelete.precioVes.toLocaleString()}</p>
-                      <p className="text-sm text-gray-600">Duración: {productToDelete.tiempoDuracion} meses</p>
-                    </div>
-                    <Badge variant={productToDelete.activo ? "default" : "secondary"}>
-                      {productToDelete.activo ? "Activo" : "Inactivo"}
-                    </Badge>
-                  </div>
-                </div>
-              )}
-
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={closeDeleteProductDialog}>
-                  Cancelar
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={handleDeleteProduct}
-                >
-                  <Trash className="h-4 w-4 mr-2" />
-                  Eliminar Producto
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+  const renderProductsView = () => (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Gestión de Productos</h1>
+          <p className="text-gray-600 mt-1">Administra el catálogo de productos para círculos de ahorro</p>
         </div>
-      );
-      case "reports": return <div className="p-8 text-center text-gray-500">Vista de reportes en desarrollo</div>;
-      default: return renderDashboardView();
-    }
-  };
+        <Button onClick={openCreateDialog} className="bg-green-600 hover:bg-green-700">
+          Nuevo Producto
+        </Button>
+      </div>
+      <Card>
+        <CardContent className="p-8 text-center">
+          <p className="text-gray-500">Vista de productos en desarrollo</p>
+        </CardContent>
+      </Card>
+    </div>
+  );
 
   return (
     <>
@@ -1836,28 +844,21 @@ const AdminDashboard = () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-red-600">
-              <UserX className="h-5 w-5" />
               Rechazar Usuario
             </DialogTitle>
             <DialogDescription>
               Proporciona una exposición de motivos para rechazar a este usuario.
-              Esta acción no se puede deshacer.
             </DialogDescription>
           </DialogHeader>
-
           {userToReject && (
             <div className="py-4">
               <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg mb-4">
                 <div className="flex-1">
                   <h4 className="font-semibold">{userToReject.nombre} {userToReject.apellido}</h4>
                   <p className="text-sm text-gray-600">{userToReject.correoElectronico}</p>
-                  <p className="text-sm text-gray-600">Cédula: {userToReject.cedula}</p>
                 </div>
-                <Badge variant="secondary">
-                  Pendiente
-                </Badge>
+                <Badge variant="secondary">Pendiente</Badge>
               </div>
-
               <div className="space-y-2">
                 <label htmlFor="reason" className="text-sm font-medium">
                   Exposición de Motivos <span className="text-red-500">*</span>
@@ -1867,33 +868,18 @@ const AdminDashboard = () => {
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   placeholder="Describe las razones para rechazar a este usuario..."
-                  className="w-full min-h-[100px] p-3 border rounded-md resize-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                  className="w-full min-h-[100px] p-3 border rounded-md resize-none"
                   required
                 />
               </div>
             </div>
           )}
-
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={closeRejectDialog} disabled={processingUser === userToReject?.id}>
+            <Button variant="outline" onClick={closeRejectDialog}>
               Cancelar
             </Button>
-            <Button
-              variant="destructive"
-              onClick={handleRejectUserWithReason}
-              disabled={processingUser === userToReject?.id || !reason.trim()}
-            >
-              {processingUser === userToReject?.id ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Rechazando...
-                </>
-              ) : (
-                <>
-                  <UserX className="h-4 w-4 mr-2" />
-                  Rechazar Usuario
-                </>
-              )}
+            <Button variant="destructive" onClick={handleRejectUserWithReason}>
+              Rechazar Usuario
             </Button>
           </div>
         </DialogContent>
@@ -1904,28 +890,23 @@ const AdminDashboard = () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-red-600">
-              <Trash className="h-5 w-5" />
               Confirmar Eliminación
             </DialogTitle>
             <DialogDescription>
               Proporciona una exposición de motivos para eliminar permanentemente a este usuario.
-              Esta acción no se puede deshacer.
             </DialogDescription>
           </DialogHeader>
-
           {userToDelete && (
             <div className="py-4">
               <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg mb-4">
                 <div className="flex-1">
                   <h4 className="font-semibold">{userToDelete.nombre} {userToDelete.apellido}</h4>
                   <p className="text-sm text-gray-600">{userToDelete.correoElectronico}</p>
-                  <p className="text-sm text-gray-600">Cédula: {userToDelete.cedula}</p>
                 </div>
                 <Badge variant="outline" className="border-orange-500 text-orange-700 bg-orange-50">
                   Suspendido
                 </Badge>
               </div>
-
               <div className="space-y-2">
                 <label htmlFor="delete-reason" className="text-sm font-medium">
                   Exposición de Motivos <span className="text-red-500">*</span>
@@ -1935,90 +916,29 @@ const AdminDashboard = () => {
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   placeholder="Describe las razones para eliminar permanentemente a este usuario..."
-                  className="w-full min-h-[100px] p-3 border rounded-md resize-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                  className="w-full min-h-[100px] p-3 border rounded-md resize-none"
                   required
                 />
               </div>
             </div>
           )}
-
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={closeDeleteDialog} disabled={processingUser === userToDelete?.id}>
+            <Button variant="outline" onClick={closeDeleteDialog}>
               Cancelar
             </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDeleteUserWithReason}
-              disabled={processingUser === userToDelete?.id || !reason.trim()}
-            >
-              {processingUser === userToDelete?.id ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Eliminando...
-                </>
-              ) : (
-                <>
-                  <Trash className="h-4 w-4 mr-2" />
-                  Eliminar Permanentemente
-                </>
-              )}
+            <Button variant="destructive" onClick={handleDeleteUserWithReason}>
+              Eliminar Permanentemente
             </Button>
           </div>
         </DialogContent>
       </Dialog>
 
       <SidebarProvider>
-        <Sidebar>
-          <SidebarHeader className="p-4">
-            <h2 className="text-lg font-semibold">Admin Panel</h2>
-            <p className="text-sm text-gray-500">Marimar Saving Circles</p>
-          </SidebarHeader>
-          <SidebarContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton isActive={activeView === "dashboard"} onClick={() => setActiveView("dashboard")}>
-                  <LayoutDashboard className="h-4 w-4" />
-                  Dashboard
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton isActive={activeView === "approvals"} onClick={() => setActiveView("approvals")}>
-                  <UserCheck className="h-4 w-4" />
-                  Aprobaciones
-                  {pendingUsers.length > 0 && (
-                    <Badge variant="destructive" className="ml-auto">
-                      {pendingUsers.length}
-                    </Badge>
-                  )}
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton isActive={activeView === "users"} onClick={() => setActiveView("users")}>
-                  <Users className="h-4 w-4" />
-                  Usuarios
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton isActive={activeView === "groups"} onClick={() => setActiveView("groups")}>
-                  <Users className="h-4 w-4" />
-                  Grupos
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton isActive={activeView === "products"} onClick={() => setActiveView("products")}>
-                  <Package className="h-4 w-4" />
-                  Productos
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton isActive={activeView === "reports"} onClick={() => setActiveView("reports")}>
-                  <BarChart3 className="h-4 w-4" />
-                  Reportes
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarContent>
-        </Sidebar>
+        <Sidebar
+          activeView={activeView}
+          onViewChange={setActiveView}
+          pendingUsersCount={pendingUsers.length}
+        />
         <SidebarInset>
           <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
             <SidebarTrigger className="-ml-1" />

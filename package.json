@@ -18,7 +18,8 @@
     "clean": "rm -rf node_modules client/node_modules backend/node_modules && bun install",
     "test": "bun run test --cwd backend && bun run test --cwd client",
     "test:backend": "bun run test --cwd backend",
-    "test:client": "bun run test --cwd client"
+    "test:client": "bun run test --cwd client",
+    "db:seed": "bun run --cwd backend src/seed.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
