@@ -17,7 +17,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Users, Package, Calendar, TrendingUp, MapPin, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Users, Package, Calendar, TrendingUp, MapPin, Clock, CheckCircle, AlertCircle, Menu, Home, ShoppingCart } from 'lucide-react';
 
 const UserDashboard = () => {
   const { user } = useAuth();
@@ -51,6 +52,7 @@ const UserDashboard = () => {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [currentView, setCurrentView] = useState<'products' | 'group'>('products');
 
   const handleProductSelect = (producto: any) => {
     setSelectedProduct(producto);
@@ -91,517 +93,590 @@ const UserDashboard = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            ¡Bienvenido, {user?.nombre}!
-          </h1>
-          <p className="text-gray-600 mt-1">
-            {hasChosenProduct
-              ? 'Tu progreso en círculos de ahorro colaborativo'
-              : 'Elige un producto para comenzar tu ahorro colaborativo'
-            }
-          </p>
+    <div className="flex min-h-screen">
+      {/* Sidebar */}
+      <Sheet>
+        <SheetTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="fixed top-4 left-4 z-40 md:hidden"
+          >
+            <Menu className="h-6 w-6" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="left" className="w-64">
+          <div className="flex flex-col space-y-4 mt-6">
+            <Button
+              variant={currentView === 'products' ? 'default' : 'ghost'}
+              className="justify-start"
+              onClick={() => setCurrentView('products')}
+            >
+              <ShoppingCart className="h-4 w-4 mr-2" />
+              Ver Productos
+            </Button>
+            {hasChosenProduct && (
+              <Button
+                variant={currentView === 'group' ? 'default' : 'ghost'}
+                className="justify-start"
+                onClick={() => setCurrentView('group')}
+              >
+                <Home className="h-4 w-4 mr-2" />
+                Mi Grupo
+              </Button>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Desktop Sidebar */}
+      <div className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 bg-white border-r">
+        <div className="flex flex-col flex-grow pt-5 pb-4 overflow-y-auto">
+          <div className="flex items-center flex-shrink-0 px-4">
+            <h2 className="text-lg font-semibold text-gray-900">Marimar</h2>
+          </div>
+          <div className="mt-8 flex-grow flex flex-col">
+            <nav className="flex-1 px-2 space-y-1">
+              <Button
+                variant={currentView === 'products' ? 'default' : 'ghost'}
+                className="w-full justify-start"
+                onClick={() => setCurrentView('products')}
+              >
+                <ShoppingCart className="h-4 w-4 mr-2" />
+                Ver Productos
+              </Button>
+              {hasChosenProduct && (
+                <Button
+                  variant={currentView === 'group' ? 'default' : 'ghost'}
+                  className="w-full justify-start"
+                  onClick={() => setCurrentView('group')}
+                >
+                  <Home className="h-4 w-4 mr-2" />
+                  Mi Grupo
+                </Button>
+              )}
+            </nav>
+          </div>
         </div>
       </div>
 
-      {hasChosenProduct ? (
-        <>
-          {/* Estadísticas principales */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Mi Posición</CardTitle>
-            <MapPin className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {isGroupInStandby ? 'Pendiente' : `#${myPosition || 'N/A'}`}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {isGroupInStandby ? 'El admin debe iniciar el grupo' : 'En el grupo'}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Pagado</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">${totalPaid.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">
-              En contribuciones
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Próxima Entrega</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {isGroupInStandby
-                ? 'Pendiente'
-                : estimatedDeliveryDate
-                  ? estimatedDeliveryDate.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })
-                  : 'N/A'
-              }
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {isGroupInStandby
-                ? 'El grupo debe ser iniciado'
-                : monthsUntilDelivery > 0
-                  ? `En ${monthsUntilDelivery} meses`
-                  : '¡Pronto!'
-              }
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Estado del Grupo</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              <Badge variant={
-                currentGroup?.estado === 'EN_MARCHA'
-                  ? 'default'
-                  : currentGroup?.estado === 'SIN_COMPLETAR'
-                    ? 'outline'
-                    : 'secondary'
-              }>
-                {currentGroup?.estado === 'SIN_COMPLETAR'
-                  ? 'En Espera'
-                  : currentGroup?.estado?.replace('_', ' ') || 'SIN GRUPO'
+      {/* Main Content */}
+      <div className="flex-1 md:ml-64">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">
+                ¡Bienvenido, {user?.nombre}!
+              </h1>
+              <p className="text-gray-600 mt-1">
+                {currentView === 'products'
+                  ? hasChosenProduct
+                    ? 'Explora más productos disponibles'
+                    : 'Elige un producto para comenzar tu ahorro colaborativo'
+                  : 'Tu progreso en círculos de ahorro colaborativo'
                 }
-              </Badge>
+              </p>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Mes {currentGroup?.turnoActual || 0} de {currentGroup?.duracionMeses || 0}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Progreso del Grupo - Solo mostrar si no está en standby */}
-      {currentGroup && !isGroupInStandby && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Progreso de {currentGroup.nombre}</CardTitle>
-            <CardDescription>
-              Avance del círculo de ahorro - {currentGroup.duracionMeses} meses de duración
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Progreso del grupo</span>
-                <span>{Math.round(groupProgress)}%</span>
-              </div>
-              <Progress value={groupProgress} className="h-2" />
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-              <div>
-                <div className="text-2xl font-bold text-blue-600">{currentGroup.turnoActual}</div>
-                <div className="text-sm text-gray-600">Meses completados</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-green-600">{myDeliveries.length}</div>
-                <div className="text-sm text-gray-600">Entregas realizadas</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-orange-600">
-                  {myContributions.filter(c => c.estado === 'PENDIENTE').length}
-                </div>
-                <div className="text-sm text-gray-600">Pagos pendientes</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-purple-600">
-                  {currentGroup.duracionMeses - currentGroup.turnoActual}
-                </div>
-                <div className="text-sm text-gray-600">Meses restantes</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Historial de Pagos */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Historial de Contribuciones</CardTitle>
-          <CardDescription>
-            Tus pagos mensuales al grupo
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {myContributions.length === 0 ? (
-            <div className="text-center py-8">
-              <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">No hay contribuciones registradas aún</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {myContributions.slice().reverse().map((contribution) => (
-                <div key={contribution.id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <CheckCircle className={`h-5 w-5 ${contribution.estado === 'CONFIRMADO' ? 'text-green-500' : 'text-yellow-500'}`} />
-                    <div>
-                      <p className="font-medium">{contribution.periodo}</p>
-                      <p className="text-sm text-gray-600">
-                        {contribution.fechaPago.toLocaleDateString('es-ES')}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold">${contribution.monto} {contribution.moneda}</p>
-                    <Badge variant={contribution.estado === 'CONFIRMADO' ? 'default' : 'secondary'}>
-                      {contribution.estado}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Notificaciones/Próximas acciones */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Próximas Acciones</CardTitle>
-          <CardDescription>
-            Mantente al día con tus responsabilidades
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {isGroupInStandby && (
-              <div className="flex items-center gap-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
-                <Clock className="h-5 w-5 text-orange-600" />
-                <div>
-                  <p className="font-medium text-orange-800">Grupo en espera</p>
-                  <p className="text-sm text-orange-700">
-                    El administrador debe iniciar el grupo para comenzar con los pagos
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {myContributions.some(c => c.estado === 'PENDIENTE') && (
-              <div className="flex items-center gap-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <AlertCircle className="h-5 w-5 text-yellow-600" />
-                <div>
-                  <p className="font-medium text-yellow-800">Pago pendiente</p>
-                  <p className="text-sm text-yellow-700">Tienes contribuciones por confirmar</p>
-                </div>
-              </div>
-            )}
-
-            {monthsUntilDelivery <= 1 && monthsUntilDelivery > 0 && (
-              <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <Clock className="h-5 w-5 text-blue-600" />
-                <div>
-                  <p className="font-medium text-blue-800">¡Tu turno se acerca!</p>
-                  <p className="text-sm text-blue-700">
-                    Recibirás tu producto en {monthsUntilDelivery} mes{monthsUntilDelivery > 1 ? 'es' : ''}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {myDeliveries.length > 0 && (
-              <div className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                <CheckCircle className="h-5 w-5 text-green-600" />
-                <div>
-                  <p className="font-medium text-green-800">¡Producto recibido!</p>
-                  <p className="text-sm text-green-700">
-                    Has completado exitosamente tu ciclo de ahorro
-                  </p>
-                </div>
-              </div>
-            )}
           </div>
-        </CardContent>
-      </Card>
-        </>
-      ) : (
-        /* Productos Disponibles */
-        <Card>
-          <CardHeader>
-            <CardTitle>Elegir Producto</CardTitle>
-            <CardDescription>
-              Selecciona el producto que deseas adquirir mediante ahorro colaborativo
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="todos" className="w-full">
-              <TabsList className="grid w-full grid-cols-6 mb-6">
-                <TabsTrigger value="todos">Todos</TabsTrigger>
-                <TabsTrigger value="electrodomésticos">Electrodomésticos</TabsTrigger>
-                <TabsTrigger value="línea blanca">Línea Blanca</TabsTrigger>
-                <TabsTrigger value="celulares">Celulares</TabsTrigger>
-                <TabsTrigger value="tv">TV</TabsTrigger>
-                <TabsTrigger value="cama">Cama</TabsTrigger>
-              </TabsList>
 
-              <TabsContent value="todos">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {productos.filter(p => p.activo).map((producto) => {
-                    const pagoMensual = Math.round(producto.precioUsd / producto.tiempoDuracion);
-                    return (
-                      <div key={producto.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                        <div className="flex justify-between items-start mb-2">
-                          <h3 className="font-semibold text-lg">{producto.nombre}</h3>
-                          {producto.tags && producto.tags.length > 0 && (
-                            <div className="flex flex-wrap gap-1">
-                              {producto.tags.map((tag, index) => (
-                                <Badge key={index} className={`text-xs border ${getTagColor(tag)}`}>
-                                  {tag}
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
+          {currentView === 'group' && hasChosenProduct ? (
+            <>
+              {/* Estadísticas principales */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Mi Posición</CardTitle>
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {isGroupInStandby ? 'Pendiente' : `#${myPosition || 'N/A'}`}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {isGroupInStandby ? 'El admin debe iniciar el grupo' : 'En el grupo'}
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Pagado</CardTitle>
+                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">${totalPaid.toLocaleString()}</div>
+                    <p className="text-xs text-muted-foreground">
+                      En contribuciones
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Próxima Entrega</CardTitle>
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {isGroupInStandby
+                        ? 'Pendiente'
+                        : estimatedDeliveryDate
+                          ? estimatedDeliveryDate.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })
+                          : 'N/A'
+                      }
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {isGroupInStandby
+                        ? 'El grupo debe ser iniciado'
+                        : monthsUntilDelivery > 0
+                          ? `En ${monthsUntilDelivery} meses`
+                          : '¡Pronto!'
+                      }
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Estado del Grupo</CardTitle>
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      <Badge variant={
+                        currentGroup?.estado === 'EN_MARCHA'
+                          ? 'default'
+                          : currentGroup?.estado === 'SIN_COMPLETAR'
+                            ? 'outline'
+                            : 'secondary'
+                      }>
+                        {currentGroup?.estado === 'SIN_COMPLETAR'
+                          ? 'En Espera'
+                          : currentGroup?.estado?.replace('_', ' ') || 'SIN GRUPO'
+                        }
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Mes {currentGroup?.turnoActual || 0} de {currentGroup?.duracionMeses || 0}
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Progreso del Grupo - Solo mostrar si no está en standby */}
+              {currentGroup && !isGroupInStandby && (
+                <Card className="mb-6">
+                  <CardHeader>
+                    <CardTitle>Progreso de {currentGroup.nombre}</CardTitle>
+                    <CardDescription>
+                      Avance del círculo de ahorro - {currentGroup.duracionMeses} meses de duración
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span>Progreso del grupo</span>
+                        <span>{Math.round(groupProgress)}%</span>
+                      </div>
+                      <Progress value={groupProgress} className="h-2" />
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                      <div>
+                        <div className="text-2xl font-bold text-blue-600">{currentGroup.turnoActual}</div>
+                        <div className="text-sm text-gray-600">Meses completados</div>
+                      </div>
+                      <div>
+                        <div className="text-2xl font-bold text-green-600">{myDeliveries.length}</div>
+                        <div className="text-sm text-gray-600">Entregas realizadas</div>
+                      </div>
+                      <div>
+                        <div className="text-2xl font-bold text-orange-600">
+                          {myContributions.filter(c => c.estado === 'PENDIENTE').length}
                         </div>
-                        <p className="text-gray-600 mb-3">{producto.descripcion}</p>
+                        <div className="text-sm text-gray-600">Pagos pendientes</div>
+                      </div>
+                      <div>
+                        <div className="text-2xl font-bold text-purple-600">
+                          {currentGroup.duracionMeses - currentGroup.turnoActual}
+                        </div>
+                        <div className="text-sm text-gray-600">Meses restantes</div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
-                        <div className="space-y-3 mb-4">
-                          <SimplePriceDisplay vesPrice={producto.precioVes} usdPrice={producto.precioUsd} />
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm font-medium text-gray-700">Duración del plan:</span>
-                            <span className="font-semibold text-purple-600">{producto.tiempoDuracion} meses</span>
+              {/* Historial de Pagos */}
+              <Card className="mb-6">
+                <CardHeader>
+                  <CardTitle>Historial de Contribuciones</CardTitle>
+                  <CardDescription>
+                    Tus pagos mensuales al grupo
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {myContributions.length === 0 ? (
+                    <div className="text-center py-8">
+                      <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-500">No hay contribuciones registradas aún</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {myContributions.slice().reverse().map((contribution) => (
+                        <div key={contribution.id} className="flex items-center justify-between p-3 border rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <CheckCircle className={`h-5 w-5 ${contribution.estado === 'CONFIRMADO' ? 'text-green-500' : 'text-yellow-500'}`} />
+                            <div>
+                              <p className="font-medium">{contribution.periodo}</p>
+                              <p className="text-sm text-gray-600">
+                                {contribution.fechaPago.toLocaleDateString('es-ES')}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-bold">${contribution.monto} {contribution.moneda}</p>
+                            <Badge variant={contribution.estado === 'CONFIRMADO' ? 'default' : 'secondary'}>
+                              {contribution.estado}
+                            </Badge>
                           </div>
                         </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
 
-                        <Button
-                          className="w-full bg-green-600 hover:bg-green-700"
-                          onClick={() => handleProductSelect(producto)}
-                        >
-                          <Package className="h-4 w-4 mr-2" />
-                          Unirme al Grupo de {producto.tiempoDuracion} meses
-                        </Button>
+              {/* Notificaciones/Próximas acciones */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Próximas Acciones</CardTitle>
+                  <CardDescription>
+                    Mantente al día con tus responsabilidades
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {isGroupInStandby && (
+                      <div className="flex items-center gap-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                        <Clock className="h-5 w-5 text-orange-600" />
+                        <div>
+                          <p className="font-medium text-orange-800">Grupo en espera</p>
+                          <p className="text-sm text-orange-700">
+                            El administrador debe iniciar el grupo para comenzar con los pagos
+                          </p>
+                        </div>
                       </div>
-                    );
-                  })}
-                </div>
-              </TabsContent>
+                    )}
 
-              <TabsContent value="electrodomésticos">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {productos.filter(p => p.activo && p.tags?.includes('electrodomésticos')).map((producto) => {
-                    const pagoMensual = Math.round(producto.precioUsd / producto.tiempoDuracion);
-                    return (
-                      <div key={producto.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                        <div className="flex justify-between items-start mb-2">
-                          <h3 className="font-semibold text-lg">{producto.nombre}</h3>
-                          {producto.tags && producto.tags.length > 0 && (
-                            <div className="flex flex-wrap gap-1">
-                              {producto.tags.map((tag, index) => (
-                                <Badge key={index} className={`text-xs border ${getTagColor(tag)}`}>
-                                  {tag}
-                                </Badge>
-                              ))}
+                    {myContributions.some(c => c.estado === 'PENDIENTE') && (
+                      <div className="flex items-center gap-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <AlertCircle className="h-5 w-5 text-yellow-600" />
+                        <div>
+                          <p className="font-medium text-yellow-800">Pago pendiente</p>
+                          <p className="text-sm text-yellow-700">Tienes contribuciones por confirmar</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {monthsUntilDelivery <= 1 && monthsUntilDelivery > 0 && (
+                      <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <Clock className="h-5 w-5 text-blue-600" />
+                        <div>
+                          <p className="font-medium text-blue-800">¡Tu turno se acerca!</p>
+                          <p className="text-sm text-blue-700">
+                            Recibirás tu producto en {monthsUntilDelivery} mes{monthsUntilDelivery > 1 ? 'es' : ''}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {myDeliveries.length > 0 && (
+                      <div className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <CheckCircle className="h-5 w-5 text-green-600" />
+                        <div>
+                          <p className="font-medium text-green-800">¡Producto recibido!</p>
+                          <p className="text-sm text-green-700">
+                            Has completado exitosamente tu ciclo de ahorro
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          ) : (
+            /* Productos Disponibles */
+            <Card>
+              <CardHeader>
+                <CardTitle>Elegir Producto</CardTitle>
+                <CardDescription>
+                  Selecciona el producto que deseas adquirir mediante ahorro colaborativo
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Tabs defaultValue="todos" className="w-full">
+                  <TabsList className="grid w-full grid-cols-6 mb-6">
+                    <TabsTrigger value="todos">Todos</TabsTrigger>
+                    <TabsTrigger value="electrodomésticos">Electrodomésticos</TabsTrigger>
+                    <TabsTrigger value="línea blanca">Línea Blanca</TabsTrigger>
+                    <TabsTrigger value="celulares">Celulares</TabsTrigger>
+                    <TabsTrigger value="tv">TV</TabsTrigger>
+                    <TabsTrigger value="cama">Cama</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="todos">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {productos.filter(p => p.activo).map((producto) => {
+                        const pagoMensual = Math.round(producto.precioUsd / producto.tiempoDuracion);
+                        return (
+                          <div key={producto.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <div className="flex justify-between items-start mb-2">
+                              <h3 className="font-semibold text-lg">{producto.nombre}</h3>
+                              {producto.tags && producto.tags.length > 0 && (
+                                <div className="flex flex-wrap gap-1">
+                                  {producto.tags.map((tag, index) => (
+                                    <Badge key={index} className={`text-xs border ${getTagColor(tag)}`}>
+                                      {tag}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
                             </div>
-                          )}
-                        </div>
-                        <p className="text-gray-600 mb-3">{producto.descripcion}</p>
+                            <p className="text-gray-600 mb-3">{producto.descripcion}</p>
 
-                        <div className="space-y-3 mb-4">
-                          <SimplePriceDisplay vesPrice={producto.precioVes} usdPrice={producto.precioUsd} />
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm font-medium text-gray-700">Duración del plan:</span>
-                            <span className="font-semibold text-purple-600">{producto.tiempoDuracion} meses</span>
-                          </div>
-                        </div>
-
-                        <Button
-                          className="w-full bg-green-600 hover:bg-green-700"
-                          onClick={() => handleProductSelect(producto)}
-                        >
-                          <Package className="h-4 w-4 mr-2" />
-                          Unirme al Grupo de {producto.tiempoDuracion} meses
-                        </Button>
-                      </div>
-                    );
-                  })}
-                </div>
-              </TabsContent>
-
-              <TabsContent value="celulares">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {productos.filter(p => p.activo && p.tags?.includes('celulares')).map((producto) => {
-                    const pagoMensual = Math.round(producto.precioUsd / producto.tiempoDuracion);
-                    return (
-                      <div key={producto.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                        <div className="flex justify-between items-start mb-2">
-                          <h3 className="font-semibold text-lg">{producto.nombre}</h3>
-                          {producto.tags && producto.tags.length > 0 && (
-                            <div className="flex flex-wrap gap-1">
-                              {producto.tags.map((tag, index) => (
-                                <Badge key={index} className={`text-xs border ${getTagColor(tag)}`}>
-                                  {tag}
-                                </Badge>
-                              ))}
+                            <div className="space-y-3 mb-4">
+                              <SimplePriceDisplay vesPrice={producto.precioVes} usdPrice={producto.precioUsd} />
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm font-medium text-gray-700">Duración del plan:</span>
+                                <span className="font-semibold text-purple-600">{producto.tiempoDuracion} meses</span>
+                              </div>
                             </div>
-                          )}
-                        </div>
-                        <p className="text-gray-600 mb-3">{producto.descripcion}</p>
 
-                        <div className="space-y-3 mb-4">
-                          <SimplePriceDisplay vesPrice={producto.precioVes} usdPrice={producto.precioUsd} />
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm font-medium text-gray-700">Duración del plan:</span>
-                            <span className="font-semibold text-purple-600">{producto.tiempoDuracion} meses</span>
+                            <Button
+                              className="w-full bg-green-600 hover:bg-green-700"
+                              onClick={() => handleProductSelect(producto)}
+                            >
+                              <Package className="h-4 w-4 mr-2" />
+                              Unirme al Grupo de {producto.tiempoDuracion} meses
+                            </Button>
                           </div>
-                        </div>
+                        );
+                      })}
+                    </div>
+                  </TabsContent>
 
-                        <Button
-                          className="w-full bg-green-600 hover:bg-green-700"
-                          onClick={() => handleProductSelect(producto)}
-                        >
-                          <Package className="h-4 w-4 mr-2" />
-                          Unirme al Grupo de {producto.tiempoDuracion} meses
-                        </Button>
-                      </div>
-                    );
-                  })}
-                </div>
-              </TabsContent>
-
-              <TabsContent value="línea blanca">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {productos.filter(p => p.activo && p.tags?.includes('línea blanca')).map((producto) => {
-                    const pagoMensual = Math.round(producto.precioUsd / producto.tiempoDuracion);
-                    return (
-                      <div key={producto.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                        <div className="flex justify-between items-start mb-2">
-                          <h3 className="font-semibold text-lg">{producto.nombre}</h3>
-                          {producto.tags && producto.tags.length > 0 && (
-                            <div className="flex flex-wrap gap-1">
-                              {producto.tags.map((tag, index) => (
-                                <Badge key={index} className={`text-xs border ${getTagColor(tag)}`}>
-                                  {tag}
-                                </Badge>
-                              ))}
+                  <TabsContent value="electrodomésticos">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {productos.filter(p => p.activo && p.tags?.includes('electrodomésticos')).map((producto) => {
+                        const pagoMensual = Math.round(producto.precioUsd / producto.tiempoDuracion);
+                        return (
+                          <div key={producto.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <div className="flex justify-between items-start mb-2">
+                              <h3 className="font-semibold text-lg">{producto.nombre}</h3>
+                              {producto.tags && producto.tags.length > 0 && (
+                                <div className="flex flex-wrap gap-1">
+                                  {producto.tags.map((tag, index) => (
+                                    <Badge key={index} className={`text-xs border ${getTagColor(tag)}`}>
+                                      {tag}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
                             </div>
-                          )}
-                        </div>
-                        <p className="text-gray-600 mb-3">{producto.descripcion}</p>
+                            <p className="text-gray-600 mb-3">{producto.descripcion}</p>
 
-                        <div className="space-y-3 mb-4">
-                          <SimplePriceDisplay vesPrice={producto.precioVes} usdPrice={producto.precioUsd} />
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm font-medium text-gray-700">Duración del plan:</span>
-                            <span className="font-semibold text-purple-600">{producto.tiempoDuracion} meses</span>
-                          </div>
-                        </div>
-
-                        <Button
-                          className="w-full bg-green-600 hover:bg-green-700"
-                          onClick={() => handleProductSelect(producto)}
-                        >
-                          <Package className="h-4 w-4 mr-2" />
-                          Unirme al Grupo de {producto.tiempoDuracion} meses
-                        </Button>
-                      </div>
-                    );
-                  })}
-                </div>
-              </TabsContent>
-
-              <TabsContent value="tv">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {productos.filter(p => p.activo && p.tags?.includes('tv')).map((producto) => {
-                    const pagoMensual = Math.round(producto.precioUsd / producto.tiempoDuracion);
-                    return (
-                      <div key={producto.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                        <div className="flex justify-between items-start mb-2">
-                          <h3 className="font-semibold text-lg">{producto.nombre}</h3>
-                          {producto.tags && producto.tags.length > 0 && (
-                            <div className="flex flex-wrap gap-1">
-                              {producto.tags.map((tag, index) => (
-                                <Badge key={index} className={`text-xs border ${getTagColor(tag)}`}>
-                                  {tag}
-                                </Badge>
-                              ))}
+                            <div className="space-y-3 mb-4">
+                              <SimplePriceDisplay vesPrice={producto.precioVes} usdPrice={producto.precioUsd} />
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm font-medium text-gray-700">Duración del plan:</span>
+                                <span className="font-semibold text-purple-600">{producto.tiempoDuracion} meses</span>
+                              </div>
                             </div>
-                          )}
-                        </div>
-                        <p className="text-gray-600 mb-3">{producto.descripcion}</p>
 
-                        <div className="space-y-3 mb-4">
-                          <SimplePriceDisplay vesPrice={producto.precioVes} usdPrice={producto.precioUsd} />
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm font-medium text-gray-700">Duración del plan:</span>
-                            <span className="font-semibold text-purple-600">{producto.tiempoDuracion} meses</span>
+                            <Button
+                              className="w-full bg-green-600 hover:bg-green-700"
+                              onClick={() => handleProductSelect(producto)}
+                            >
+                              <Package className="h-4 w-4 mr-2" />
+                              Unirme al Grupo de {producto.tiempoDuracion} meses
+                            </Button>
                           </div>
-                        </div>
+                        );
+                      })}
+                    </div>
+                  </TabsContent>
 
-                        <Button
-                          className="w-full bg-green-600 hover:bg-green-700"
-                          onClick={() => handleProductSelect(producto)}
-                        >
-                          <Package className="h-4 w-4 mr-2" />
-                          Unirme al Grupo de {producto.tiempoDuracion} meses
-                        </Button>
-                      </div>
-                    );
-                  })}
-                </div>
-              </TabsContent>
-
-              <TabsContent value="cama">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {productos.filter(p => p.activo && p.tags?.includes('cama')).map((producto) => {
-                    const pagoMensual = Math.round(producto.precioUsd / producto.tiempoDuracion);
-                    return (
-                      <div key={producto.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                        <div className="flex justify-between items-start mb-2">
-                          <h3 className="font-semibold text-lg">{producto.nombre}</h3>
-                          {producto.tags && producto.tags.length > 0 && (
-                            <div className="flex flex-wrap gap-1">
-                              {producto.tags.map((tag, index) => (
-                                <Badge key={index} className={`text-xs border ${getTagColor(tag)}`}>
-                                  {tag}
-                                </Badge>
-                              ))}
+                  <TabsContent value="celulares">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {productos.filter(p => p.activo && p.tags?.includes('celulares')).map((producto) => {
+                        const pagoMensual = Math.round(producto.precioUsd / producto.tiempoDuracion);
+                        return (
+                          <div key={producto.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <div className="flex justify-between items-start mb-2">
+                              <h3 className="font-semibold text-lg">{producto.nombre}</h3>
+                              {producto.tags && producto.tags.length > 0 && (
+                                <div className="flex flex-wrap gap-1">
+                                  {producto.tags.map((tag, index) => (
+                                    <Badge key={index} className={`text-xs border ${getTagColor(tag)}`}>
+                                      {tag}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
                             </div>
-                          )}
-                        </div>
-                        <p className="text-gray-600 mb-3">{producto.descripcion}</p>
+                            <p className="text-gray-600 mb-3">{producto.descripcion}</p>
 
-                        <div className="space-y-3 mb-4">
-                          <SimplePriceDisplay vesPrice={producto.precioVes} usdPrice={producto.precioUsd} />
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm font-medium text-gray-700">Duración del plan:</span>
-                            <span className="font-semibold text-purple-600">{producto.tiempoDuracion} meses</span>
+                            <div className="space-y-3 mb-4">
+                              <SimplePriceDisplay vesPrice={producto.precioVes} usdPrice={producto.precioUsd} />
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm font-medium text-gray-700">Duración del plan:</span>
+                                <span className="font-semibold text-purple-600">{producto.tiempoDuracion} meses</span>
+                              </div>
+                            </div>
+
+                            <Button
+                              className="w-full bg-green-600 hover:bg-green-700"
+                              onClick={() => handleProductSelect(producto)}
+                            >
+                              <Package className="h-4 w-4 mr-2" />
+                              Unirme al Grupo de {producto.tiempoDuracion} meses
+                            </Button>
                           </div>
-                        </div>
+                        );
+                      })}
+                    </div>
+                  </TabsContent>
 
-                        <Button
-                          className="w-full bg-green-600 hover:bg-green-700"
-                          onClick={() => handleProductSelect(producto)}
-                        >
-                          <Package className="h-4 w-4 mr-2" />
-                          Unirme al Grupo de {producto.tiempoDuracion} meses
-                        </Button>
-                      </div>
-                    );
-                  })}
-                </div>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
-      )}
+                  <TabsContent value="línea blanca">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {productos.filter(p => p.activo && p.tags?.includes('línea blanca')).map((producto) => {
+                        const pagoMensual = Math.round(producto.precioUsd / producto.tiempoDuracion);
+                        return (
+                          <div key={producto.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <div className="flex justify-between items-start mb-2">
+                              <h3 className="font-semibold text-lg">{producto.nombre}</h3>
+                              {producto.tags && producto.tags.length > 0 && (
+                                <div className="flex flex-wrap gap-1">
+                                  {producto.tags.map((tag, index) => (
+                                    <Badge key={index} className={`text-xs border ${getTagColor(tag)}`}>
+                                      {tag}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                            <p className="text-gray-600 mb-3">{producto.descripcion}</p>
+
+                            <div className="space-y-3 mb-4">
+                              <SimplePriceDisplay vesPrice={producto.precioVes} usdPrice={producto.precioUsd} />
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm font-medium text-gray-700">Duración del plan:</span>
+                                <span className="font-semibold text-purple-600">{producto.tiempoDuracion} meses</span>
+                              </div>
+                            </div>
+
+                            <Button
+                              className="w-full bg-green-600 hover:bg-green-700"
+                              onClick={() => handleProductSelect(producto)}
+                            >
+                              <Package className="h-4 w-4 mr-2" />
+                              Unirme al Grupo de {producto.tiempoDuracion} meses
+                            </Button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="tv">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {productos.filter(p => p.activo && p.tags?.includes('tv')).map((producto) => {
+                        const pagoMensual = Math.round(producto.precioUsd / producto.tiempoDuracion);
+                        return (
+                          <div key={producto.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <div className="flex justify-between items-start mb-2">
+                              <h3 className="font-semibold text-lg">{producto.nombre}</h3>
+                              {producto.tags && producto.tags.length > 0 && (
+                                <div className="flex flex-wrap gap-1">
+                                  {producto.tags.map((tag, index) => (
+                                    <Badge key={index} className={`text-xs border ${getTagColor(tag)}`}>
+                                      {tag}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                            <p className="text-gray-600 mb-3">{producto.descripcion}</p>
+
+                            <div className="space-y-3 mb-4">
+                              <SimplePriceDisplay vesPrice={producto.precioVes} usdPrice={producto.precioUsd} />
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm font-medium text-gray-700">Duración del plan:</span>
+                                <span className="font-semibold text-purple-600">{producto.tiempoDuracion} meses</span>
+                              </div>
+                            </div>
+
+                            <Button
+                              className="w-full bg-green-600 hover:bg-green-700"
+                              onClick={() => handleProductSelect(producto)}
+                            >
+                              <Package className="h-4 w-4 mr-2" />
+                              Unirme al Grupo de {producto.tiempoDuracion} meses
+                            </Button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="cama">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {productos.filter(p => p.activo && p.tags?.includes('cama')).map((producto) => {
+                        const pagoMensual = Math.round(producto.precioUsd / producto.tiempoDuracion);
+                        return (
+                          <div key={producto.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <div className="flex justify-between items-start mb-2">
+                              <h3 className="font-semibold text-lg">{producto.nombre}</h3>
+                              {producto.tags && producto.tags.length > 0 && (
+                                <div className="flex flex-wrap gap-1">
+                                  {producto.tags.map((tag, index) => (
+                                    <Badge key={index} className={`text-xs border ${getTagColor(tag)}`}>
+                                      {tag}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                            <p className="text-gray-600 mb-3">{producto.descripcion}</p>
+
+                            <div className="space-y-3 mb-4">
+                              <SimplePriceDisplay vesPrice={producto.precioVes} usdPrice={producto.precioUsd} />
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm font-medium text-gray-700">Duración del plan:</span>
+                                <span className="font-semibold text-purple-600">{producto.tiempoDuracion} meses</span>
+                              </div>
+                            </div>
+
+                            <Button
+                              className="w-full bg-green-600 hover:bg-green-700"
+                              onClick={() => handleProductSelect(producto)}
+                            >
+                              <Package className="h-4 w-4 mr-2" />
+                              Unirme al Grupo de {producto.tiempoDuracion} meses
+                            </Button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
 
       {/* Currency Selection Modal */}
       <Dialog open={showCurrencyModal} onOpenChange={setShowCurrencyModal}>
