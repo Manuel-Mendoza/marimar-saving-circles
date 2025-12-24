@@ -8,6 +8,7 @@ import authRoutes from './routes/auth.js';
 import groupRoutes from './routes/groups.js';
 import userRoutes from './routes/users.js';
 import productRoutes from './routes/products.js';
+import productSelectionsRoutes from './routes/product-selections.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { rateLimiter } from './middleware/rateLimiter.js';
 
@@ -49,6 +50,7 @@ app.route('/api/auth', authRoutes);
 app.route('/api/groups', groupRoutes);
 app.route('/api/users', userRoutes);
 app.route('/api/products', productRoutes);
+app.route('/api/product-selections', productSelectionsRoutes);
 
 // Health check
 app.get('/api/health', (c) => {

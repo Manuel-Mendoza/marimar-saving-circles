@@ -6,6 +6,7 @@ export * from "./tables/users";
 export * from "./tables/groups";
 export * from "./tables/user-groups";
 export * from "./tables/products";
+export * from "./tables/product-selections";
 export * from "./tables/contributions";
 export * from "./tables/deliveries";
 export * from "./tables/payment-options";

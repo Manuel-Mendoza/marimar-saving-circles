@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { eq } from 'drizzle-orm';
+import { eq, count, sql } from 'drizzle-orm';
 import { groups } from '../db/tables/groups.js';
 import { userGroups } from '../db/tables/user-groups.js';
 import { db } from '../config/database.js';
@@ -9,6 +9,19 @@ const groupsRoute = new Hono();
 // Get all groups
 groupsRoute.get('/', async (c) => {
   try {
+    // First, update any groups that should be marked as LLENO but aren't
+    await db.execute(sql`
+      UPDATE ${groups}
+      SET estado = 'LLENO'
+      WHERE id IN (
+        SELECT g.id
+        FROM ${groups} g
+        LEFT JOIN ${userGroups} ug ON g.id = ug.group_id
+        GROUP BY g.id
+        HAVING COUNT(ug.id) >= g.duracion_meses AND g.estado = 'SIN_COMPLETAR'
+      )
+    `);
+
     const allGroups = await db
       .select({
         id: groups.id,
@@ -17,9 +30,12 @@ groupsRoute.get('/', async (c) => {
         estado: groups.estado,
         fechaInicio: groups.fechaInicio,
         fechaFinal: groups.fechaFinal,
-        turnoActual: groups.turnoActual
+        turnoActual: groups.turnoActual,
+        participantes: sql<number>`count(${userGroups.id})`
       })
       .from(groups)
+      .leftJoin(userGroups, eq(groups.id, userGroups.groupId))
+      .groupBy(groups.id)
       .orderBy(groups.id);
 
     return c.json({
