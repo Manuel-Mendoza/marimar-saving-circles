@@ -8,7 +8,9 @@
     "build": "bunx vite build",
     "build:dev": "bunx vite build --mode development",
     "lint": "eslint .",
-    "preview": "bunx vite preview"
+    "preview": "bunx vite preview",
+    "test": "vitest",
+    "test:ui": "vitest --ui"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
