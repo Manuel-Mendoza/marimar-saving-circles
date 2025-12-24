@@ -46,6 +46,7 @@ const UserDashboard = () => {
     : null;
 
   const hasChosenProduct = myUserGroups.length > 0;
+  const isGroupInStandby = currentGroup?.estado === 'SIN_COMPLETAR';
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
@@ -115,9 +116,11 @@ const UserDashboard = () => {
             <MapPin className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">#{myPosition || 'N/A'}</div>
+            <div className="text-2xl font-bold">
+              {isGroupInStandby ? 'Pendiente' : `#${myPosition || 'N/A'}`}
+            </div>
             <p className="text-xs text-muted-foreground">
-              En el grupo
+              {isGroupInStandby ? 'El admin debe iniciar el grupo' : 'En el grupo'}
             </p>
           </CardContent>
         </Card>
@@ -142,13 +145,20 @@ const UserDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {estimatedDeliveryDate
-                ? estimatedDeliveryDate.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })
-                : 'N/A'
+              {isGroupInStandby
+                ? 'Pendiente'
+                : estimatedDeliveryDate
+                  ? estimatedDeliveryDate.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })
+                  : 'N/A'
               }
             </div>
             <p className="text-xs text-muted-foreground">
-              {monthsUntilDelivery > 0 ? `En ${monthsUntilDelivery} meses` : '¡Pronto!'}
+              {isGroupInStandby
+                ? 'El grupo debe ser iniciado'
+                : monthsUntilDelivery > 0
+                  ? `En ${monthsUntilDelivery} meses`
+                  : '¡Pronto!'
+              }
             </p>
           </CardContent>
         </Card>
@@ -160,8 +170,17 @@ const UserDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              <Badge variant={currentGroup?.estado === 'EN_MARCHA' ? 'default' : 'secondary'}>
-                {currentGroup?.estado.replace('_', ' ') || 'SIN GRUPO'}
+              <Badge variant={
+                currentGroup?.estado === 'EN_MARCHA'
+                  ? 'default'
+                  : currentGroup?.estado === 'SIN_COMPLETAR'
+                    ? 'outline'
+                    : 'secondary'
+              }>
+                {currentGroup?.estado === 'SIN_COMPLETAR'
+                  ? 'En Espera'
+                  : currentGroup?.estado?.replace('_', ' ') || 'SIN GRUPO'
+                }
               </Badge>
             </div>
             <p className="text-xs text-muted-foreground">
@@ -171,8 +190,8 @@ const UserDashboard = () => {
         </Card>
       </div>
 
-      {/* Progreso del Grupo */}
-      {currentGroup && (
+      {/* Progreso del Grupo - Solo mostrar si no está en standby */}
+      {currentGroup && !isGroupInStandby && (
         <Card>
           <CardHeader>
             <CardTitle>Progreso de {currentGroup.nombre}</CardTitle>
@@ -265,6 +284,18 @@ const UserDashboard = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
+            {isGroupInStandby && (
+              <div className="flex items-center gap-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                <Clock className="h-5 w-5 text-orange-600" />
+                <div>
+                  <p className="font-medium text-orange-800">Grupo en espera</p>
+                  <p className="text-sm text-orange-700">
+                    El administrador debe iniciar el grupo para comenzar con los pagos
+                  </p>
+                </div>
+              </div>
+            )}
+
             {myContributions.some(c => c.estado === 'PENDIENTE') && (
               <div className="flex items-center gap-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <AlertCircle className="h-5 w-5 text-yellow-600" />
