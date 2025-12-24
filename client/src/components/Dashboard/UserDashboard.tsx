@@ -1,19 +1,27 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAppState } from '@/contexts/AppStateContext';
 import { getTagColor } from '@/lib/tagUtils';
 import { SimplePriceDisplay } from '@/components/ui/price-display';
+import { apiClient } from '@/lib/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Users, Package, Calendar, TrendingUp, MapPin, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 
 const UserDashboard = () => {
   const { user } = useAuth();
-  const { grupos, productos, userGroups, contributions, deliveries } = useAppState();
+  const { grupos, productos, userGroups, contributions, deliveries, addUserGroup } = useAppState();
 
   // Find user's group memberships
   const myUserGroups = userGroups.filter(ug => ug.userId === user?.id);
@@ -38,6 +46,48 @@ const UserDashboard = () => {
     : null;
 
   const hasChosenProduct = myUserGroups.length > 0;
+  const [showCurrencyModal, setShowCurrencyModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+
+  const handleProductSelect = (producto: any) => {
+    setSelectedProduct(producto);
+    setShowCurrencyModal(true);
+  };
+
+  const handleCurrencySelect = async (currency: 'VES' | 'USD') => {
+    if (!selectedProduct || !user) return;
+
+    try {
+      const response = await apiClient.joinGroup(selectedProduct.id, currency);
+
+      if (response.success && response.data) {
+        // Add the new userGroup to the context
+        const newUserGroup = {
+          id: Date.now(), // Temporary ID, should come from backend
+          userId: user.id,
+          groupId: response.data.groupId,
+          posicion: response.data.position,
+          productoSeleccionado: selectedProduct.nombre,
+          monedaPago: currency,
+          fechaUnion: new Date()
+        };
+        addUserGroup(newUserGroup);
+
+        setShowCurrencyModal(false);
+        setSelectedProduct(null);
+        // Show success dialog
+        setSuccessMessage('¡Te has unido exitosamente al grupo!');
+        setShowSuccessDialog(true);
+      } else {
+        alert('Error al unirse al grupo: ' + (response.message || 'Error desconocido'));
+      }
+    } catch (error) {
+      console.error('Error joining group:', error);
+      alert('Error de conexión. Inténtalo de nuevo.');
+    }
+  };
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-6">
@@ -300,7 +350,10 @@ const UserDashboard = () => {
                           </div>
                         </div>
 
-                        <Button className="w-full bg-green-600 hover:bg-green-700">
+                        <Button
+                          className="w-full bg-green-600 hover:bg-green-700"
+                          onClick={() => handleProductSelect(producto)}
+                        >
                           <Package className="h-4 w-4 mr-2" />
                           Unirme al Grupo de {producto.tiempoDuracion} meses
                         </Button>
@@ -338,7 +391,10 @@ const UserDashboard = () => {
                           </div>
                         </div>
 
-                        <Button className="w-full bg-green-600 hover:bg-green-700">
+                        <Button
+                          className="w-full bg-green-600 hover:bg-green-700"
+                          onClick={() => handleProductSelect(producto)}
+                        >
                           <Package className="h-4 w-4 mr-2" />
                           Unirme al Grupo de {producto.tiempoDuracion} meses
                         </Button>
@@ -376,7 +432,10 @@ const UserDashboard = () => {
                           </div>
                         </div>
 
-                        <Button className="w-full bg-green-600 hover:bg-green-700">
+                        <Button
+                          className="w-full bg-green-600 hover:bg-green-700"
+                          onClick={() => handleProductSelect(producto)}
+                        >
                           <Package className="h-4 w-4 mr-2" />
                           Unirme al Grupo de {producto.tiempoDuracion} meses
                         </Button>
@@ -414,7 +473,10 @@ const UserDashboard = () => {
                           </div>
                         </div>
 
-                        <Button className="w-full bg-green-600 hover:bg-green-700">
+                        <Button
+                          className="w-full bg-green-600 hover:bg-green-700"
+                          onClick={() => handleProductSelect(producto)}
+                        >
                           <Package className="h-4 w-4 mr-2" />
                           Unirme al Grupo de {producto.tiempoDuracion} meses
                         </Button>
@@ -452,7 +514,10 @@ const UserDashboard = () => {
                           </div>
                         </div>
 
-                        <Button className="w-full bg-green-600 hover:bg-green-700">
+                        <Button
+                          className="w-full bg-green-600 hover:bg-green-700"
+                          onClick={() => handleProductSelect(producto)}
+                        >
                           <Package className="h-4 w-4 mr-2" />
                           Unirme al Grupo de {producto.tiempoDuracion} meses
                         </Button>
@@ -490,7 +555,10 @@ const UserDashboard = () => {
                           </div>
                         </div>
 
-                        <Button className="w-full bg-green-600 hover:bg-green-700">
+                        <Button
+                          className="w-full bg-green-600 hover:bg-green-700"
+                          onClick={() => handleProductSelect(producto)}
+                        >
                           <Package className="h-4 w-4 mr-2" />
                           Unirme al Grupo de {producto.tiempoDuracion} meses
                         </Button>
@@ -503,6 +571,55 @@ const UserDashboard = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Currency Selection Modal */}
+      <Dialog open={showCurrencyModal} onOpenChange={setShowCurrencyModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Seleccionar Moneda de Pago</DialogTitle>
+            <DialogDescription>
+              ¿En qué moneda deseas realizar los pagos para {selectedProduct?.nombre}?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-3">
+            <Button
+              onClick={() => handleCurrencySelect('VES')}
+              className="w-full bg-blue-600 hover:bg-blue-700"
+            >
+              Pagar en Bolívares (VES)
+            </Button>
+            <Button
+              onClick={() => handleCurrencySelect('USD')}
+              className="w-full bg-green-600 hover:bg-green-700"
+            >
+              Pagar en Dólares (USD)
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Success Dialog */}
+      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-center gap-2 text-green-800">
+              <CheckCircle className="h-6 w-6 text-green-600" />
+              ¡Éxito!
+            </DialogTitle>
+            <DialogDescription className="text-center">
+              {successMessage}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-center">
+            <Button
+              onClick={() => setShowSuccessDialog(false)}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              Continuar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

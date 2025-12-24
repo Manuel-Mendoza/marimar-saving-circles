@@ -87,6 +87,7 @@ interface AppStateContextType {
   setSelectedGroup: (grupo: Grupo | null) => void;
   updateGrupo: (grupo: Grupo) => void;
   addGrupo: (grupo: Grupo) => void;
+  addUserGroup: (userGroup: UserGroup) => void;
 }
 
 const AppStateContext = createContext<AppStateContextType | undefined>(undefined);
@@ -142,7 +143,7 @@ export const AppStateProvider = ({ children }: AppStateProviderProps) => {
     fetchProducts();
   }, []);
 
-  const [userGroups] = useState<UserGroup[]>([
+  const [userGroups, setUserGroups] = useState<UserGroup[]>([
     {
       id: 1,
       userId: 1, // Assuming current user is 1
@@ -208,6 +209,10 @@ export const AppStateProvider = ({ children }: AppStateProviderProps) => {
     setGrupos(prev => [...prev, grupo]);
   };
 
+  const addUserGroup = (userGroup: UserGroup) => {
+    setUserGroups(prev => [...prev, userGroup]);
+  };
+
   return (
     <AppStateContext.Provider value={{
       grupos,
@@ -218,7 +223,8 @@ export const AppStateProvider = ({ children }: AppStateProviderProps) => {
       selectedGroup,
       setSelectedGroup,
       updateGrupo,
-      addGrupo
+      addGrupo,
+      addUserGroup
     }}>
       {children}
     </AppStateContext.Provider>

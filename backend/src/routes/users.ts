@@ -1,6 +1,9 @@
 import { Hono } from 'hono';
 import { eq, and, or } from 'drizzle-orm';
 import { users } from '../db/tables/users.js';
+import { groups } from '../db/tables/groups.js';
+import { products } from '../db/tables/products.js';
+import { userGroups } from '../db/tables/user-groups.js';
 import { db } from '../config/database.js';
 import { authenticate } from '../middleware/auth.js';
 
@@ -312,6 +315,132 @@ usersRoute.delete('/:id', authenticate, async (c) => {
 
   } catch (error) {
     console.error('Error eliminando usuario:', error);
+    return c.json({
+      success: false,
+      message: 'Error interno del servidor'
+    }, 500);
+  }
+});
+
+// Join a group with selected product and currency
+usersRoute.post('/join', authenticate, async (c) => {
+  try {
+    const userPayload = c.get('user') as any;
+    const body = await c.req.json();
+    const { productId, currency } = body;
+
+    if (!productId || !currency || !['VES', 'USD'].includes(currency)) {
+      return c.json({
+        success: false,
+        message: 'Datos inválidos'
+      }, 400);
+    }
+
+    // Check if user is already in a group
+    const existingUserGroup = await db
+      .select()
+      .from(userGroups)
+      .where(eq(userGroups.userId, userPayload.id))
+      .limit(1);
+
+    if (existingUserGroup.length > 0) {
+      return c.json({
+        success: false,
+        message: 'Ya estás en un grupo'
+      }, 400);
+    }
+
+    // Get product details
+    const [product] = await db
+      .select()
+      .from(products)
+      .where(eq(products.id, productId))
+      .limit(1);
+
+    if (!product) {
+      return c.json({
+        success: false,
+        message: 'Producto no encontrado'
+      }, 404);
+    }
+
+    // Find or create group for this duration
+    let groupResult = await db
+      .select()
+      .from(groups)
+      .where(and(
+        eq(groups.duracionMeses, product.tiempoDuracion),
+        eq(groups.estado, 'SIN_COMPLETAR')
+      ))
+      .limit(1);
+
+    let group;
+    if (groupResult.length === 0) {
+      // Create new group
+      const newGroup = await db
+        .insert(groups)
+        .values({
+          nombre: `Grupo ${product.tiempoDuracion} meses`,
+          duracionMeses: product.tiempoDuracion,
+          estado: 'SIN_COMPLETAR',
+          turnoActual: 0,
+          fechaInicio: null
+        })
+        .returning();
+
+      if (newGroup.length === 0) {
+        return c.json({
+          success: false,
+          message: 'Error al crear el grupo'
+        }, 500);
+      }
+
+      group = newGroup[0];
+    } else {
+      group = groupResult[0];
+    }
+
+    if (!group) {
+      return c.json({
+        success: false,
+        message: 'Error al obtener el grupo'
+      }, 500);
+    }
+
+    // Get current members count
+    const currentMembers = await db
+      .select()
+      .from(userGroups)
+      .where(eq(userGroups.groupId, group.id));
+
+    const position = currentMembers.length + 1;
+
+    // Add user to group
+    await db
+      .insert(userGroups)
+      .values({
+        userId: userPayload.id,
+        groupId: group.id,
+        posicion: position,
+        productoSeleccionado: product.nombre,
+        monedaPago: currency
+      });
+
+    // Check if group is now full (assuming max 10 members for example)
+    // For now, let's assume groups can have unlimited members or update logic later
+
+    return c.json({
+      success: true,
+      message: 'Te has unido exitosamente al grupo',
+      data: {
+        groupId: group.id,
+        position: position,
+        currency: currency
+      }
+    });
+
+  } catch (error) {
+    console.error('Error joining group:', error);
     return c.json({
       success: false,
       message: 'Error interno del servidor'

@@ -157,6 +157,17 @@ class ApiClient {
     });
   }
 
+  async joinGroup(productId: number, currency: 'VES' | 'USD') {
+    return this.request<{
+      groupId: number;
+      position: number;
+      currency: string;
+    }>('/users/join', {
+      method: 'POST',
+      body: JSON.stringify({ productId, currency }),
+    });
+  }
+
   // Products endpoints
   async getProducts() {
     return this.request<{ products: any[] }>('/products');
