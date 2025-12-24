@@ -7,7 +7,7 @@ export const userGroups = pgTable('user_groups', {
   id: serial('id').primaryKey(),
   userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   groupId: integer('group_id').notNull().references(() => groups.id, { onDelete: 'cascade' }),
-  posicion: integer('posicion').notNull(), // Posición del participante en el grupo (1, 2, 3, ...)
+  posicion: integer('posicion'), // Posición del participante en el grupo (1, 2, 3, ...) - null hasta sorteo admin
   productoSeleccionado: varchar('producto_seleccionado', { length: 255 }), // Producto elegido por el usuario
   monedaPago: varchar('moneda_pago', { length: 3 }), // Moneda de pago: 'VES' o 'USD'
   fechaUnion: timestamp('fecha_union').notNull().defaultNow(),

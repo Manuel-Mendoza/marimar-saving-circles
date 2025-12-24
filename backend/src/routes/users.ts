@@ -362,19 +362,30 @@ usersRoute.post('/join', authenticate, async (c) => {
       }, 404);
     }
 
-    // Find or create group for this duration
-    let groupResult = await db
+    // Find available group for this duration (not full)
+    const availableGroups = await db
       .select()
       .from(groups)
       .where(and(
         eq(groups.duracionMeses, product.tiempoDuracion),
         eq(groups.estado, 'SIN_COMPLETAR')
-      ))
-      .limit(1);
+      ));
 
-    let group;
-    if (groupResult.length === 0) {
-      // Create new group
+    let group = null;
+    for (const candidateGroup of availableGroups) {
+      const members = await db
+        .select()
+        .from(userGroups)
+        .where(eq(userGroups.groupId, candidateGroup.id));
+
+      if (members.length < product.tiempoDuracion) {
+        group = candidateGroup;
+        break;
+      }
+    }
+
+    // If no available group found, create a new one
+    if (!group) {
       const newGroup = await db
         .insert(groups)
         .values({
@@ -394,24 +405,31 @@ usersRoute.post('/join', authenticate, async (c) => {
       }
 
       group = newGroup[0];
-    } else {
-      group = groupResult[0];
     }
 
     if (!group) {
       return c.json({
         success: false,
-        message: 'Error al obtener el grupo'
-      }, 500);
+        message: 'No hay grupos disponibles para esta duración'
+      }, 400);
     }
 
-    // Get current members count
+    // Get current members count to verify group is not full
     const currentMembers = await db
       .select()
       .from(userGroups)
       .where(eq(userGroups.groupId, group.id));
 
-    const position = currentMembers.length + 1;
+    // Check if group is already full
+    if (currentMembers.length >= product.tiempoDuracion) {
+      return c.json({
+        success: false,
+        message: 'Este grupo ya está completo'
+      }, 400);
+    }
+
+    // Position will be assigned by admin lottery later, so we use null for now
+    const position = null;
 
     // Use price directly as monthly payment (stored as monthly amount in database)
     const monthlyPayment = currency === 'USD'
