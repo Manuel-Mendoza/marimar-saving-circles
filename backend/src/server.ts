@@ -22,7 +22,6 @@ connectDB();
 
 // Middleware
 const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:8080';
-console.log(`🔗 CORS configured for: ${frontendUrl}`);
 
 // CORS middleware - more permissive for development
 app.use('*', cors({
@@ -64,9 +63,6 @@ app.onError(errorHandler);
 app.notFound((c) => {
   return c.json({ message: 'Route not found' }, 404);
 });
-
-console.log(`🚀 Server starting on port ${PORT}`);
-console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
 
 serve({
   fetch: app.fetch,

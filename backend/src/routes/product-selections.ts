@@ -321,7 +321,7 @@ async function checkAndCreateGroup(productId: number) {
         .returning();
 
       targetGroup = { ...newGroup, userCount: 0 };
-      console.log(`Nuevo grupo creado: ${groupName}`);
+
     }
 
     // Get the current user selection
@@ -359,8 +359,6 @@ async function checkAndCreateGroup(productId: number) {
       .set({ estado: 'EN_GRUPO' })
       .where(eq(productSelections.id, selection.id));
 
-    console.log(`Usuario añadido al grupo ${targetGroup.nombre} en posición ${position}`);
-
     // Check if group is now full
     const updatedCountResult = await db
       .select({ count: sql<number>`count(*)` })
@@ -376,8 +374,6 @@ async function checkAndCreateGroup(productId: number) {
           estado: 'LLENO'
         })
         .where(eq(groups.id, targetGroup.id));
-
-      console.log(`Grupo ${targetGroup.nombre} completado con ${updatedCount.count} miembros - Estado: LLENO`);
     }
 
   } catch (error) {
@@ -387,18 +383,12 @@ async function checkAndCreateGroup(productId: number) {
 
 // TEMPORAL: Endpoint sin auth para testing - REMOVER DESPUÉS
 productSelectionsRoute.post('/simulate-test', async (c) => {
-  console.log('🚨 ADVERTENCIA: Endpoint temporal de testing - remover después de usar');
-
   try {
-    console.log('🎯 Ejecutando simulación estratégica desde endpoint de testing...');
-
     // Get all approved users
     const approvedUsers = await db
       .select({ id: users.id, nombre: users.nombre, apellido: users.apellido })
       .from(users)
       .where(eq(users.estado, 'APROBADO'));
-
-    console.log(`👥 Encontrados ${approvedUsers.length} usuarios aprobados`);
 
     // Get all active products
     const activeProducts = await db
@@ -410,8 +400,6 @@ productSelectionsRoute.post('/simulate-test', async (c) => {
       .from(products)
       .where(eq(products.activo, true));
 
-    console.log(`📦 Encontrados ${activeProducts.length} productos activos`);
-
     // Sort products by duration (smaller groups first)
     const sortedProducts = activeProducts.sort((a, b) => a.tiempoDuracion - b.tiempoDuracion);
 
@@ -421,13 +409,10 @@ productSelectionsRoute.post('/simulate-test', async (c) => {
 
     // Strategy: Fill products with smaller group sizes first, then larger ones
     for (const product of sortedProducts) {
-      console.log(`\n📦 Procesando producto: ${product.nombre} (${product.tiempoDuracion} meses)`);
-
       // Find users not yet assigned to any group
       const availableUsers = approvedUsers.filter(user => !assignedUsers.has(user.id));
 
       if (availableUsers.length < product.tiempoDuracion) {
-        console.log(`⚠️  No hay suficientes usuarios disponibles para ${product.nombre} (${availableUsers.length}/${product.tiempoDuracion})`);
         continue;
       }
 
@@ -435,8 +420,6 @@ productSelectionsRoute.post('/simulate-test', async (c) => {
       const maxGroups = Math.floor(availableUsers.length / product.tiempoDuracion);
 
       for (let groupIndex = 0; groupIndex < maxGroups; groupIndex++) {
-        console.log(`🎯 Formando grupo ${groupIndex + 1} de ${maxGroups} para ${product.nombre}`);
-
         // Select users for this group
         const groupUsers = availableUsers.slice(
           groupIndex * product.tiempoDuracion,
@@ -454,7 +437,6 @@ productSelectionsRoute.post('/simulate-test', async (c) => {
 
             selectionsCreated++;
             assignedUsers.add(user.id);
-            console.log(`✅ ${user.nombre} ${user.apellido} asignado a: ${product.nombre}`);
           }
 
           // Create the group immediately
@@ -495,7 +477,6 @@ productSelectionsRoute.post('/simulate-test', async (c) => {
           }
 
           groupsFormed++;
-          console.log(`🎊 Grupo "${groupName}" creado con ${product.tiempoDuracion} miembros!`);
 
         } catch (error) {
           console.error(`❌ Error creando grupo para ${product.nombre}:`, error);
@@ -506,8 +487,6 @@ productSelectionsRoute.post('/simulate-test', async (c) => {
     // Check for remaining users
     const remainingUsers = approvedUsers.filter(user => !assignedUsers.has(user.id));
     if (remainingUsers.length > 0) {
-      console.log(`\n⚠️  ${remainingUsers.length} usuarios sin asignar. Creando grupos adicionales...`);
-
       // For remaining users, create additional groups with larger products
       const largeProducts = activeProducts.filter(p => p.tiempoDuracion >= 12);
 
@@ -526,7 +505,6 @@ productSelectionsRoute.post('/simulate-test', async (c) => {
                 estado: 'PENDIENTE'
               });
               selectionsCreated++;
-              console.log(`✅ ${user.nombre} ${user.apellido} asignado a grupo adicional: ${product.nombre}`);
             }
 
             // Create group
@@ -565,7 +543,6 @@ productSelectionsRoute.post('/simulate-test', async (c) => {
             }
 
             groupsFormed++;
-            console.log(`🎊 Grupo adicional "${groupName}" creado!`);
 
           } catch (error) {
             console.error(`❌ Error creando grupo adicional:`, error);
@@ -573,12 +550,6 @@ productSelectionsRoute.post('/simulate-test', async (c) => {
         }
       }
     }
-
-    console.log('\n🎉 Simulación estratégica completada!');
-    console.log(`📊 Resumen:`);
-    console.log(`   - Selecciones creadas: ${selectionsCreated}`);
-    console.log(`   - Grupos formados: ${groupsFormed}`);
-    console.log(`   - Usuarios asignados: ${assignedUsers.size}/${approvedUsers.length}`);
 
     return c.json({
       success: true,
@@ -613,15 +584,11 @@ productSelectionsRoute.post('/simulate', authenticate, async (c) => {
       }, 403);
     }
 
-    console.log('🎯 Ejecutando simulación estratégica desde endpoint...');
-
     // Get all approved users
     const approvedUsers = await db
       .select({ id: users.id, nombre: users.nombre, apellido: users.apellido })
       .from(users)
       .where(eq(users.estado, 'APROBADO'));
-
-    console.log(`👥 Encontrados ${approvedUsers.length} usuarios aprobados`);
 
     // Get all active products
     const activeProducts = await db
@@ -633,8 +600,6 @@ productSelectionsRoute.post('/simulate', authenticate, async (c) => {
       .from(products)
       .where(eq(products.activo, true));
 
-    console.log(`📦 Encontrados ${activeProducts.length} productos activos`);
-
     // Sort products by duration (smaller groups first)
     const sortedProducts = activeProducts.sort((a, b) => a.tiempoDuracion - b.tiempoDuracion);
 
@@ -644,13 +609,10 @@ productSelectionsRoute.post('/simulate', authenticate, async (c) => {
 
     // Strategy: Fill products with smaller group sizes first, then larger ones
     for (const product of sortedProducts) {
-      console.log(`\n📦 Procesando producto: ${product.nombre} (${product.tiempoDuracion} meses)`);
-
       // Find users not yet assigned to any group
       const availableUsers = approvedUsers.filter(user => !assignedUsers.has(user.id));
 
       if (availableUsers.length < product.tiempoDuracion) {
-        console.log(`⚠️  No hay suficientes usuarios disponibles para ${product.nombre} (${availableUsers.length}/${product.tiempoDuracion})`);
         continue;
       }
 
@@ -658,8 +620,6 @@ productSelectionsRoute.post('/simulate', authenticate, async (c) => {
       const maxGroups = Math.floor(availableUsers.length / product.tiempoDuracion);
 
       for (let groupIndex = 0; groupIndex < maxGroups; groupIndex++) {
-        console.log(`🎯 Formando grupo ${groupIndex + 1} de ${maxGroups} para ${product.nombre}`);
-
         // Select users for this group
         const groupUsers = availableUsers.slice(
           groupIndex * product.tiempoDuracion,
@@ -677,7 +637,6 @@ productSelectionsRoute.post('/simulate', authenticate, async (c) => {
 
             selectionsCreated++;
             assignedUsers.add(user.id);
-            console.log(`✅ ${user.nombre} ${user.apellido} asignado a: ${product.nombre}`);
           }
 
           // Create the group immediately
@@ -718,7 +677,6 @@ productSelectionsRoute.post('/simulate', authenticate, async (c) => {
           }
 
           groupsFormed++;
-          console.log(`🎊 Grupo "${groupName}" creado con ${product.tiempoDuracion} miembros!`);
 
         } catch (error) {
           console.error(`❌ Error creando grupo para ${product.nombre}:`, error);
@@ -729,8 +687,6 @@ productSelectionsRoute.post('/simulate', authenticate, async (c) => {
     // Check for remaining users
     const remainingUsers = approvedUsers.filter(user => !assignedUsers.has(user.id));
     if (remainingUsers.length > 0) {
-      console.log(`\n⚠️  ${remainingUsers.length} usuarios sin asignar. Creando grupos adicionales...`);
-
       // For remaining users, create additional groups with larger products
       const largeProducts = activeProducts.filter(p => p.tiempoDuracion >= 12);
 
@@ -749,7 +705,6 @@ productSelectionsRoute.post('/simulate', authenticate, async (c) => {
                 estado: 'PENDIENTE'
               });
               selectionsCreated++;
-              console.log(`✅ ${user.nombre} ${user.apellido} asignado a grupo adicional: ${product.nombre}`);
             }
 
             // Create group
@@ -788,7 +743,6 @@ productSelectionsRoute.post('/simulate', authenticate, async (c) => {
             }
 
             groupsFormed++;
-            console.log(`🎊 Grupo adicional "${groupName}" creado!`);
 
           } catch (error) {
             console.error(`❌ Error creando grupo adicional:`, error);
@@ -796,12 +750,6 @@ productSelectionsRoute.post('/simulate', authenticate, async (c) => {
         }
       }
     }
-
-    console.log('\n🎉 Simulación estratégica completada!');
-    console.log(`📊 Resumen:`);
-    console.log(`   - Selecciones creadas: ${selectionsCreated}`);
-    console.log(`   - Grupos formados: ${groupsFormed}`);
-    console.log(`   - Usuarios asignados: ${assignedUsers.size}/${approvedUsers.length}`);
 
     return c.json({
       success: true,

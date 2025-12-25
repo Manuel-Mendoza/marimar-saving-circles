@@ -331,14 +331,10 @@ usersRoute.post('/join', authenticate, async (c) => {
     const body = await c.req.json();
     const { productId, currency } = body;
 
-    console.log('Join request body:', { productId, currency, type: typeof productId });
-
     // Ensure productId is a number
     const parsedProductId = parseInt(productId);
-    console.log('Parsed productId:', parsedProductId, 'isNaN:', isNaN(parsedProductId));
 
     if (!parsedProductId || isNaN(parsedProductId) || !currency || !['VES', 'USD'].includes(currency)) {
-      console.log('Validation failed:', { parsedProductId, currency });
       return c.json({
         success: false,
         message: 'Datos inválidos'
@@ -346,7 +342,6 @@ usersRoute.post('/join', authenticate, async (c) => {
     }
 
     // Users can join multiple groups, so no check for existing groups
-    console.log('User can join multiple groups, proceeding...');
 
     // Get product details
     const [product] = await db
@@ -435,9 +430,6 @@ usersRoute.post('/join', authenticate, async (c) => {
     const monthlyPayment = currency === 'USD'
       ? product.precioUsd
       : product.precioVes;
-
-    console.log('Product prices:', { precioUsd: product.precioUsd, precioVes: product.precioVes });
-    console.log('Calculated monthly payment:', monthlyPayment, 'for currency:', currency);
 
     // Add user to group
     await db

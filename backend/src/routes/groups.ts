@@ -198,8 +198,6 @@ groupsRoute.post('/:id/join', async (c) => {
     const userPayload = c.get('user') as any;
     const groupId = parseInt(c.req.param('id'));
 
-    console.log('User trying to join group:', { userId: userPayload?.id, groupId });
-
     if (!userPayload?.id) {
       return c.json({
         success: false,
@@ -213,8 +211,6 @@ groupsRoute.post('/:id/join', async (c) => {
       .from(userGroups)
       .where(eq(userGroups.userId, userPayload.id))
       .limit(1);
-
-    console.log('Existing user groups found:', existingUserGroup.length);
 
     if (existingUserGroup.length > 0) {
       return c.json({
@@ -230,8 +226,6 @@ groupsRoute.post('/:id/join', async (c) => {
       .where(eq(groups.id, groupId))
       .limit(1);
 
-    console.log('Group found:', !!group);
-
     if (!group) {
       return c.json({
         success: false,
@@ -246,7 +240,6 @@ groupsRoute.post('/:id/join', async (c) => {
       .where(eq(userGroups.groupId, groupId));
 
     const position = currentMembers.length + 1;
-    console.log('Assigning position:', position);
 
     // Add user to group
     const result = await db
@@ -259,8 +252,6 @@ groupsRoute.post('/:id/join', async (c) => {
         monedaPago: 'USD'
       })
       .returning();
-
-    console.log('Insert result:', result);
 
     return c.json({
       success: true,
