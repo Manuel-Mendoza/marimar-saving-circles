@@ -1,10 +1,13 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { motion } from "framer-motion";
+import { Confetti } from "../../../components/ui/confetti";
 import {
   Users,
   Clock,
@@ -15,13 +18,167 @@ import {
   Search,
   BarChart3,
   Calendar,
-  DollarSign
+  DollarSign,
+  Shuffle
 } from "lucide-react";
 import { useGroups } from "@/hooks/useGroups";
+import { useGroupRealtime, DrawMessage } from "@/hooks/useGroupRealtime";
+import api from "@/lib/api";
+import { toast } from "@/hooks/use-toast";
 
 const GroupsView: React.FC = () => {
   const { allGroups, groupsLoading, refetch } = useGroups();
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Draw animation state
+  const [drawDialogOpen, setDrawDialogOpen] = useState(false);
+  const [selectedGroupForDraw, setSelectedGroupForDraw] = useState<any>(null);
+  const [isDrawStarting, setIsDrawStarting] = useState(false);
+  const [drawAnimationData, setDrawAnimationData] = useState<DrawMessage | null>(null);
+
+  // WebSocket for the selected group
+  const { isConnected, lastMessage } = useGroupRealtime(selectedGroupForDraw?.id);
+
+  // Handle WebSocket messages
+  useEffect(() => {
+    if (lastMessage?.type === 'DRAW_STARTED') {
+      setDrawAnimationData(lastMessage);
+      setIsDrawStarting(false);
+    }
+  }, [lastMessage]);
+
+  // Start draw function
+  const handleStartDraw = async (group: any) => {
+    setSelectedGroupForDraw(group);
+    setDrawDialogOpen(true);
+  };
+
+  // Confirm and start the draw
+  const confirmStartDraw = async () => {
+    if (!selectedGroupForDraw) return;
+
+    setIsDrawStarting(true);
+    try {
+      const response = await api.startDraw(selectedGroupForDraw.id);
+
+      if (response.success) {
+        toast({
+          title: "Sorteo iniciado",
+          description: "El sorteo de posiciones ha comenzado",
+        });
+      } else {
+        throw new Error(response.message || 'Failed to start draw');
+      }
+    } catch (error) {
+      console.error('Error starting draw:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo iniciar el sorteo",
+        variant: "destructive",
+      });
+      setIsDrawStarting(false);
+    }
+  };
+
+  // Animation component for the draw
+  const DrawAnimation = ({ data }: { data: DrawMessage }) => {
+    const [currentStep, setCurrentStep] = useState(0);
+    const [revealedPositions, setRevealedPositions] = useState<number[]>([]);
+    const [animationCompleted, setAnimationCompleted] = useState(false);
+    const [showConfetti, setShowConfetti] = useState(false);
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
+    const animationStartedRef = useRef(false);
+
+    useEffect(() => {
+      if (!data || animationCompleted || animationStartedRef.current) return;
+
+      animationStartedRef.current = true;
+
+      // Clear any existing timer
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+
+      timerRef.current = setInterval(() => {
+        setCurrentStep(prev => {
+          if (prev < data.animationSequence.length - 1) {
+            setRevealedPositions(prevPos => [...prevPos, prev + 1]);
+            return prev + 1;
+          } else {
+            // Animation complete, add the last position and show confetti
+            setRevealedPositions(prevPos => [...prevPos, prev + 1]);
+            setAnimationCompleted(true);
+            setShowConfetti(true);
+            setTimeout(() => setShowConfetti(false), 5000);
+            if (timerRef.current) {
+              clearInterval(timerRef.current);
+              timerRef.current = null;
+            }
+            return prev;
+          }
+        });
+      }, 1500); // 1.5 seconds between reveals
+
+      return () => {
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
+      };
+    }, [data, animationCompleted]);
+
+    return (
+      <div className="space-y-6">
+        <div className="text-center">
+          <h3 className="text-2xl font-bold text-gray-900 mb-2">
+            ¡Sorteo de Posiciones Iniciado!
+          </h3>
+          <p className="text-gray-600">
+            Las posiciones se están asignando en tiempo real
+          </p>
+        </div>
+
+        <div className="grid gap-4">
+          {data.finalPositions.map((pos, index) => (
+            <motion.div
+              key={pos.userId}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{
+                opacity: revealedPositions.includes(index + 1) ? 1 : 0.3,
+                y: revealedPositions.includes(index + 1) ? 0 : 20
+              }}
+              transition={{ duration: 0.5 }}
+              className={`p-4 rounded-lg border-2 ${
+                revealedPositions.includes(index + 1)
+                  ? 'border-green-500 bg-green-50'
+                  : 'border-gray-200 bg-gray-50'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-white ${
+                    revealedPositions.includes(index + 1) ? 'bg-green-500' : 'bg-gray-400'
+                  }`}>
+                    {pos.position}
+                  </div>
+                  <span className={`font-medium ${
+                    revealedPositions.includes(index + 1) ? 'text-gray-900' : 'text-gray-500'
+                  }`}>
+                    {revealedPositions.includes(index + 1) ? pos.name : '???'}
+                  </span>
+                </div>
+                {revealedPositions.includes(index + 1) && (
+                  <CheckCircle className="w-5 h-5 text-green-500" />
+                )}
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {showConfetti && <Confetti />}
+      </div>
+    );
+  };
 
   // Filter groups based on search
   const filteredGroups = useMemo(() => {
@@ -102,9 +259,9 @@ const GroupsView: React.FC = () => {
           </div>
           <div className="flex gap-2">
             {group.estado === 'LLENO' && (
-              <Button size="sm" variant="default">
-                <Play className="w-4 h-4 mr-1" />
-                Iniciar Grupo
+              <Button size="sm" variant="default" onClick={() => handleStartDraw(group)}>
+                <Shuffle className="w-4 h-4 mr-1" />
+                Iniciar Sorteo
               </Button>
             )}
             {group.estado === 'EN_MARCHA' && (
@@ -331,6 +488,67 @@ const GroupsView: React.FC = () => {
           </>
         )}
       </Tabs>
+
+      {/* Draw Dialog */}
+      <Dialog open={drawDialogOpen} onOpenChange={setDrawDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedGroupForDraw ? `Sorteo - ${selectedGroupForDraw.nombre}` : 'Sorteo de Posiciones'}
+            </DialogTitle>
+          </DialogHeader>
+
+          {!drawAnimationData ? (
+            <div className="space-y-6">
+              <div className="text-center">
+                <Shuffle className="w-16 h-16 text-blue-600 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  ¿Iniciar sorteo de posiciones?
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  Esta acción asignará posiciones aleatorias a todos los miembros del grupo.
+                  Una vez iniciado, no se puede deshacer.
+                </p>
+                {selectedGroupForDraw && (
+                  <div className="bg-gray-50 p-4 rounded-lg text-left">
+                    <p className="font-medium">Detalles del grupo:</p>
+                    <p><strong>Participantes:</strong> {selectedGroupForDraw.participantes}</p>
+                    <p><strong>Duración:</strong> {selectedGroupForDraw.duracionMeses} meses</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-3 justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => setDrawDialogOpen(false)}
+                  disabled={isDrawStarting}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={confirmStartDraw}
+                  disabled={isDrawStarting}
+                >
+                  {isDrawStarting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Iniciando...
+                    </>
+                  ) : (
+                    <>
+                      <Shuffle className="w-4 h-4 mr-2" />
+                      Iniciar Sorteo
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <DrawAnimation data={drawAnimationData} />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

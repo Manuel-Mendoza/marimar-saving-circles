@@ -1,8 +1,11 @@
 import { Hono } from 'hono';
-import { eq, count, sql } from 'drizzle-orm';
+import { eq, and, count, sql } from 'drizzle-orm';
 import { groups } from '../db/tables/groups.js';
 import { userGroups } from '../db/tables/user-groups.js';
+import { users } from '../db/tables/users.js';
 import { db } from '../config/database.js';
+import { broadcastToGroup } from '../server.js';
+import { authenticate } from '../middleware/auth.js';
 
 const groupsRoute = new Hono();
 
@@ -95,7 +98,7 @@ groupsRoute.get('/:id', async (c) => {
 });
 
 // Create group - Admin only
-groupsRoute.post('/', async (c) => {
+groupsRoute.post('/', authenticate, async (c) => {
   try {
     const userPayload = c.get('user') as any;
 
@@ -144,7 +147,7 @@ groupsRoute.post('/', async (c) => {
 });
 
 // Update group - Admin only
-groupsRoute.put('/:id', async (c) => {
+groupsRoute.put('/:id', authenticate, async (c) => {
   try {
     const userPayload = c.get('user') as any;
 
@@ -270,8 +273,130 @@ groupsRoute.post('/:id/join', async (c) => {
   }
 });
 
+// Start group draw - Admin only
+groupsRoute.post('/:id/start-draw', authenticate, async (c) => {
+  try {
+    const userPayload = c.get('user') as any;
+
+    if (userPayload.tipo !== 'ADMINISTRADOR') {
+      return c.json({
+        success: false,
+        message: 'Acceso denegado'
+      }, 403);
+    }
+
+    const groupId = parseInt(c.req.param('id'));
+
+    // Check if group exists and is in correct state
+    const [group] = await db
+      .select()
+      .from(groups)
+      .where(eq(groups.id, groupId))
+      .limit(1);
+
+    if (!group) {
+      return c.json({
+        success: false,
+        message: 'Grupo no encontrado'
+      }, 404);
+    }
+
+    if (group.estado !== 'LLENO') {
+      return c.json({
+        success: false,
+        message: 'El grupo debe estar completo para iniciar el sorteo'
+      }, 400);
+    }
+
+    // Get all group members
+    const groupMembers = await db
+      .select({
+        userId: userGroups.userId,
+        posicion: userGroups.posicion,
+        nombre: users.nombre,
+        apellido: users.apellido
+      })
+      .from(userGroups)
+      .innerJoin(users, eq(userGroups.userId, users.id))
+      .where(eq(userGroups.groupId, groupId))
+      .orderBy(userGroups.posicion);
+
+    if (groupMembers.length === 0) {
+      return c.json({
+        success: false,
+        message: 'No hay miembros en el grupo'
+      }, 400);
+    }
+
+    // Shuffle positions for the draw
+    const shuffledMembers = [...groupMembers].sort(() => Math.random() - 0.5);
+
+    // Update positions in database
+    for (let i = 0; i < shuffledMembers.length; i++) {
+      const member = shuffledMembers[i];
+      if (member) {
+        await db
+          .update(userGroups)
+          .set({ posicion: i + 1 })
+          .where(and(eq(userGroups.userId, member.userId), eq(userGroups.groupId, groupId)));
+      }
+    }
+
+    // Update group status and start date
+    await db
+      .update(groups)
+      .set({
+        estado: 'EN_MARCHA',
+        fechaInicio: new Date(),
+        turnoActual: 1
+      })
+      .where(eq(groups.id, groupId));
+
+    // Create animation sequence for real-time updates
+    const animationSequence = shuffledMembers.map((member, index) => ({
+      position: index + 1,
+      userId: member.userId,
+      name: `${member.nombre} ${member.apellido}`,
+      delay: index * 1000 // 1 second delay between each position reveal
+    }));
+
+    // Broadcast to all connected clients
+    broadcastToGroup(groupId, {
+      type: 'DRAW_STARTED',
+      groupId,
+      animationSequence,
+      startTime: Date.now(),
+      finalPositions: shuffledMembers.map((member, index) => ({
+        position: index + 1,
+        userId: member.userId,
+        name: `${member.nombre} ${member.apellido}`
+      }))
+    });
+
+    return c.json({
+      success: true,
+      message: 'Sorteo iniciado exitosamente',
+      data: {
+        groupId,
+        finalPositions: shuffledMembers.map((member, index) => ({
+          position: index + 1,
+          userId: member.userId,
+          name: `${member.nombre} ${member.apellido}`
+        })),
+        animationSequence
+      }
+    });
+  } catch (error) {
+    console.error('Error iniciando sorteo:', error);
+    return c.json({
+      success: false,
+      message: 'Error interno del servidor'
+    }, 500);
+  }
+});
+
 // Delete group - Admin only
-groupsRoute.delete('/:id', async (c) => {
+groupsRoute.delete('/:id', authenticate, async (c) => {
   try {
     const userPayload = c.get('user') as any;
 

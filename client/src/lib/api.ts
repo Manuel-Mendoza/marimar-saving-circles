@@ -242,6 +242,16 @@ class ApiClient {
       method: 'POST',
     });
   }
+
+  async startDraw(groupId: number) {
+    return this.request<{
+      groupId: number;
+      finalPositions: any[];
+      animationSequence: any[];
+    }>(`/groups/${groupId}/start-draw`, {
+      method: 'POST',
+    });
+  }
 }
 
 export const apiClient = new ApiClient(API_BASE_URL);
