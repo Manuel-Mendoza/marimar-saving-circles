@@ -3,6 +3,8 @@ import { eq, and, count, sql } from 'drizzle-orm';
 import { groups } from '../db/tables/groups.js';
 import { userGroups } from '../db/tables/user-groups.js';
 import { users } from '../db/tables/users.js';
+import { contributions as contributionsTable } from '../db/tables/contributions.js';
+import { deliveries as deliveriesTable } from '../db/tables/deliveries.js';
 import { db } from '../config/database.js';
 import { broadcastToGroup } from '../server.js';
 import { authenticate } from '../middleware/auth.js';
@@ -90,6 +92,134 @@ groupsRoute.get('/:id', async (c) => {
     });
   } catch (error) {
     console.error('Error obteniendo grupo:', error);
+    return c.json({
+      success: false,
+      message: 'Error interno del servidor'
+    }, 500);
+  }
+});
+
+// Get detailed group info for admin
+groupsRoute.get('/:id/admin', authenticate, async (c) => {
+  try {
+    const userPayload = c.get('user') as any;
+
+    if (userPayload.tipo !== 'ADMINISTRADOR') {
+      return c.json({
+        success: false,
+        message: 'Acceso denegado'
+      }, 403);
+    }
+
+    const groupId = parseInt(c.req.param('id'));
+
+    // Get basic group info
+    const [group] = await db
+      .select({
+        id: groups.id,
+        nombre: groups.nombre,
+        duracionMeses: groups.duracionMeses,
+        estado: groups.estado,
+        fechaInicio: groups.fechaInicio,
+        fechaFinal: groups.fechaFinal,
+        turnoActual: groups.turnoActual
+      })
+      .from(groups)
+      .where(eq(groups.id, groupId))
+      .limit(1);
+
+    if (!group) {
+      return c.json({
+        success: false,
+        message: 'Grupo no encontrado'
+      }, 404);
+    }
+
+    // Get group members with user details
+    const members = await db
+      .select({
+        id: userGroups.id,
+        posicion: userGroups.posicion,
+        fechaUnion: userGroups.fechaUnion,
+        productoSeleccionado: userGroups.productoSeleccionado,
+        monedaPago: userGroups.monedaPago,
+        user: {
+          id: users.id,
+          nombre: users.nombre,
+          apellido: users.apellido,
+          cedula: users.cedula,
+          telefono: users.telefono,
+          correoElectronico: users.correoElectronico,
+          estado: users.estado
+        }
+      })
+      .from(userGroups)
+      .innerJoin(users, eq(userGroups.userId, users.id))
+      .where(eq(userGroups.groupId, groupId))
+      .orderBy(userGroups.posicion);
+
+    // Get all contributions for this group
+    const contributions = await db
+      .select({
+        id: contributionsTable.id,
+        userId: contributionsTable.userId,
+        monto: contributionsTable.monto,
+        moneda: contributionsTable.moneda,
+        fechaPago: contributionsTable.fechaPago,
+        periodo: contributionsTable.periodo,
+        metodoPago: contributionsTable.metodoPago,
+        estado: contributionsTable.estado,
+        referenciaPago: contributionsTable.referenciaPago,
+        user: {
+          nombre: users.nombre,
+          apellido: users.apellido
+        }
+      })
+      .from(contributionsTable)
+      .innerJoin(users, eq(contributionsTable.userId, users.id))
+      .where(eq(contributionsTable.groupId, groupId))
+      .orderBy(contributionsTable.fechaPago);
+
+    // Get all deliveries for this group
+    const deliveries = await db
+      .select({
+        id: deliveriesTable.id,
+        userId: deliveriesTable.userId,
+        productName: deliveriesTable.productName,
+        productValue: deliveriesTable.productValue,
+        fechaEntrega: deliveriesTable.fechaEntrega,
+        mesEntrega: deliveriesTable.mesEntrega,
+        estado: deliveriesTable.estado,
+        notas: deliveriesTable.notas,
+        user: {
+          nombre: users.nombre,
+          apellido: users.apellido
+        }
+      })
+      .from(deliveriesTable)
+      .innerJoin(users, eq(deliveriesTable.userId, users.id))
+      .where(eq(deliveriesTable.groupId, groupId))
+      .orderBy(deliveriesTable.fechaEntrega);
+
+    return c.json({
+      success: true,
+      data: {
+        group,
+        members,
+        contributions,
+        deliveries,
+        stats: {
+          totalMembers: members.length,
+          totalContributions: contributions.length,
+          pendingContributions: contributions.filter(c => c.estado === 'PENDIENTE').length,
+          confirmedContributions: contributions.filter(c => c.estado === 'CONFIRMADO').length,
+          totalDeliveries: deliveries.length,
+          completedDeliveries: deliveries.filter(d => d.estado === 'ENTREGADO').length
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error obteniendo detalles del grupo:', error);
     return c.json({
       success: false,
       message: 'Error interno del servidor'

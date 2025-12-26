@@ -262,6 +262,23 @@ class ApiClient {
       method: 'POST',
     });
   }
+
+  async getGroupAdminDetails(groupId: number) {
+    return this.request<{
+      group: any;
+      members: any[];
+      contributions: any[];
+      deliveries: any[];
+      stats: {
+        totalMembers: number;
+        totalContributions: number;
+        pendingContributions: number;
+        confirmedContributions: number;
+        totalDeliveries: number;
+        completedDeliveries: number;
+      };
+    }>(`/groups/${groupId}/admin`);
+  }
 }
 
 export const apiClient = new ApiClient(API_BASE_URL);

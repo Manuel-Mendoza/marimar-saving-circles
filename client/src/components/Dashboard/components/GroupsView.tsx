@@ -25,6 +25,7 @@ import { useGroups } from "@/hooks/useGroups";
 import { useGroupRealtime, DrawMessage } from "@/hooks/useGroupRealtime";
 import api from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
+import GroupDetailsView from "./GroupDetailsView";
 
 // Animation component for the draw
 const DrawAnimation = ({ data, onComplete }: { data: DrawMessage, onComplete?: () => void }) => {
@@ -135,6 +136,9 @@ const GroupsView: React.FC = () => {
   const { allGroups, groupsLoading, refetch } = useGroups();
   const [searchTerm, setSearchTerm] = useState("");
 
+  // Group details state
+  const [selectedGroupForDetails, setSelectedGroupForDetails] = useState<number | null>(null);
+
   // Draw animation state
   const [drawDialogOpen, setDrawDialogOpen] = useState(false);
   const [selectedGroupForDraw, setSelectedGroupForDraw] = useState<any>(null);
@@ -157,6 +161,16 @@ const GroupsView: React.FC = () => {
     setSelectedGroupForDraw(group);
     setDrawAnimationData(null); // Reset previous draw data
     setDrawDialogOpen(true);
+  };
+
+  // Handle view details
+  const handleViewDetails = (groupId: number) => {
+    setSelectedGroupForDetails(groupId);
+  };
+
+  // Handle back from details
+  const handleBackFromDetails = () => {
+    setSelectedGroupForDetails(null);
   };
 
   // Confirm and start the draw
@@ -281,7 +295,7 @@ const GroupsView: React.FC = () => {
               </Button>
             )}
             {group.estado === 'EN_MARCHA' && (
-              <Button size="sm" variant="outline">
+              <Button size="sm" variant="outline" onClick={() => handleViewDetails(group.id)}>
                 <BarChart3 className="w-4 h-4 mr-1" />
                 Ver Detalles
               </Button>
@@ -348,6 +362,11 @@ const GroupsView: React.FC = () => {
       </CardContent>
     </Card>
   );
+
+  // Show details view if a group is selected
+  if (selectedGroupForDetails) {
+    return <GroupDetailsView groupId={selectedGroupForDetails} onBack={handleBackFromDetails} />;
+  }
 
   return (
     <div className="space-y-6">
