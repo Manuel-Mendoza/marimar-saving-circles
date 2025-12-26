@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import api from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
+import { usePaymentRequests } from "@/hooks/usePaymentRequests";
 
 interface PaymentRequest {
   id: number;
@@ -56,6 +57,9 @@ const PaymentRequestsView: React.FC = () => {
   const [rejectReason, setRejectReason] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
 
+  // Hook para actualizar el contador del sidebar automáticamente
+  const { refetch: refetchSidebarCount } = usePaymentRequests();
+
   useEffect(() => {
     loadPaymentRequests();
   }, []);
@@ -67,6 +71,8 @@ const PaymentRequestsView: React.FC = () => {
 
       if (response.success) {
         setRequests(response.data.requests);
+        // Refresh sidebar counter when loading data
+        await refetchSidebarCount();
       } else {
         toast({
           title: "Error",
@@ -97,6 +103,7 @@ const PaymentRequestsView: React.FC = () => {
           description: "Solicitud de pago aprobada exitosamente",
         });
         await loadPaymentRequests(); // Refresh the list
+        await refetchSidebarCount(); // Refresh sidebar counter immediately
       } else {
         toast({
           title: "Error",
@@ -129,6 +136,7 @@ const PaymentRequestsView: React.FC = () => {
           description: "Solicitud de pago rechazada",
         });
         await loadPaymentRequests(); // Refresh the list
+        await refetchSidebarCount(); // Refresh sidebar counter immediately
         setShowRejectModal(false);
         setSelectedRequest(null);
         setRejectReason('');

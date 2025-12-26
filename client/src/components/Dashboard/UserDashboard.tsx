@@ -285,9 +285,7 @@ const UserDashboard = () => {
   const handleCurrencySelect = async (currency: 'VES' | 'USD') => {
     if (!selectedProduct || !user) return;
 
-    console.log('Selected product:', selectedProduct);
-    console.log('Currency:', currency);
-    console.log('Product ID:', selectedProduct.id, 'Type:', typeof selectedProduct.id);
+
 
     try {
       const response = await apiClient.joinGroup(selectedProduct.id, currency);

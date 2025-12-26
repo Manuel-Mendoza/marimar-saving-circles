@@ -49,7 +49,6 @@ export const useGroupRealtime = (groupId: number | null) => {
     });
 
     ws.onopen = () => {
-      console.log(`WebSocket connected to group ${groupId}`);
       setIsConnected(true);
       setConnectionAttempts(0); // Reset on successful connection
     };
@@ -65,12 +64,10 @@ export const useGroupRealtime = (groupId: number | null) => {
     };
 
     ws.onclose = (event) => {
-      console.log(`WebSocket disconnected from group ${groupId}`);
       setIsConnected(false);
 
       // Check if we should stop retrying
       if (event.code === 1006 || connectionAttempts >= maxConnectionAttempts) {
-        console.log(`WebSocket connection failed after ${connectionAttempts} attempts, stopping reconnection`);
         ws.close();
         return;
       }
@@ -84,7 +81,6 @@ export const useGroupRealtime = (groupId: number | null) => {
 
       // Stop retrying if we've exceeded max attempts
       if (connectionAttempts >= maxConnectionAttempts) {
-        console.log('Max WebSocket connection attempts reached, stopping');
         ws.close();
       }
     };

@@ -21,11 +21,9 @@ export const useUsers = () => {
   const [processingUser, setProcessingUser] = useState<number | null>(null);
 
   const fetchAllUsers = async () => {
-    console.log('🔄 useUsers - fetchAllUsers called - refreshing user data');
     setUsersLoading(true);
     try {
       const response = await apiClient.getAllUsers();
-      console.log('🔄 useUsers - fetchAllUsers response:', response);
       if (response.success && response.data) {
         const usersWithDates = response.data.users.map((user: any) => ({
           ...user,
@@ -36,10 +34,9 @@ export const useUsers = () => {
             : null,
         }));
         console.log('🔄 useUsers - fetchAllUsers setting users:', usersWithDates.length, 'users');
-        console.log('🔄 useUsers - User details:', usersWithDates.map(u => ({ id: u.id, nombre: u.nombre, estado: u.estado })));
+
         setAllUsers(usersWithDates);
       } else {
-        console.log('🔄 useUsers - fetchAllUsers failed or no data, clearing users');
         setAllUsers([]);
       }
     } catch (error) {
@@ -54,19 +51,7 @@ export const useUsers = () => {
     const userExists = allUsers.some(u => u.id === userId);
     const userData = allUsers.find(u => u.id === userId);
 
-    console.log('useUsers - handleSuspendUser Debug:', {
-      userId,
-      userExists,
-      userData: userData ? {
-        id: userData.id,
-        nombre: userData.nombre,
-        apellido: userData.apellido,
-        estado: userData.estado,
-        tipo: userData.tipo
-      } : null,
-      allUsersCount: allUsers.length,
-      allUsersIds: allUsers.map(u => ({ id: u.id, estado: u.estado, nombre: u.nombre }))
-    });
+
 
     if (!userExists) {
       toast({

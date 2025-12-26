@@ -129,7 +129,6 @@ export const AppStateProvider = ({ children }: AppStateProviderProps) => {
 
       try {
         // Fetch groups first
-        console.log('Fetching groups...');
         const groupsResponse = await apiClient.getGroups();
         if (isMounted && groupsResponse.success && groupsResponse.data?.groups) {
           setGrupos(groupsResponse.data.groups);
@@ -139,7 +138,6 @@ export const AppStateProvider = ({ children }: AppStateProviderProps) => {
         await new Promise(resolve => setTimeout(resolve, 100));
 
         // Fetch products
-        console.log('Fetching products...');
         const productsResponse = await apiClient.getProducts();
         if (isMounted && productsResponse.success && productsResponse.data?.products) {
           setProductos(productsResponse.data.products);
@@ -161,7 +159,6 @@ export const AppStateProvider = ({ children }: AppStateProviderProps) => {
         await new Promise(resolve => setTimeout(resolve, 100));
 
         // Fetch contributions
-        console.log('Fetching contributions...');
         const contributionsResponse = await apiClient.getMyContributions();
         if (isMounted && contributionsResponse.success && contributionsResponse.data?.contributions) {
           setContributions(contributionsResponse.data.contributions);
@@ -171,7 +168,6 @@ export const AppStateProvider = ({ children }: AppStateProviderProps) => {
         await new Promise(resolve => setTimeout(resolve, 100));
 
         // Fetch deliveries
-        console.log('Fetching deliveries...');
         const deliveriesResponse = await apiClient.getMyDeliveries();
         if (isMounted && deliveriesResponse.success && deliveriesResponse.data?.deliveries) {
           setDeliveries(deliveriesResponse.data.deliveries);
@@ -248,7 +244,7 @@ export const AppStateProvider = ({ children }: AppStateProviderProps) => {
         setDeliveries(deliveriesResponse.data.deliveries);
       }
 
-      console.log('Data refreshed successfully');
+        // Data refreshed successfully
     } catch (error) {
       console.error('Error refreshing data:', error);
     }

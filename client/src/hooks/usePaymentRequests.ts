@@ -1,12 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import api from '@/lib/api';
 
 export const usePaymentRequests = () => {
   const [pendingCount, setPendingCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  const fetchPendingCount = async () => {
+  const fetchPendingCount = useCallback(async () => {
     try {
+      setLoading(true);
       const response = await api.getAllPaymentRequests();
       if (response.success) {
         const pendingRequests = response.data.requests.filter((r: any) => r.estado === 'PENDIENTE');
@@ -14,23 +15,29 @@ export const usePaymentRequests = () => {
       }
     } catch (error) {
       console.error('Error fetching payment requests count:', error);
+      setPendingCount(0); // Reset on error
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchPendingCount();
 
-    // Refresh count every 30 seconds
-    const interval = setInterval(fetchPendingCount, 30000);
+    // Refresh count every 15 seconds for better responsiveness
+    const interval = setInterval(fetchPendingCount, 15000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchPendingCount]);
+
+  // Force refresh when called externally
+  const refresh = useCallback(() => {
+    fetchPendingCount();
+  }, [fetchPendingCount]);
 
   return {
     pendingCount,
     loading,
-    refetch: fetchPendingCount
+    refetch: refresh
   };
 };
