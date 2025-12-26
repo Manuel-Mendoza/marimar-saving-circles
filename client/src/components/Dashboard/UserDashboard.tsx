@@ -161,6 +161,10 @@ const UserDashboard = () => {
   // Users can switch between products and their groups
   const [currentView, setCurrentView] = useState<'products' | 'groups' | 'group'>('products');
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
+
+  // Payment modal state
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedPaymentPeriod, setSelectedPaymentPeriod] = useState<string>('');
   // Filters for mobile-first UX
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDuration, setSelectedDuration] = useState<number | null>(null);
@@ -488,6 +492,106 @@ const UserDashboard = () => {
                   </CardContent>
                 </Card>
               </div>
+
+              {/* Sección de Pagos - Solo mostrar si el grupo está activo */}
+              {currentGroup && !isGroupInStandby && (
+                <Card className="mb-6">
+                  <CardHeader>
+                    <CardTitle>Realizar Pago</CardTitle>
+                    <CardDescription>
+                      Realiza tu contribución mensual al grupo de ahorro
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {/* Información del pago */}
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="text-center">
+                            <div className="text-lg font-bold text-blue-600">
+                              ${(() => {
+                                const myUserGroup = myUserGroups.find(ug => ug.groupId === currentGroup?.id);
+                                const selectedProduct = productos.find(p => p.nombre === myUserGroup?.productoSeleccionado);
+                                const price = selectedProduct ? (myUserGroup?.monedaPago === 'USD' ? selectedProduct.precioUsd : selectedProduct.precioVes) : 0;
+                                return price.toLocaleString();
+                              })()}
+                            </div>
+                            <div className="text-sm text-gray-600">Monto total del producto</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-lg font-bold text-green-600">
+                              ${(() => {
+                                const myUserGroup = myUserGroups.find(ug => ug.groupId === currentGroup?.id);
+                                const selectedProduct = productos.find(p => p.nombre === myUserGroup?.productoSeleccionado);
+                                const monthlyPrice = selectedProduct ? (myUserGroup?.monedaPago === 'USD' ? selectedProduct.precioUsd : selectedProduct.precioVes) / selectedProduct.tiempoDuracion : 0;
+                                return monthlyPrice.toFixed(0);
+                              })()}
+                            </div>
+                            <div className="text-sm text-gray-600">Pago mensual</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-lg font-bold text-purple-600">
+                              {(() => {
+                                const myUserGroup = myUserGroups.find(ug => ug.groupId === currentGroup?.id);
+                                return myUserGroup?.monedaPago === 'USD' ? 'USD' : 'VES';
+                              })()}
+                            </div>
+                            <div className="text-sm text-gray-600">Moneda de pago</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Estado de pagos del mes actual */}
+                      <div className="space-y-2">
+                        <h4 className="font-medium">Estado del mes actual</h4>
+                        <div className="flex items-center justify-between p-3 bg-white border rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-3 h-3 rounded-full ${
+                              currentGroupContributions.some(c => c.estado === 'CONFIRMADO' && c.periodo === `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`)
+                                ? 'bg-green-500'
+                                : currentGroupContributions.some(c => c.estado === 'PENDIENTE' && c.periodo === `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`)
+                                  ? 'bg-yellow-500'
+                                  : 'bg-gray-300'
+                            }`}></div>
+                            <div>
+                              <p className="font-medium">
+                                Mes {currentGroup?.turnoActual || 0} - {new Date().toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                {currentGroupContributions.some(c => c.estado === 'CONFIRMADO' && c.periodo === `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`)
+                                  ? 'Pago realizado'
+                                  : currentGroupContributions.some(c => c.estado === 'PENDIENTE' && c.periodo === `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`)
+                                    ? 'Pago pendiente de confirmación'
+                                    : 'Pago requerido'
+                                }
+                              </p>
+                            </div>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              const currentPeriod = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
+                              setSelectedPaymentPeriod(currentPeriod);
+                              setShowPaymentModal(true);
+                            }}
+                            disabled={currentGroupContributions.some(c =>
+                              (c.estado === 'CONFIRMADO' || c.estado === 'PENDIENTE') &&
+                              c.periodo === `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`
+                            )}
+                          >
+                            <DollarSign className="h-4 w-4 mr-2" />
+                            {currentGroupContributions.some(c => c.estado === 'CONFIRMADO' && c.periodo === `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`)
+                              ? 'Pagado'
+                              : 'Realizar Pago'
+                            }
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Progreso del Grupo - Solo mostrar si no está en standby */}
               {currentGroup && !isGroupInStandby && (
@@ -1008,6 +1112,71 @@ const UserDashboard = () => {
             <DialogTitle className="text-center">¡Sorteo de Posiciones!</DialogTitle>
           </DialogHeader>
           {drawData && <DrawAnimation data={drawData} onComplete={handleDrawComplete} />}
+        </DialogContent>
+      </Dialog>
+
+      {/* Payment Modal */}
+      <Dialog open={showPaymentModal} onOpenChange={setShowPaymentModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Realizar Pago Mensual</DialogTitle>
+            <DialogDescription>
+              Selecciona la moneda en la que deseas realizar tu pago mensual para el período {selectedPaymentPeriod}
+            </DialogDescription>
+          </DialogHeader>
+
+          {/* Payment Information */}
+          <div className="bg-gray-50 p-4 rounded-lg mb-4">
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span className="text-sm font-medium">Grupo:</span>
+                <span className="text-sm">{currentGroup?.nombre}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm font-medium">Período:</span>
+                <span className="text-sm">{selectedPaymentPeriod}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm font-medium">Monto mensual:</span>
+                <span className="text-sm font-bold">
+                  ${(() => {
+                    const myUserGroup = myUserGroups.find(ug => ug.groupId === currentGroup?.id);
+                    const selectedProduct = productos.find(p => p.nombre === myUserGroup?.productoSeleccionado);
+                    const monthlyPrice = selectedProduct ? (myUserGroup?.monedaPago === 'USD' ? selectedProduct.precioUsd : selectedProduct.precioVes) / selectedProduct.tiempoDuracion : 0;
+                    return monthlyPrice.toFixed(0);
+                  })()} {(() => {
+                    const myUserGroup = myUserGroups.find(ug => ug.groupId === currentGroup?.id);
+                    return myUserGroup?.monedaPago === 'USD' ? 'USD' : 'VES';
+                  })()}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <Button
+              onClick={() => {
+                // TODO: Implement payment logic for VES
+                alert('Funcionalidad de pago en Bolívares próximamente disponible');
+                setShowPaymentModal(false);
+              }}
+              className="w-full bg-blue-600 hover:bg-blue-700"
+            >
+              <DollarSign className="h-4 w-4 mr-2" />
+              Pagar en Bolívares (VES)
+            </Button>
+            <Button
+              onClick={() => {
+                // TODO: Implement payment logic for USD
+                alert('Funcionalidad de pago en Dólares próximamente disponible');
+                setShowPaymentModal(false);
+              }}
+              className="w-full bg-green-600 hover:bg-green-700"
+            >
+              <DollarSign className="h-4 w-4 mr-2" />
+              Pagar en Dólares (USD)
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 
