@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAppState } from '@/contexts/AppStateContext';
 import { getTagColor } from '@/lib/tagUtils';
@@ -17,10 +17,139 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Users, Package, Calendar, TrendingUp, MapPin, Clock, CheckCircle, AlertCircle, Menu, Home, ShoppingCart, DollarSign } from 'lucide-react';
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Users, Package, Calendar, TrendingUp, MapPin, Clock, CheckCircle, AlertCircle, Menu, Home, ShoppingCart, DollarSign, Search, Filter, X, Shuffle } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { useGroupRealtime, DrawMessage } from '@/hooks/useGroupRealtime';
+import { motion } from 'framer-motion';
+import { Confetti } from '@/components/ui/confetti';
+
+// This component handles the real-time connection for a single group and
+// surfaces events. It does not render any UI itself.
+const GroupRealtimeHandler = ({
+  groupId,
+  onDrawStarted,
+}: {
+  groupId: number;
+  onDrawStarted: (message: DrawMessage) => void;
+}) => {
+  const { lastMessage } = useGroupRealtime(groupId);
+
+  React.useEffect(() => {
+    if (lastMessage?.type === 'DRAW_STARTED') {
+      onDrawStarted(lastMessage);
+    }
+  }, [lastMessage, onDrawStarted]);
+
+  return null; // Headless component
+};
+
 
 const UserDashboard = () => {
+  // Animation component for the draw
+  const DrawAnimation = ({ data, onComplete }: { data: DrawMessage, onComplete?: () => void }) => {
+    const [revealedPositions, setRevealedPositions] = React.useState<number[]>([]);
+    const [animationCompleted, setAnimationCompleted] = React.useState(false);
+    const [showConfetti, setShowConfetti] = React.useState(false);
+    const [onCompleteCalled, setOnCompleteCalled] = React.useState(false);
+    const timeoutsRef = React.useRef<NodeJS.Timeout[]>([]);
+    const animationStartedRef = React.useRef(false);
+
+    React.useEffect(() => {
+      if (!data || animationCompleted || animationStartedRef.current) return;
+
+      animationStartedRef.current = true;
+
+      // Clear any existing timeouts
+      timeoutsRef.current.forEach(timeout => clearTimeout(timeout));
+      timeoutsRef.current = [];
+
+      // Schedule each position reveal based on backend delays
+      data.animationSequence.forEach((item, index) => {
+        const timeout = setTimeout(() => {
+          setRevealedPositions(prev => [...prev, item.position]);
+
+          // Check if this is the last position
+          if (index === data.animationSequence.length - 1) {
+            setAnimationCompleted(true);
+            setShowConfetti(true);
+            // Confeti duration is handled by the Confetti component itself (6 seconds)
+          }
+        }, item.delay);
+
+        timeoutsRef.current.push(timeout);
+      });
+
+      return () => {
+        timeoutsRef.current.forEach(timeout => clearTimeout(timeout));
+        timeoutsRef.current = [];
+        animationStartedRef.current = false; // Reset for next animation
+      };
+    }, [data, animationCompleted]);
+
+    // Call onComplete when animation completes (only once)
+    React.useEffect(() => {
+      if (animationCompleted && !onCompleteCalled) {
+        setOnCompleteCalled(true);
+        onComplete?.();
+      }
+    }, [animationCompleted, onComplete, onCompleteCalled]);
+
+    return (
+      <div className="space-y-4">
+        <div className="text-center">
+          <h3 className="text-xl font-bold text-gray-900 mb-1">
+            ¡Sorteo de Posiciones Iniciado!
+          </h3>
+          <p className="text-sm text-gray-600">
+            Las posiciones se están asignando en tiempo real
+          </p>
+        </div>
+
+        <div className="grid gap-2 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {data.finalPositions.map((pos, index) => (
+            <motion.div
+              key={pos.userId}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{
+                opacity: revealedPositions.includes(index + 1) ? 1 : 0.3,
+                scale: revealedPositions.includes(index + 1) ? 1 : 0.8
+              }}
+              transition={{ duration: 0.3 }}
+              className={`p-2 rounded-md border ${
+                revealedPositions.includes(index + 1)
+                  ? 'border-green-400 bg-green-50 shadow-sm'
+                  : 'border-gray-200 bg-gray-50'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <div
+                  className={`rounded-full flex items-center justify-center font-bold text-sm text-white ${
+                    revealedPositions.includes(index + 1) ? 'bg-green-500' : 'bg-gray-400'
+                  }`}
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    minWidth: '32px',
+                    minHeight: '32px'
+                  }}
+                >
+                  {pos.position}
+                </div>
+                <span className={`text-sm truncate ${
+                  revealedPositions.includes(index + 1) ? 'text-gray-900 font-medium' : 'text-gray-500'
+                }`}>
+                  {revealedPositions.includes(index + 1) ? pos.name : '???'}
+                </span>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {showConfetti && <Confetti intensity="extreme" duration={8000} />}
+      </div>
+    );
+  };
   const { user } = useAuth();
   const { grupos, productos, userGroups, contributions, deliveries, addUserGroup, refreshData } = useAppState();
 
@@ -32,12 +161,34 @@ const UserDashboard = () => {
   // Users can switch between products and their groups
   const [currentView, setCurrentView] = useState<'products' | 'groups' | 'group'>('products');
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
+  // Filters for mobile-first UX
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedDuration, setSelectedDuration] = useState<number | null>(null);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [sortBy, setSortBy] = useState<'popular' | 'price-low' | 'price-high' | 'newest'>('popular');
+
+  // Real-time draw state
+  const [showDrawDialog, setShowDrawDialog] = useState(false);
+  const [drawData, setDrawData] = useState<DrawMessage | null>(null);
 
   // Find user's group memberships
   const myUserGroups = userGroups.filter(ug => ug.userId === user?.id);
   const myGroups = grupos.filter(g => myUserGroups.some(ug => ug.groupId === g.id));
   const myContributions = contributions.filter(c => c.userId === user?.id);
   const myDeliveries = deliveries.filter(d => d.userId === user?.id);
+
+  // Define the callback for when a draw starts
+  const handleDrawStarted = useCallback((message: DrawMessage) => {
+    setDrawData(message);
+    setShowDrawDialog(true);
+  }, []);
+
+  // Handle draw animation completion
+  const handleDrawComplete = () => {
+    setShowDrawDialog(false);
+    setDrawData(null);
+    refreshData(); // Refresh data to show updated positions
+  };
 
   // Calculate payment progress
   const totalPaid = myContributions
@@ -58,13 +209,64 @@ const UserDashboard = () => {
   // Calculate when user will receive product
   const monthsUntilDelivery = myPosition ? myPosition - (currentGroup?.turnoActual || 0) : 0;
   const estimatedDeliveryDate = monthsUntilDelivery > 0 && currentGroup?.fechaInicio
-    ? new Date(currentGroup.fechaInicio.getTime() + monthsUntilDelivery * 30 * 24 * 60 * 60 * 1000)
+    ? new Date(new Date(currentGroup.fechaInicio).getTime() + monthsUntilDelivery * 30 * 24 * 60 * 60 * 1000)
     : null;
 
   const hasGroups = myUserGroups.length > 0;
   const hasAvailableGroups = grupos.length > 0; // Grupos disponibles para unirse
 
   const isGroupInStandby = currentGroup?.estado === 'SIN_COMPLETAR';
+
+  // Filter and sort products for mobile-first UX
+  const filteredProducts = productos.filter(product => {
+    if (!product.activo) return false;
+
+    // Search filter
+    const matchesSearch = searchTerm === '' ||
+      product.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.descripcion.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (product.tags && product.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())));
+
+    // Duration filter
+    const matchesDuration = selectedDuration === null || product.tiempoDuracion === selectedDuration;
+
+    // Tags filter
+    const matchesTags = selectedTags.length === 0 ||
+      (product.tags && selectedTags.every(selectedTag => product.tags?.includes(selectedTag)));
+
+    return matchesSearch && matchesDuration && matchesTags;
+  }).sort((a, b) => {
+    switch (sortBy) {
+      case 'price-low':
+        return a.precioUsd - b.precioUsd;
+      case 'price-high':
+        return b.precioUsd - a.precioUsd;
+      case 'newest':
+        return b.id - a.id; // Assuming higher ID means newer
+      case 'popular':
+      default:
+        return 0; // Keep original order for popular
+    }
+  });
+
+  // Get unique durations and tags for filters
+  const availableDurations = [...new Set(productos.filter(p => p.activo).map(p => p.tiempoDuracion))].sort((a, b) => a - b);
+  const availableTags = [...new Set(productos.filter(p => p.activo && p.tags).flatMap(p => p.tags || []))].sort();
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setSelectedDuration(null);
+    setSelectedTags([]);
+    setSortBy('popular');
+  };
+
+  const toggleTag = (tag: string) => {
+    setSelectedTags(prev =>
+      prev.includes(tag)
+        ? prev.filter(t => t !== tag)
+        : [...prev, tag]
+    );
+  };
 
   const handleProductSelect = (producto: any) => {
     setSelectedProduct(producto);
@@ -113,6 +315,14 @@ const UserDashboard = () => {
 
   return (
     <div className="flex min-h-screen">
+      {/* Websocket handlers - these don't render anything */}
+      {myGroups.map(group => (
+        <GroupRealtimeHandler
+          key={group.id}
+          groupId={group.id}
+          onDrawStarted={handleDrawStarted}
+        />
+      ))}
       {/* Sidebar */}
       <Sheet>
         <SheetTrigger asChild>
@@ -346,7 +556,7 @@ const UserDashboard = () => {
                             <div>
                               <p className="font-medium">{contribution.periodo}</p>
                               <p className="text-sm text-gray-600">
-                                {contribution.fechaPago ? contribution.fechaPago.toLocaleDateString('es-ES') : 'Pendiente'}
+                                {contribution.fechaPago ? new Date(contribution.fechaPago).toLocaleDateString('es-ES') : 'Pendiente'}
                               </p>
                             </div>
                           </div>
@@ -504,273 +714,263 @@ const UserDashboard = () => {
 
             </div>
           ) : (
-            /* Productos Disponibles */
-            <Card>
-              <CardHeader>
-                <CardTitle>Elegir Producto</CardTitle>
-                <CardDescription>
-                  Selecciona el producto que deseas adquirir mediante ahorro colaborativo
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Tabs defaultValue="todos" className="w-full">
-                  <TabsList className="grid w-full grid-cols-6 mb-6">
-                    <TabsTrigger value="todos">Todos</TabsTrigger>
-                    <TabsTrigger value="electrodomésticos">Electrodomésticos</TabsTrigger>
-                    <TabsTrigger value="línea blanca">Línea Blanca</TabsTrigger>
-                    <TabsTrigger value="celulares">Celulares</TabsTrigger>
-                    <TabsTrigger value="tv">TV</TabsTrigger>
-                    <TabsTrigger value="cama">Cama</TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="todos">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {productos.filter(p => p.activo).map((producto) => {
-                        const pagoMensual = Math.round(producto.precioUsd / producto.tiempoDuracion);
-                        return (
-                          <div key={producto.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                            <div className="flex justify-between items-start mb-2">
-                              <h3 className="font-semibold text-lg">{producto.nombre}</h3>
-                              {producto.tags && producto.tags.length > 0 && (
-                                <div className="flex flex-wrap gap-1">
-                                  {producto.tags.map((tag, index) => (
-                                    <Badge key={index} className={`text-xs border ${getTagColor(tag)}`}>
-                                      {tag}
-                                    </Badge>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                            <p className="text-gray-600 mb-3">{producto.descripcion}</p>
-
-                            <div className="space-y-3 mb-4">
-                              <SimplePriceDisplay vesPrice={producto.precioVes} usdPrice={producto.precioUsd} />
-                              <div className="flex justify-between items-center">
-                                <span className="text-sm font-medium text-gray-700">Duración del plan:</span>
-                                <span className="font-semibold text-purple-600">{producto.tiempoDuracion} meses</span>
-                              </div>
-                            </div>
-
-                            <Button
-                              className="w-full bg-green-600 hover:bg-green-700"
-                              onClick={() => handleProductSelect(producto)}
-                            >
-                              <Package className="h-4 w-4 mr-2" />
-                              Unirme al Grupo de {producto.tiempoDuracion} meses
-                            </Button>
-                          </div>
-                        );
-                      })}
+            /* Productos Disponibles - Mobile-First Design */
+            <div className="space-y-4">
+              {/* Search and Filters - Mobile First */}
+              <Card className="sticky top-0 z-10 shadow-sm">
+                <CardContent className="p-4">
+                  {/* Search Bar and Filter Button in one line */}
+                  <div className="flex gap-2 mb-3">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <Input
+                        placeholder="Buscar productos..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10 pr-4"
+                      />
                     </div>
-                  </TabsContent>
-
-                  <TabsContent value="electrodomésticos">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {productos.filter(p => p.activo && p.tags?.includes('electrodomésticos')).map((producto) => {
-                        const pagoMensual = Math.round(producto.precioUsd / producto.tiempoDuracion);
-                        return (
-                          <div key={producto.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                            <div className="flex justify-between items-start mb-2">
-                              <h3 className="font-semibold text-lg">{producto.nombre}</h3>
-                              {producto.tags && producto.tags.length > 0 && (
-                                <div className="flex flex-wrap gap-1">
-                                  {producto.tags.map((tag, index) => (
-                                    <Badge key={index} className={`text-xs border ${getTagColor(tag)}`}>
-                                      {tag}
-                                    </Badge>
-                                  ))}
-                                </div>
-                              )}
+                    <Sheet>
+                      <SheetTrigger asChild>
+                        <Button variant="outline" size="sm" className="shrink-0">
+                          <Filter className="h-4 w-4 mr-2" />
+                          Filtros
+                        </Button>
+                      </SheetTrigger>
+                      <SheetContent side="bottom" className="h-auto max-h-[80vh]">
+                        <SheetHeader>
+                          <SheetTitle>Filtros</SheetTitle>
+                        </SheetHeader>
+                        <div className="py-6 space-y-4">
+                          <div>
+                            <label className="text-sm font-medium mb-2 block">Duración del plan</label>
+                            <div className="grid grid-cols-3 gap-2">
+                              <Button
+                                variant={selectedDuration === null ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => setSelectedDuration(null)}
+                              >
+                                Todos
+                              </Button>
+                              {availableDurations.map(duration => (
+                                <Button
+                                  key={duration}
+                                  variant={selectedDuration === duration ? "default" : "outline"}
+                                  size="sm"
+                                  onClick={() => setSelectedDuration(duration)}
+                                >
+                                  {duration}m
+                                </Button>
+                              ))}
                             </div>
-                            <p className="text-gray-600 mb-3">{producto.descripcion}</p>
-
-                            <div className="space-y-3 mb-4">
-                              <SimplePriceDisplay vesPrice={producto.precioVes} usdPrice={producto.precioUsd} />
-                              <div className="flex justify-between items-center">
-                                <span className="text-sm font-medium text-gray-700">Duración del plan:</span>
-                                <span className="font-semibold text-purple-600">{producto.tiempoDuracion} meses</span>
-                              </div>
-                            </div>
-
-                            <Button
-                              className="w-full bg-green-600 hover:bg-green-700"
-                              onClick={() => handleProductSelect(producto)}
-                            >
-                              <Package className="h-4 w-4 mr-2" />
-                              Unirme al Grupo de {producto.tiempoDuracion} meses
-                            </Button>
                           </div>
-                        );
-                      })}
-                    </div>
-                  </TabsContent>
 
-                  <TabsContent value="celulares">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {productos.filter(p => p.activo && p.tags?.includes('celulares')).map((producto) => {
-                        const pagoMensual = Math.round(producto.precioUsd / producto.tiempoDuracion);
-                        return (
-                          <div key={producto.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                            <div className="flex justify-between items-start mb-2">
-                              <h3 className="font-semibold text-lg">{producto.nombre}</h3>
-                              {producto.tags && producto.tags.length > 0 && (
-                                <div className="flex flex-wrap gap-1">
-                                  {producto.tags.map((tag, index) => (
-                                    <Badge key={index} className={`text-xs border ${getTagColor(tag)}`}>
-                                      {tag}
-                                    </Badge>
-                                  ))}
-                                </div>
-                              )}
+                          <div>
+                            <label className="text-sm font-medium mb-2 block">Categorías</label>
+                            <div className="grid grid-cols-2 gap-2">
+                              {availableTags.map((tag) => (
+                                <Button
+                                  key={tag}
+                                  variant={selectedTags.includes(tag) ? "default" : "outline"}
+                                  size="sm"
+                                  onClick={() => toggleTag(tag)}
+                                  className={`text-xs h-8 ${selectedTags.includes(tag) ? "" : getTagColor(tag)}`}
+                                >
+                                  {tag}
+                                </Button>
+                              ))}
                             </div>
-                            <p className="text-gray-600 mb-3">{producto.descripcion}</p>
-
-                            <div className="space-y-3 mb-4">
-                              <SimplePriceDisplay vesPrice={producto.precioVes} usdPrice={producto.precioUsd} />
-                              <div className="flex justify-between items-center">
-                                <span className="text-sm font-medium text-gray-700">Duración del plan:</span>
-                                <span className="font-semibold text-purple-600">{producto.tiempoDuracion} meses</span>
-                              </div>
-                            </div>
-
-                            <Button
-                              className="w-full bg-green-600 hover:bg-green-700"
-                              onClick={() => handleProductSelect(producto)}
-                            >
-                              <Package className="h-4 w-4 mr-2" />
-                              Unirme al Grupo de {producto.tiempoDuracion} meses
-                            </Button>
                           </div>
-                        );
-                      })}
-                    </div>
-                  </TabsContent>
 
-                  <TabsContent value="línea blanca">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {productos.filter(p => p.activo && p.tags?.includes('línea blanca')).map((producto) => {
-                        const pagoMensual = Math.round(producto.precioUsd / producto.tiempoDuracion);
-                        return (
-                          <div key={producto.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                            <div className="flex justify-between items-start mb-2">
-                              <h3 className="font-semibold text-lg">{producto.nombre}</h3>
-                              {producto.tags && producto.tags.length > 0 && (
-                                <div className="flex flex-wrap gap-1">
-                                  {producto.tags.map((tag, index) => (
-                                    <Badge key={index} className={`text-xs border ${getTagColor(tag)}`}>
-                                      {tag}
-                                    </Badge>
-                                  ))}
-                                </div>
-                              )}
+                          <div>
+                            <label className="text-sm font-medium mb-2 block">Ordenar por</label>
+                            <div className="grid grid-cols-2 gap-2">
+                              <Button
+                                variant={sortBy === 'popular' ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => setSortBy('popular')}
+                              >
+                                Popular
+                              </Button>
+                              <Button
+                                variant={sortBy === 'price-low' ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => setSortBy('price-low')}
+                              >
+                                Precio Menor
+                              </Button>
+                              <Button
+                                variant={sortBy === 'price-high' ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => setSortBy('price-high')}
+                              >
+                                Precio Mayor
+                              </Button>
+                              <Button
+                                variant={sortBy === 'newest' ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => setSortBy('newest')}
+                              >
+                                Nuevo
+                              </Button>
                             </div>
-                            <p className="text-gray-600 mb-3">{producto.descripcion}</p>
-
-                            <div className="space-y-3 mb-4">
-                              <SimplePriceDisplay vesPrice={producto.precioVes} usdPrice={producto.precioUsd} />
-                              <div className="flex justify-between items-center">
-                                <span className="text-sm font-medium text-gray-700">Duración del plan:</span>
-                                <span className="font-semibold text-purple-600">{producto.tiempoDuracion} meses</span>
-                              </div>
-                            </div>
-
-                            <Button
-                              className="w-full bg-green-600 hover:bg-green-700"
-                              onClick={() => handleProductSelect(producto)}
-                            >
-                              <Package className="h-4 w-4 mr-2" />
-                              Unirme al Grupo de {producto.tiempoDuracion} meses
-                            </Button>
                           </div>
-                        );
-                      })}
-                    </div>
-                  </TabsContent>
 
-                  <TabsContent value="tv">
+                          <Button
+                            variant="outline"
+                            onClick={clearFilters}
+                            className="w-full"
+                          >
+                            <X className="h-4 w-4 mr-2" />
+                            Limpiar Filtros
+                          </Button>
+                        </div>
+                      </SheetContent>
+                    </Sheet>
+                  </div>
+
+                  {/* Active Filters Display */}
+                  {(searchTerm || selectedDuration || selectedTags.length > 0) && (
+                    <div className="flex items-center gap-2 mt-3 pt-3 border-t">
+                      <span className="text-sm text-gray-600">Filtros activos:</span>
+                      {searchTerm && (
+                        <Badge variant="secondary" className="text-xs">
+                          "{searchTerm}"
+                          <button
+                            onClick={() => setSearchTerm('')}
+                            className="ml-1 hover:bg-gray-300 rounded-full p-0.5"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      )}
+                      {selectedDuration && (
+                        <Badge variant="secondary" className="text-xs">
+                          {selectedDuration} meses
+                          <button
+                            onClick={() => setSelectedDuration(null)}
+                            className="ml-1 hover:bg-gray-300 rounded-full p-0.5"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      )}
+                      {selectedTags.map(tag => (
+                        <Badge key={tag} variant="secondary" className="text-xs">
+                          {tag}
+                          <button
+                            onClick={() => toggleTag(tag)}
+                            className="ml-1 hover:bg-gray-300 rounded-full p-0.5"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={clearFilters}
+                        className="text-xs h-6 px-2 ml-auto"
+                      >
+                        Limpiar
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Products Grid - Mobile Optimized */}
+              <div className="space-y-4">
+                {filteredProducts.length === 0 ? (
+                  <Card>
+                    <CardContent className="p-8 text-center">
+                      <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No se encontraron productos</h3>
+                      <p className="text-gray-600 mb-4">
+                        Intenta ajustar tus filtros de búsqueda
+                      </p>
+                      <Button variant="outline" onClick={clearFilters}>
+                        Limpiar filtros
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <>
+                    {/* Results count */}
+                    <div className="flex items-center justify-between text-sm text-gray-600 px-1">
+                      <span>{filteredProducts.length} producto{filteredProducts.length !== 1 ? 's' : ''} encontrado{filteredProducts.length !== 1 ? 's' : ''}</span>
+                    </div>
+
+                    {/* Products */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {productos.filter(p => p.activo && p.tags?.includes('tv')).map((producto) => {
-                        const pagoMensual = Math.round(producto.precioUsd / producto.tiempoDuracion);
-                        return (
-                          <div key={producto.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                            <div className="flex justify-between items-start mb-2">
-                              <h3 className="font-semibold text-lg">{producto.nombre}</h3>
-                              {producto.tags && producto.tags.length > 0 && (
-                                <div className="flex flex-wrap gap-1">
-                                  {producto.tags.map((tag, index) => (
-                                    <Badge key={index} className={`text-xs border ${getTagColor(tag)}`}>
-                                      {tag}
-                                    </Badge>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                            <p className="text-gray-600 mb-3">{producto.descripcion}</p>
-
-                            <div className="space-y-3 mb-4">
-                              <SimplePriceDisplay vesPrice={producto.precioVes} usdPrice={producto.precioUsd} />
-                              <div className="flex justify-between items-center">
-                                <span className="text-sm font-medium text-gray-700">Duración del plan:</span>
-                                <span className="font-semibold text-purple-600">{producto.tiempoDuracion} meses</span>
+                      {filteredProducts.map((producto) => (
+                        <Card key={producto.id} className="overflow-hidden hover:shadow-lg transition-all duration-200 border-l-4 border-l-green-500">
+                          <CardContent className="p-4">
+                            {/* Mobile-first layout */}
+                            <div className="space-y-3">
+                              {/* Header with title and badges */}
+                              <div className="flex items-start justify-between gap-3">
+                                <h3 className="font-semibold text-lg text-gray-900 leading-tight flex-1">
+                                  {producto.nombre}
+                                </h3>
+                                {producto.tags && producto.tags.length > 0 && (
+                                  <div className="flex flex-wrap gap-1 shrink-0">
+                                    {producto.tags.slice(0, 2).map((tag, index) => (
+                                      <Badge key={index} className={`text-xs ${getTagColor(tag)}`}>
+                                        {tag}
+                                      </Badge>
+                                    ))}
+                                    {producto.tags.length > 2 && (
+                                      <Badge variant="outline" className="text-xs">
+                                        +{producto.tags.length - 2}
+                                      </Badge>
+                                    )}
+                                  </div>
+                                )}
                               </div>
-                            </div>
 
-                            <Button
-                              className="w-full bg-green-600 hover:bg-green-700"
-                              onClick={() => handleProductSelect(producto)}
-                            >
-                              <Package className="h-4 w-4 mr-2" />
-                              Unirme al Grupo de {producto.tiempoDuracion} meses
-                            </Button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </TabsContent>
+                              {/* Description - hidden on very small screens */}
+                              <p className="text-gray-600 text-sm leading-relaxed hidden sm:block">
+                                {producto.descripcion}
+                              </p>
 
-                  <TabsContent value="cama">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {productos.filter(p => p.activo && p.tags?.includes('cama')).map((producto) => {
-                        const pagoMensual = Math.round(producto.precioUsd / producto.tiempoDuracion);
-                        return (
-                          <div key={producto.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                            <div className="flex justify-between items-start mb-2">
-                              <h3 className="font-semibold text-lg">{producto.nombre}</h3>
-                              {producto.tags && producto.tags.length > 0 && (
-                                <div className="flex flex-wrap gap-1">
-                                  {producto.tags.map((tag, index) => (
-                                    <Badge key={index} className={`text-xs border ${getTagColor(tag)}`}>
-                                      {tag}
-                                    </Badge>
-                                  ))}
+                              {/* Price and Duration - Mobile optimized */}
+                              <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+                                <SimplePriceDisplay
+                                  vesPrice={producto.precioVes}
+                                  usdPrice={producto.precioUsd}
+                                />
+                                <div className="flex items-center justify-between text-sm">
+                                  <span className="font-medium text-gray-700">Plan:</span>
+                                  <Badge variant="secondary" className="bg-purple-100 text-purple-800 border-purple-200">
+                                    {producto.tiempoDuracion} meses
+                                  </Badge>
                                 </div>
-                              )}
-                            </div>
-                            <p className="text-gray-600 mb-3">{producto.descripcion}</p>
-
-                            <div className="space-y-3 mb-4">
-                              <SimplePriceDisplay vesPrice={producto.precioVes} usdPrice={producto.precioUsd} />
-                              <div className="flex justify-between items-center">
-                                <span className="text-sm font-medium text-gray-700">Duración del plan:</span>
-                                <span className="font-semibold text-purple-600">{producto.tiempoDuracion} meses</span>
+                                <div className="flex items-center justify-between text-sm">
+                                  <span className="font-medium text-gray-700">Pago mensual:</span>
+                                  <span className="font-semibold text-green-600">
+                                    ${(producto.precioUsd / producto.tiempoDuracion).toFixed(0)} USD
+                                  </span>
+                                </div>
                               </div>
-                            </div>
 
-                            <Button
-                              className="w-full bg-green-600 hover:bg-green-700"
-                              onClick={() => handleProductSelect(producto)}
-                            >
-                              <Package className="h-4 w-4 mr-2" />
-                              Unirme al Grupo de {producto.tiempoDuracion} meses
-                            </Button>
-                          </div>
-                        );
-                      })}
+                              {/* Action Button */}
+                              <Button
+                                className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 rounded-lg transition-colors"
+                                onClick={() => handleProductSelect(producto)}
+                              >
+                                <Package className="h-4 w-4 mr-2" />
+                                Unirme al Grupo
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
                     </div>
-                  </TabsContent>
-                </Tabs>
-              </CardContent>
-            </Card>
+                  </>
+                )}
+              </div>
+            </div>
           )}
         </div>
       </div>
@@ -798,6 +998,16 @@ const UserDashboard = () => {
               Pagar en Dólares (USD)
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Draw Animation Dialog */}
+      <Dialog open={showDrawDialog} onOpenChange={() => {}}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
+          <DialogHeader>
+            <DialogTitle className="text-center">¡Sorteo de Posiciones!</DialogTitle>
+          </DialogHeader>
+          {drawData && <DrawAnimation data={drawData} onComplete={handleDrawComplete} />}
         </DialogContent>
       </Dialog>
 
