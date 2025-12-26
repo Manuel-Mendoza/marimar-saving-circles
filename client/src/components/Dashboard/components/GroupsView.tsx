@@ -26,6 +26,117 @@ import { useGroupRealtime, DrawMessage } from "@/hooks/useGroupRealtime";
 import api from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
 
+// Animation component for the draw
+const DrawAnimation = ({ data, onComplete }: { data: DrawMessage, onComplete?: () => void }) => {
+  const [currentStep, setCurrentStep] = useState(0);
+  const [revealedPositions, setRevealedPositions] = useState<number[]>([]);
+  const [animationCompleted, setAnimationCompleted] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [onCompleteCalled, setOnCompleteCalled] = useState(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const animationStartedRef = useRef(false);
+
+  useEffect(() => {
+    if (!data || animationCompleted || animationStartedRef.current) return;
+
+    animationStartedRef.current = true;
+
+    // Clear any existing timer
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+
+    timerRef.current = setInterval(() => {
+      setCurrentStep(prev => {
+        if (prev < data.animationSequence.length - 1) {
+          setRevealedPositions(prevPos => [...prevPos, prev + 1]);
+          return prev + 1;
+          } else {
+            // Animation complete, add the last position and show confetti
+            setRevealedPositions(prevPos => [...prevPos, prev + 1]);
+            setAnimationCompleted(true);
+            setShowConfetti(true);
+            setTimeout(() => {
+              setShowConfetti(false);
+            }, 5000);
+            if (timerRef.current) {
+              clearInterval(timerRef.current);
+              timerRef.current = null;
+            }
+            return prev;
+          }
+      });
+    }, 1500); // 1.5 seconds between reveals
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [data, animationCompleted]);
+
+  // Call onComplete when animation completes (only once)
+  useEffect(() => {
+    if (animationCompleted && !onCompleteCalled) {
+      setOnCompleteCalled(true);
+      onComplete?.();
+    }
+  }, [animationCompleted, onComplete, onCompleteCalled]);
+
+  return (
+    <div className="space-y-6">
+      <div className="text-center">
+        <h3 className="text-2xl font-bold text-gray-900 mb-2">
+          ¡Sorteo de Posiciones Iniciado!
+        </h3>
+        <p className="text-gray-600">
+          Las posiciones se están asignando en tiempo real
+        </p>
+      </div>
+
+      <div className="grid gap-4">
+        {data.finalPositions.map((pos, index) => (
+          <motion.div
+            key={pos.userId}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{
+              opacity: revealedPositions.includes(index + 1) ? 1 : 0.3,
+              y: revealedPositions.includes(index + 1) ? 0 : 20
+            }}
+            transition={{ duration: 0.5 }}
+            className={`p-4 rounded-lg border-2 ${
+              revealedPositions.includes(index + 1)
+                ? 'border-green-500 bg-green-50'
+                : 'border-gray-200 bg-gray-50'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-white ${
+                  revealedPositions.includes(index + 1) ? 'bg-green-500' : 'bg-gray-400'
+                }`}>
+                  {pos.position}
+                </div>
+                <span className={`font-medium ${
+                  revealedPositions.includes(index + 1) ? 'text-gray-900' : 'text-gray-500'
+                }`}>
+                  {revealedPositions.includes(index + 1) ? pos.name : '???'}
+                </span>
+              </div>
+              {revealedPositions.includes(index + 1) && (
+                <CheckCircle className="w-5 h-5 text-green-500" />
+              )}
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      {showConfetti && <Confetti />}
+    </div>
+  );
+};
+
 const GroupsView: React.FC = () => {
   const { allGroups, groupsLoading, refetch } = useGroups();
   const [searchTerm, setSearchTerm] = useState("");
@@ -61,12 +172,7 @@ const GroupsView: React.FC = () => {
     try {
       const response = await api.startDraw(selectedGroupForDraw.id);
 
-      if (response.success) {
-        toast({
-          title: "Sorteo iniciado",
-          description: "El sorteo de posiciones ha comenzado",
-        });
-      } else {
+      if (!response.success) {
         throw new Error(response.message || 'Failed to start draw');
       }
     } catch (error) {
@@ -79,106 +185,6 @@ const GroupsView: React.FC = () => {
       setIsDrawStarting(false);
     }
   };
-
-  // Animation component for the draw
-  const DrawAnimation = React.memo(({ data }: { data: DrawMessage }) => {
-    const [currentStep, setCurrentStep] = useState(0);
-    const [revealedPositions, setRevealedPositions] = useState<number[]>([]);
-    const [animationCompleted, setAnimationCompleted] = useState(false);
-    const [showConfetti, setShowConfetti] = useState(false);
-    const timerRef = useRef<NodeJS.Timeout | null>(null);
-    const animationStartedRef = useRef(false);
-
-    useEffect(() => {
-      if (!data || animationCompleted || animationStartedRef.current) return;
-
-      animationStartedRef.current = true;
-
-      // Clear any existing timer
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-
-      timerRef.current = setInterval(() => {
-        setCurrentStep(prev => {
-          if (prev < data.animationSequence.length - 1) {
-            setRevealedPositions(prevPos => [...prevPos, prev + 1]);
-            return prev + 1;
-          } else {
-            // Animation complete, add the last position and show confetti
-            setRevealedPositions(prevPos => [...prevPos, prev + 1]);
-            setAnimationCompleted(true);
-            setShowConfetti(true);
-            setTimeout(() => setShowConfetti(false), 5000);
-            if (timerRef.current) {
-              clearInterval(timerRef.current);
-              timerRef.current = null;
-            }
-            return prev;
-          }
-        });
-      }, 1500); // 1.5 seconds between reveals
-
-      return () => {
-        if (timerRef.current) {
-          clearInterval(timerRef.current);
-          timerRef.current = null;
-        }
-      };
-    }, [data, animationCompleted]);
-
-    return (
-      <div className="space-y-6">
-        <div className="text-center">
-          <h3 className="text-2xl font-bold text-gray-900 mb-2">
-            ¡Sorteo de Posiciones Iniciado!
-          </h3>
-          <p className="text-gray-600">
-            Las posiciones se están asignando en tiempo real
-          </p>
-        </div>
-
-        <div className="grid gap-4">
-          {data.finalPositions.map((pos, index) => (
-            <motion.div
-              key={pos.userId}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{
-                opacity: revealedPositions.includes(index + 1) ? 1 : 0.3,
-                y: revealedPositions.includes(index + 1) ? 0 : 20
-              }}
-              transition={{ duration: 0.5 }}
-              className={`p-4 rounded-lg border-2 ${
-                revealedPositions.includes(index + 1)
-                  ? 'border-green-500 bg-green-50'
-                  : 'border-gray-200 bg-gray-50'
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-white ${
-                    revealedPositions.includes(index + 1) ? 'bg-green-500' : 'bg-gray-400'
-                  }`}>
-                    {pos.position}
-                  </div>
-                  <span className={`font-medium ${
-                    revealedPositions.includes(index + 1) ? 'text-gray-900' : 'text-gray-500'
-                  }`}>
-                    {revealedPositions.includes(index + 1) ? pos.name : '???'}
-                  </span>
-                </div>
-                {revealedPositions.includes(index + 1) && (
-                  <CheckCircle className="w-5 h-5 text-green-500" />
-                )}
-              </div>
-            </motion.div>
-          ))}
-        </div>
-
-        {showConfetti && <Confetti />}
-      </div>
-    );
-  });
 
   // Filter groups based on search
   const filteredGroups = useMemo(() => {
@@ -545,7 +551,7 @@ const GroupsView: React.FC = () => {
               </div>
             </div>
           ) : (
-            <DrawAnimation data={drawAnimationData} />
+            <DrawAnimation data={drawAnimationData} onComplete={refetch} />
           )}
         </DialogContent>
       </Dialog>

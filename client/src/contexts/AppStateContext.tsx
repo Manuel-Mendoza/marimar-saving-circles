@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { apiClient } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Local type definitions for coherence with analysis
 interface Grupo {
@@ -108,105 +109,86 @@ interface AppStateProviderProps {
 }
 
 export const AppStateProvider = ({ children }: AppStateProviderProps) => {
+  const { isLoading: authLoading, isAuthenticated } = useAuth();
   const [grupos, setGrupos] = useState<Grupo[]>([]);
-
-  // Fetch groups from API on mount
-  useEffect(() => {
-    const fetchGroups = async () => {
-      try {
-        const response = await apiClient.getGroups();
-        if (response.success && response.data?.groups) {
-          setGrupos(response.data.groups);
-        }
-      } catch (error) {
-        console.error('Error fetching groups:', error);
-        // Keep empty array or show error
-      }
-    };
-
-    fetchGroups();
-  }, []);
-
   const [productos, setProductos] = useState<Producto[]>([]);
-
-  // Fetch products from API on mount
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const response = await apiClient.getProducts();
-        if (response.success && response.data?.products) {
-          setProductos(response.data.products);
-        }
-      } catch (error) {
-        console.error('Error fetching products:', error);
-        // Keep empty array or show error
-      }
-    };
-
-    fetchProducts();
-  }, []);
-
   const [userGroups, setUserGroups] = useState<UserGroup[]>([]);
-
-  // Fetch user groups from API on mount
-  useEffect(() => {
-    const fetchUserGroups = async () => {
-      try {
-        console.log('Fetching user groups...');
-        const response = await apiClient.getMyGroups();
-        console.log('User groups response:', response);
-        if (response.success && response.data?.userGroups) {
-          console.log('Setting user groups:', response.data.userGroups);
-          setUserGroups(response.data.userGroups);
-        } else {
-          console.log('No user groups found or error:', response);
-        }
-      } catch (error) {
-        console.error('Error fetching user groups:', error);
-        // Keep empty array
-      }
-    };
-
-    fetchUserGroups();
-  }, []);
-
   const [contributions, setContributions] = useState<Contribution[]>([]);
-
-  // Fetch user contributions from API on mount
-  useEffect(() => {
-    const fetchContributions = async () => {
-      try {
-        const response = await apiClient.getMyContributions();
-        if (response.success && response.data?.contributions) {
-          setContributions(response.data.contributions);
-        }
-      } catch (error) {
-        console.error('Error fetching contributions:', error);
-        // Keep empty array
-      }
-    };
-
-    fetchContributions();
-  }, []);
-
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
 
-  // Fetch user deliveries from API on mount
+  // Fetch all initial data sequentially to avoid rate limiting
+  // Only fetch after authentication check is complete
   useEffect(() => {
-    const fetchDeliveries = async () => {
+    // Don't fetch if auth is still loading or user is not authenticated
+    if (authLoading || !isAuthenticated) return;
+
+    let isMounted = true;
+
+    const fetchInitialData = async () => {
+      if (!isMounted) return;
+
       try {
-        const response = await apiClient.getMyDeliveries();
-        if (response.success && response.data?.deliveries) {
-          setDeliveries(response.data.deliveries);
+        // Fetch groups first
+        console.log('Fetching groups...');
+        const groupsResponse = await apiClient.getGroups();
+        if (isMounted && groupsResponse.success && groupsResponse.data?.groups) {
+          setGrupos(groupsResponse.data.groups);
         }
+
+        // Small delay to avoid overwhelming the server
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        // Fetch products
+        console.log('Fetching products...');
+        const productsResponse = await apiClient.getProducts();
+        if (isMounted && productsResponse.success && productsResponse.data?.products) {
+          setProductos(productsResponse.data.products);
+        }
+
+        // Small delay
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        // Fetch user groups
+        console.log('Fetching user groups...');
+        const userGroupsResponse = await apiClient.getMyGroups();
+        console.log('User groups response:', userGroupsResponse);
+        if (isMounted && userGroupsResponse.success && userGroupsResponse.data?.userGroups) {
+          console.log('Setting user groups:', userGroupsResponse.data.userGroups);
+          setUserGroups(userGroupsResponse.data.userGroups);
+        }
+
+        // Small delay
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        // Fetch contributions
+        console.log('Fetching contributions...');
+        const contributionsResponse = await apiClient.getMyContributions();
+        if (isMounted && contributionsResponse.success && contributionsResponse.data?.contributions) {
+          setContributions(contributionsResponse.data.contributions);
+        }
+
+        // Small delay
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        // Fetch deliveries
+        console.log('Fetching deliveries...');
+        const deliveriesResponse = await apiClient.getMyDeliveries();
+        if (isMounted && deliveriesResponse.success && deliveriesResponse.data?.deliveries) {
+          setDeliveries(deliveriesResponse.data.deliveries);
+        }
+
       } catch (error) {
-        console.error('Error fetching deliveries:', error);
-        // Keep empty array
+        console.error('Error fetching initial data:', error);
+        // Keep empty arrays - the app should still work
       }
     };
 
-    fetchDeliveries();
-  }, []);
+    fetchInitialData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [authLoading, isAuthenticated]);
 
   const [selectedGroup, setSelectedGroup] = useState<Grupo | null>(null);
 
@@ -230,11 +212,17 @@ export const AppStateProvider = ({ children }: AppStateProviderProps) => {
         setGrupos(groupsResponse.data.groups);
       }
 
+      // Small delay
+      await new Promise(resolve => setTimeout(resolve, 100));
+
       // Refresh products
       const productsResponse = await apiClient.getProducts();
       if (productsResponse.success && productsResponse.data?.products) {
         setProductos(productsResponse.data.products);
       }
+
+      // Small delay
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       // Refresh user groups
       const userGroupsResponse = await apiClient.getMyGroups();
@@ -242,11 +230,17 @@ export const AppStateProvider = ({ children }: AppStateProviderProps) => {
         setUserGroups(userGroupsResponse.data.userGroups);
       }
 
+      // Small delay
+      await new Promise(resolve => setTimeout(resolve, 100));
+
       // Refresh contributions
       const contributionsResponse = await apiClient.getMyContributions();
       if (contributionsResponse.success && contributionsResponse.data?.contributions) {
         setContributions(contributionsResponse.data.contributions);
       }
+
+      // Small delay
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       // Refresh deliveries
       const deliveriesResponse = await apiClient.getMyDeliveries();

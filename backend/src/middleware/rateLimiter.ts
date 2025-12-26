@@ -10,7 +10,7 @@ export const rateLimiter: MiddlewareHandler = async (c, next) => {
 
   const now = Date.now();
   const windowMs = 15 * 60 * 1000; // 15 minutes
-  const maxRequests = 100; // requests per window
+  const maxRequests = 10000; // requests per window - increased for dashboard usage with multiple contexts and retries
 
   const clientData = requests.get(clientIP);
 

@@ -93,7 +93,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   // Cargar usuario al inicializar si hay token
   useEffect(() => {
+    let isMounted = true;
+
     const initAuth = async () => {
+      if (!isMounted) return;
+
       const token = localStorage.getItem("auth_token");
       const savedUser = localStorage.getItem("sanmarimar_user");
 
@@ -102,7 +106,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           // Verificar que el token sea válido y el usuario esté aprobado
           const response = await apiClient.getCurrentUser();
 
-          if (response.success && response.data) {
+          if (isMounted && response.success && response.data) {
             const currentUser = response.data.user;
             // Verificar que el usuario esté aprobado o reactivado (no suspendido, rechazado o pendiente)
             if (currentUser.estado === 'APROBADO' || currentUser.estado === 'REACTIVADO') {
@@ -130,10 +134,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           // Si es error de red, mantener la sesión local y reintentar después
         }
       }
-      setIsLoading(false);
+
+      if (isMounted) {
+        setIsLoading(false);
+      }
     };
 
     initAuth();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   return (

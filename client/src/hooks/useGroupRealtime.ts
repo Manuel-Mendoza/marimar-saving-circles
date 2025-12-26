@@ -30,22 +30,28 @@ export const useGroupRealtime = (groupId: number | null) => {
   const [socket, setSocket] = useState<ReconnectingWebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [lastMessage, setLastMessage] = useState<WebSocketMessage | null>(null);
+  const [connectionAttempts, setConnectionAttempts] = useState(0);
+  const [maxConnectionAttempts] = useState(3); // Limit reconnection attempts
 
   // Initialize WebSocket connection
   useEffect(() => {
     if (!groupId) return;
 
+    // Reset attempts for new group
+    setConnectionAttempts(0);
+
     const WS_PORT = 6001; // Backend WebSocket server port
     const wsUrl = `ws://localhost:${WS_PORT}/groups/${groupId}`;
 
     const ws = new ReconnectingWebSocket(wsUrl, [], {
-      maxRetries: 10,
+      maxRetries: maxConnectionAttempts,
       startClosed: false,
     });
 
     ws.onopen = () => {
       console.log(`WebSocket connected to group ${groupId}`);
       setIsConnected(true);
+      setConnectionAttempts(0); // Reset on successful connection
     };
 
     ws.onmessage = (event) => {
@@ -58,13 +64,29 @@ export const useGroupRealtime = (groupId: number | null) => {
       }
     };
 
-    ws.onclose = () => {
+    ws.onclose = (event) => {
       console.log(`WebSocket disconnected from group ${groupId}`);
       setIsConnected(false);
+
+      // Check if we should stop retrying
+      if (event.code === 1006 || connectionAttempts >= maxConnectionAttempts) {
+        console.log(`WebSocket connection failed after ${connectionAttempts} attempts, stopping reconnection`);
+        ws.close();
+        return;
+      }
+
+      setConnectionAttempts(prev => prev + 1);
     };
 
     ws.onerror = (error) => {
       console.error('WebSocket error:', error);
+      setConnectionAttempts(prev => prev + 1);
+
+      // Stop retrying if we've exceeded max attempts
+      if (connectionAttempts >= maxConnectionAttempts) {
+        console.log('Max WebSocket connection attempts reached, stopping');
+        ws.close();
+      }
     };
 
     setSocket(ws);
@@ -75,8 +97,9 @@ export const useGroupRealtime = (groupId: number | null) => {
       setSocket(null);
       setIsConnected(false);
       setLastMessage(null);
+      setConnectionAttempts(0);
     };
-  }, [groupId]);
+  }, [groupId, maxConnectionAttempts]);
 
   const sendMessage = useCallback((message: any) => {
     if (socket && socket.readyState === WebSocket.OPEN) {

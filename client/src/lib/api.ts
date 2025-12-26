@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 interface ApiResponse<T = any> {
   success: boolean;
@@ -22,9 +22,11 @@ class ApiClient {
 
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    retryCount = 0
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`;
+    const maxRetries = 3;
 
     const config: RequestInit = {
       headers: {
@@ -47,6 +49,14 @@ class ApiClient {
       const data = await response.json();
 
       if (!response.ok) {
+        // Handle rate limiting with exponential backoff
+        if (response.status === 429 && retryCount < maxRetries) {
+          const backoffDelay = Math.min(2000 * Math.pow(2.5, retryCount), 30000); // Max 30 seconds, starting at 2s
+          console.warn(`Rate limited, retrying in ${backoffDelay}ms... (attempt ${retryCount + 1}/${maxRetries})`);
+          await new Promise(resolve => setTimeout(resolve, backoffDelay));
+          return this.request<T>(endpoint, options, retryCount + 1);
+        }
+
         throw new Error(data.message || 'API request failed');
       }
 

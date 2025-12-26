@@ -102,7 +102,6 @@ export const useUsers = () => {
 
       console.warn("🔄 useUsers - Desincronización detectada - forzando recarga completa de datos");
       fetchAllUsers();
-      fetchAllUsers();
 
       toast({
         title: "Datos desactualizados",
