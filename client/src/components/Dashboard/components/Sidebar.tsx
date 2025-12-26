@@ -14,17 +14,19 @@ import {
   Users,
   Package,
   BarChart3,
+  DollarSign,
 } from "lucide-react";
 
-type ActiveView = "dashboard" | "approvals" | "users" | "groups" | "products" | "reports";
+type ActiveView = "dashboard" | "approvals" | "users" | "groups" | "products" | "payment-requests" | "reports";
 
 interface SidebarProps {
   activeView: ActiveView;
   onViewChange: (view: ActiveView) => void;
   pendingUsersCount: number;
+  pendingPaymentsCount?: number;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ activeView, onViewChange, pendingUsersCount }) => {
+const Sidebar: React.FC<SidebarProps> = ({ activeView, onViewChange, pendingUsersCount, pendingPaymentsCount = 0 }) => {
   return (
     <SidebarComponent>
       <SidebarHeader className="p-4">
@@ -81,6 +83,20 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onViewChange, pendingUser
             >
               <Package className="h-4 w-4" />
               Productos
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              isActive={activeView === "payment-requests"}
+              onClick={() => onViewChange("payment-requests")}
+            >
+              <DollarSign className="h-4 w-4" />
+              Solicitudes de Pago
+              {pendingPaymentsCount > 0 && (
+                <Badge variant="destructive" className="ml-auto">
+                  {pendingPaymentsCount}
+                </Badge>
+              )}
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>

@@ -9,6 +9,7 @@ import { useApprovals } from "@/hooks/useApprovals";
 import { useUsers } from "@/hooks/useUsers";
 import { useProducts } from "@/hooks/useProducts";
 import { useGroups } from "@/hooks/useGroups";
+import { usePaymentRequests } from "@/hooks/usePaymentRequests";
 
 // Componentes separados
 import Sidebar from "./components/Sidebar";
@@ -17,6 +18,7 @@ import GroupsView from "./components/GroupsView";
 import ApprovalsView from "./components/ApprovalsView";
 import UsersView from "./components/UsersView";
 import ProductsView from "./components/ProductsView";
+import PaymentRequestsView from "./components/PaymentRequestsView";
 
 type ActiveView =
   | "dashboard"
@@ -24,6 +26,7 @@ type ActiveView =
   | "users"
   | "groups"
   | "products"
+  | "payment-requests"
   | "reports";
 
 const AdminDashboard = () => {
@@ -34,6 +37,7 @@ const AdminDashboard = () => {
   const { allUsers } = useUsers();
   const { allProducts } = useProducts();
   const { allGroups } = useGroups();
+  const { pendingCount: pendingPaymentRequests } = usePaymentRequests();
 
   const renderContent = () => {
     switch (activeView) {
@@ -51,6 +55,8 @@ const AdminDashboard = () => {
         return <GroupsView />;
       case "products":
         return <ProductsView />;
+      case "payment-requests":
+        return <PaymentRequestsView />;
       case "reports":
         return <div className="p-8 text-center text-gray-500">Vista de reportes en desarrollo</div>;
       default:
@@ -68,6 +74,7 @@ const AdminDashboard = () => {
         activeView={activeView}
         onViewChange={setActiveView}
         pendingUsersCount={pendingUsers.length}
+        pendingPaymentsCount={pendingPaymentRequests}
       />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">

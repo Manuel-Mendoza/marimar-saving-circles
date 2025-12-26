@@ -279,6 +279,54 @@ class ApiClient {
       };
     }>(`/groups/${groupId}/admin`);
   }
+
+  // Payment Requests
+  async createPaymentRequest(data: {
+    groupId: number;
+    periodo: string;
+    monto: number;
+    moneda: 'VES' | 'USD';
+    metodoPago: string;
+    referenciaPago?: string;
+    comprobantePago?: string;
+  }) {
+    return this.request<{
+      request: any;
+    }>('/payment-requests', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getMyPaymentRequests() {
+    return this.request<{
+      requests: any[];
+    }>('/payment-requests/my-requests');
+  }
+
+  async getAllPaymentRequests() {
+    return this.request<{
+      requests: any[];
+    }>('/payment-requests');
+  }
+
+  async approvePaymentRequest(requestId: number, notasAdmin?: string) {
+    return this.request<{
+      request: any;
+    }>(`/payment-requests/${requestId}/approve`, {
+      method: 'PUT',
+      body: JSON.stringify({ notasAdmin }),
+    });
+  }
+
+  async rejectPaymentRequest(requestId: number, notasAdmin: string) {
+    return this.request<{
+      request: any;
+    }>(`/payment-requests/${requestId}/reject`, {
+      method: 'PUT',
+      body: JSON.stringify({ notasAdmin }),
+    });
+  }
 }
 
 export const apiClient = new ApiClient(API_BASE_URL);

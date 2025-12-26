@@ -10,6 +10,7 @@ export * from "./tables/product-selections";
 export * from "./tables/contributions";
 export * from "./tables/deliveries";
 export * from "./tables/payment-options";
+export * from "./tables/payment-requests";
 export * from "./tables/notifications";
 
 // Relations

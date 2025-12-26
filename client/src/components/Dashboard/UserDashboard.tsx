@@ -165,6 +165,11 @@ const UserDashboard = () => {
   // Payment modal state
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedPaymentPeriod, setSelectedPaymentPeriod] = useState<string>('');
+  const [selectedCurrency, setSelectedCurrency] = useState<'VES' | 'USD'>('VES');
+  const [paymentMethod, setPaymentMethod] = useState<string>('');
+  const [paymentReference, setPaymentReference] = useState<string>('');
+  const [paymentReceipt, setPaymentReceipt] = useState<File | null>(null);
+  const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
   // Filters for mobile-first UX
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDuration, setSelectedDuration] = useState<number | null>(null);
@@ -314,6 +319,59 @@ const UserDashboard = () => {
     } catch (error) {
       console.error('Error joining group:', error);
       alert('Error de conexión. Inténtalo de nuevo.');
+    }
+  };
+
+  const handleSubmitPaymentRequest = async () => {
+    if (!currentGroup || !user) return;
+
+    setIsSubmittingPayment(true);
+
+    try {
+      const myUserGroup = myUserGroups.find(ug => ug.groupId === currentGroup?.id);
+      const selectedProduct = productos.find(p => p.nombre === myUserGroup?.productoSeleccionado);
+
+      if (!selectedProduct || !myUserGroup) {
+        alert('Error: No se pudo encontrar la información del producto');
+        return;
+      }
+
+      const monthlyAmount = myUserGroup.monedaPago === 'USD' ? selectedProduct.precioUsd : selectedProduct.precioVes;
+
+      // Prepare payment data
+      const paymentData = {
+        groupId: currentGroup.id,
+        periodo: selectedPaymentPeriod,
+        monto: monthlyAmount,
+        moneda: myUserGroup.monedaPago as 'VES' | 'USD',
+        metodoPago: paymentMethod || 'Efectivo',
+        referenciaPago: paymentReference || undefined,
+        comprobantePago: undefined // For now, we'll implement file upload later
+      };
+
+      const response = await apiClient.createPaymentRequest(paymentData);
+
+      if (response.success) {
+        setSuccessMessage('¡Solicitud de pago enviada exitosamente! El administrador la revisará pronto.');
+        setShowSuccessDialog(true);
+        setShowPaymentModal(false);
+
+        // Reset form
+        setPaymentMethod('');
+        setPaymentReference('');
+        setPaymentReceipt(null);
+        setSelectedPaymentPeriod('');
+
+        // Refresh data to show the new request
+        await refreshData();
+      } else {
+        alert('Error al enviar la solicitud: ' + (response.message || 'Error desconocido'));
+      }
+    } catch (error) {
+      console.error('Error submitting payment request:', error);
+      alert('Error de conexión. Inténtalo de nuevo.');
+    } finally {
+      setIsSubmittingPayment(false);
     }
   };
 
@@ -1144,25 +1202,33 @@ const UserDashboard = () => {
 
           <div className="flex flex-col gap-3">
             <Button
-              onClick={() => {
-                // TODO: Implement payment logic for VES
-                alert('Funcionalidad de pago en Bolívares próximamente disponible');
-                setShowPaymentModal(false);
+              onClick={async () => {
+                setSelectedCurrency('VES');
+                await handleSubmitPaymentRequest();
               }}
+              disabled={isSubmittingPayment}
               className="w-full bg-blue-600 hover:bg-blue-700"
             >
-              <DollarSign className="h-4 w-4 mr-2" />
+              {isSubmittingPayment && selectedCurrency === 'VES' ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              ) : (
+                <DollarSign className="h-4 w-4 mr-2" />
+              )}
               Pagar en Bolívares (VES)
             </Button>
             <Button
-              onClick={() => {
-                // TODO: Implement payment logic for USD
-                alert('Funcionalidad de pago en Dólares próximamente disponible');
-                setShowPaymentModal(false);
+              onClick={async () => {
+                setSelectedCurrency('USD');
+                await handleSubmitPaymentRequest();
               }}
+              disabled={isSubmittingPayment}
               className="w-full bg-green-600 hover:bg-green-700"
             >
-              <DollarSign className="h-4 w-4 mr-2" />
+              {isSubmittingPayment && selectedCurrency === 'USD' ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              ) : (
+                <DollarSign className="h-4 w-4 mr-2" />
+              )}
               Pagar en Dólares (USD)
             </Button>
           </div>

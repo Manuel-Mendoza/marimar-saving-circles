@@ -10,6 +10,7 @@ import groupRoutes from "./routes/groups.js";
 import userRoutes from "./routes/users.js";
 import productRoutes from "./routes/products.js";
 import productSelectionsRoutes from "./routes/product-selections.js";
+import paymentRequestsRoutes from "./routes/payment-requests.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { rateLimiter } from "./middleware/rateLimiter.js";
 
@@ -64,6 +65,7 @@ app.route("/api/groups", groupRoutes);
 app.route("/api/users", userRoutes);
 app.route("/api/products", productRoutes);
 app.route("/api/product-selections", productSelectionsRoutes);
+app.route("/api/payment-requests", paymentRequestsRoutes);
 
 // WebSocket connections storage
 const groupConnections = new Map<number, WebSocket[]>();
@@ -114,7 +116,7 @@ const wss = new WebSocketServer({ port: WS_PORT });
 
 wss.on("connection", (ws, req) => {
   const requestUrl = ensureString(req.url);
-  const url = new URL(requestUrl as string, `http://localhost:${WS_PORT}`);
+  const url = new URL(requestUrl, `http://localhost:${WS_PORT}`);
   const pathParts = url.pathname.split("/");
   const groupId = parseInt(pathParts[pathParts.length - 1]);
 
