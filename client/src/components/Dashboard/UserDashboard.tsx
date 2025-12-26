@@ -506,29 +506,18 @@ const UserDashboard = () => {
                     <div className="space-y-4">
                       {/* Información del pago */}
                       <div className="bg-gray-50 p-4 rounded-lg">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div className="text-center">
-                            <div className="text-lg font-bold text-blue-600">
-                              ${(() => {
-                                const myUserGroup = myUserGroups.find(ug => ug.groupId === currentGroup?.id);
-                                const selectedProduct = productos.find(p => p.nombre === myUserGroup?.productoSeleccionado);
-                                const price = selectedProduct ? (myUserGroup?.monedaPago === 'USD' ? selectedProduct.precioUsd : selectedProduct.precioVes) : 0;
-                                return price.toLocaleString();
-                              })()}
-                            </div>
-                            <div className="text-sm text-gray-600">Monto total del producto</div>
-                          </div>
-                          <div className="text-center">
-                            <div className="text-lg font-bold text-green-600">
-                              ${(() => {
-                                const myUserGroup = myUserGroups.find(ug => ug.groupId === currentGroup?.id);
-                                const selectedProduct = productos.find(p => p.nombre === myUserGroup?.productoSeleccionado);
-                                const monthlyPrice = selectedProduct ? (myUserGroup?.monedaPago === 'USD' ? selectedProduct.precioUsd : selectedProduct.precioVes) / selectedProduct.tiempoDuracion : 0;
-                                return monthlyPrice.toFixed(0);
-                              })()}
-                            </div>
-                            <div className="text-sm text-gray-600">Pago mensual</div>
-                          </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="text-center">
+                                <div className="text-lg font-bold text-green-600">
+                                  ${(() => {
+                                    const myUserGroup = myUserGroups.find(ug => ug.groupId === currentGroup?.id);
+                                    const selectedProduct = productos.find(p => p.nombre === myUserGroup?.productoSeleccionado);
+                                    const monthlyPrice = selectedProduct ? (myUserGroup?.monedaPago === 'USD' ? selectedProduct.precioUsd : selectedProduct.precioVes) : 0;
+                                    return monthlyPrice.toFixed(0);
+                                  })()}
+                                </div>
+                                <div className="text-sm text-gray-600">Pago mensual</div>
+                              </div>
                           <div className="text-center">
                             <div className="text-lg font-bold text-purple-600">
                               {(() => {
@@ -1142,7 +1131,7 @@ const UserDashboard = () => {
                   ${(() => {
                     const myUserGroup = myUserGroups.find(ug => ug.groupId === currentGroup?.id);
                     const selectedProduct = productos.find(p => p.nombre === myUserGroup?.productoSeleccionado);
-                    const monthlyPrice = selectedProduct ? (myUserGroup?.monedaPago === 'USD' ? selectedProduct.precioUsd : selectedProduct.precioVes) / selectedProduct.tiempoDuracion : 0;
+                    const monthlyPrice = selectedProduct ? (myUserGroup?.monedaPago === 'USD' ? selectedProduct.precioUsd : selectedProduct.precioVes) : 0;
                     return monthlyPrice.toFixed(0);
                   })()} {(() => {
                     const myUserGroup = myUserGroups.find(ug => ug.groupId === currentGroup?.id);
