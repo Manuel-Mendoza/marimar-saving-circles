@@ -28,12 +28,11 @@ import { toast } from "@/hooks/use-toast";
 
 // Animation component for the draw
 const DrawAnimation = ({ data, onComplete }: { data: DrawMessage, onComplete?: () => void }) => {
-  const [currentStep, setCurrentStep] = useState(0);
   const [revealedPositions, setRevealedPositions] = useState<number[]>([]);
   const [animationCompleted, setAnimationCompleted] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [onCompleteCalled, setOnCompleteCalled] = useState(false);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
   const animationStartedRef = useRef(false);
 
   useEffect(() => {
@@ -41,38 +40,30 @@ const DrawAnimation = ({ data, onComplete }: { data: DrawMessage, onComplete?: (
 
     animationStartedRef.current = true;
 
-    // Clear any existing timer
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-    }
+    // Clear any existing timeouts
+    timeoutsRef.current.forEach(timeout => clearTimeout(timeout));
+    timeoutsRef.current = [];
 
-    timerRef.current = setInterval(() => {
-      setCurrentStep(prev => {
-        if (prev < data.animationSequence.length - 1) {
-          setRevealedPositions(prevPos => [...prevPos, prev + 1]);
-          return prev + 1;
-          } else {
-            // Animation complete, add the last position and show confetti
-            setRevealedPositions(prevPos => [...prevPos, prev + 1]);
-            setAnimationCompleted(true);
-            setShowConfetti(true);
-            setTimeout(() => {
-              setShowConfetti(false);
-            }, 5000);
-            if (timerRef.current) {
-              clearInterval(timerRef.current);
-              timerRef.current = null;
-            }
-            return prev;
-          }
-      });
-    }, 1500); // 1.5 seconds between reveals
+    // Schedule each position reveal based on backend delays
+    data.animationSequence.forEach((item, index) => {
+      const timeout = setTimeout(() => {
+        setRevealedPositions(prev => [...prev, item.position]);
+
+        // Check if this is the last position
+        if (index === data.animationSequence.length - 1) {
+          setAnimationCompleted(true);
+          setShowConfetti(true);
+          // Confeti duration is handled by the Confetti component itself (6 seconds)
+        }
+      }, item.delay);
+
+      timeoutsRef.current.push(timeout);
+    });
 
     return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
+      timeoutsRef.current.forEach(timeout => clearTimeout(timeout));
+      timeoutsRef.current = [];
+      animationStartedRef.current = false; // Reset for next animation
     };
   }, [data, animationCompleted]);
 
@@ -85,54 +76,57 @@ const DrawAnimation = ({ data, onComplete }: { data: DrawMessage, onComplete?: (
   }, [animationCompleted, onComplete, onCompleteCalled]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="text-center">
-        <h3 className="text-2xl font-bold text-gray-900 mb-2">
+        <h3 className="text-xl font-bold text-gray-900 mb-1">
           ¡Sorteo de Posiciones Iniciado!
         </h3>
-        <p className="text-gray-600">
+        <p className="text-sm text-gray-600">
           Las posiciones se están asignando en tiempo real
         </p>
       </div>
 
-      <div className="grid gap-4">
+      <div className="grid gap-2 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {data.finalPositions.map((pos, index) => (
           <motion.div
             key={pos.userId}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, scale: 0.8 }}
             animate={{
               opacity: revealedPositions.includes(index + 1) ? 1 : 0.3,
-              y: revealedPositions.includes(index + 1) ? 0 : 20
+              scale: revealedPositions.includes(index + 1) ? 1 : 0.8
             }}
-            transition={{ duration: 0.5 }}
-            className={`p-4 rounded-lg border-2 ${
+            transition={{ duration: 0.3 }}
+            className={`p-2 rounded-md border ${
               revealedPositions.includes(index + 1)
-                ? 'border-green-500 bg-green-50'
+                ? 'border-green-400 bg-green-50 shadow-sm'
                 : 'border-gray-200 bg-gray-50'
             }`}
           >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-white ${
+            <div className="flex items-center gap-2">
+              <div
+                className={`rounded-full flex items-center justify-center font-bold text-sm text-white ${
                   revealedPositions.includes(index + 1) ? 'bg-green-500' : 'bg-gray-400'
-                }`}>
-                  {pos.position}
-                </div>
-                <span className={`font-medium ${
-                  revealedPositions.includes(index + 1) ? 'text-gray-900' : 'text-gray-500'
-                }`}>
-                  {revealedPositions.includes(index + 1) ? pos.name : '???'}
-                </span>
+                }`}
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  minWidth: '32px',
+                  minHeight: '32px'
+                }}
+              >
+                {pos.position}
               </div>
-              {revealedPositions.includes(index + 1) && (
-                <CheckCircle className="w-5 h-5 text-green-500" />
-              )}
+              <span className={`text-sm truncate ${
+                revealedPositions.includes(index + 1) ? 'text-gray-900 font-medium' : 'text-gray-500'
+              }`}>
+                {revealedPositions.includes(index + 1) ? pos.name : '???'}
+              </span>
             </div>
           </motion.div>
         ))}
       </div>
 
-      {showConfetti && <Confetti />}
+      {showConfetti && <Confetti intensity="extreme" duration={8000} />}
     </div>
   );
 };
@@ -161,12 +155,23 @@ const GroupsView: React.FC = () => {
   // Start draw function
   const handleStartDraw = async (group: any) => {
     setSelectedGroupForDraw(group);
+    setDrawAnimationData(null); // Reset previous draw data
     setDrawDialogOpen(true);
   };
 
   // Confirm and start the draw
   const confirmStartDraw = async () => {
     if (!selectedGroupForDraw) return;
+
+    // Check WebSocket connection
+    if (!isConnected) {
+      toast({
+        title: "Conexión requerida",
+        description: "Esperando conexión en tiempo real...",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setIsDrawStarting(true);
     try {
@@ -175,11 +180,16 @@ const GroupsView: React.FC = () => {
       if (!response.success) {
         throw new Error(response.message || 'Failed to start draw');
       }
+
+      toast({
+        title: "Sorteo iniciado",
+        description: "El sorteo de posiciones ha comenzado",
+      });
     } catch (error) {
       console.error('Error starting draw:', error);
       toast({
         title: "Error",
-        description: "No se pudo iniciar el sorteo",
+        description: error instanceof Error ? error.message : "No se pudo iniciar el sorteo",
         variant: "destructive",
       });
       setIsDrawStarting(false);
@@ -497,7 +507,7 @@ const GroupsView: React.FC = () => {
 
       {/* Draw Dialog */}
       <Dialog open={drawDialogOpen} onOpenChange={setDrawDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
           <DialogHeader>
             <DialogTitle>
               {selectedGroupForDraw ? `Sorteo - ${selectedGroupForDraw.nombre}` : 'Sorteo de Posiciones'}
@@ -551,7 +561,11 @@ const GroupsView: React.FC = () => {
               </div>
             </div>
           ) : (
-            <DrawAnimation data={drawAnimationData} onComplete={refetch} />
+            <DrawAnimation
+              key={selectedGroupForDraw?.id}
+              data={drawAnimationData}
+              onComplete={refetch}
+            />
           )}
         </DialogContent>
       </Dialog>
