@@ -81,7 +81,7 @@ const GroupsView: React.FC = () => {
   };
 
   // Animation component for the draw
-  const DrawAnimation = ({ data }: { data: DrawMessage }) => {
+  const DrawAnimation = React.memo(({ data }: { data: DrawMessage }) => {
     const [currentStep, setCurrentStep] = useState(0);
     const [revealedPositions, setRevealedPositions] = useState<number[]>([]);
     const [animationCompleted, setAnimationCompleted] = useState(false);
@@ -178,7 +178,7 @@ const GroupsView: React.FC = () => {
         {showConfetti && <Confetti />}
       </div>
     );
-  };
+  });
 
   // Filter groups based on search
   const filteredGroups = useMemo(() => {
