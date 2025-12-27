@@ -37,7 +37,7 @@ interface UserDashboardStats {
 
 interface ActivityItem {
   id: string;
-  type: 'payment_made' | 'group_joined' | 'product_selected';
+  type: 'payment_made' | 'payment_approved' | 'group_joined' | 'draw_completed' | 'product_delivered';
   message: string;
   timestamp: Date;
   groupId?: number;
@@ -101,6 +101,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
 
   // Use real data from hook, fallback to props or defaults
   const currentStats = ensureStatsComplete(dashboardData?.stats ?? stats);
+  const currentActivities = dashboardData?.recentActivity ?? currentStats.recentActivity ?? [];
 
   // Rating system: 10/10 = green, 7/10 = yellow, 4/10 = red
   const getRatingColor = (rating: number) => {
@@ -115,65 +116,66 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
 
   const isLoading = externalLoading || dashboardLoading;
 
-  const ActivityFeed: React.FC<{ activities: ActivityItem[] }> = ({ activities }) => (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center space-x-2">
-          <TrendingUp className="h-5 w-5" />
-          <span>Actividad Reciente</span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {activities.length === 0 ? (
-          <div className="text-center py-8">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
-              <TrendingUp className="h-8 w-8 text-gray-400" />
-            </div>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">Aún no tienes actividad</p>
-            <Button onClick={onJoinGroup} size="sm">
-              <Plus className="h-4 w-4 mr-2" />
-              Unirte a un grupo
-            </Button>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {activities.slice(0, 5).map(activity => (
-              <div key={activity.id} className="flex items-start space-x-3">
-                <div
-                  className={`p-2 rounded-full ${
-                    activity.type === 'payment_made'
-                      ? 'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300'
-                      : activity.type === 'group_joined'
-                        ? 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300'
-                        : 'bg-purple-100 text-purple-600 dark:bg-purple-900 dark:text-purple-300'
-                  }`}
-                >
-                  {activity.type === 'payment_made' && <CheckCircle className="h-4 w-4" />}
-                  {activity.type === 'group_joined' && <Users className="h-4 w-4" />}
-                  {activity.type === 'product_selected' && <Package className="h-4 w-4" />}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-900 dark:text-white">{activity.message}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {activity.timestamp.toLocaleString('es-ES')}
-                  </p>
-                </div>
-                {activity.groupId && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => onNavigate?.(`group-${activity.groupId}`)}
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                )}
+  const ActivityFeed: React.FC<{ activities: ActivityItem[] }> = ({ activities }) => {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <TrendingUp className="h-5 w-5" />
+            <span>Actividad Reciente</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {activities.length === 0 ? (
+            <div className="text-center py-8">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
+                <TrendingUp className="h-8 w-8 text-gray-400" />
               </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
+              <p className="text-gray-600 dark:text-gray-400 mb-4">Aún no tienes actividad</p>
+              <Button onClick={onJoinGroup} size="sm">
+                <Plus className="h-4 w-4 mr-2" />
+                Unirte a un grupo
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {activities.slice(0, 5).map(activity => (
+                <div key={activity.id} className="flex items-start space-x-3">
+                  <div
+                    className={`p-2 rounded-full ${
+                      activity.type === 'payment_made'
+                        ? 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300'
+                        : activity.type === 'payment_approved'
+                          ? 'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300'
+                          : activity.type === 'group_joined'
+                            ? 'bg-purple-100 text-purple-600 dark:bg-purple-900 dark:text-purple-300'
+                            : activity.type === 'draw_completed'
+                              ? 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900 dark:text-yellow-300'
+                              : activity.type === 'product_delivered'
+                                ? 'bg-orange-100 text-orange-600 dark:bg-orange-900 dark:text-orange-300'
+                                : 'bg-gray-100 text-gray-600 dark:bg-gray-900 dark:text-gray-300'
+                    }`}
+                  >
+                    {activity.type === 'payment_made' && <CreditCard className="h-4 w-4" />}
+                    {activity.type === 'payment_approved' && <CheckCircle className="h-4 w-4" />}
+                    {activity.type === 'group_joined' && <Users className="h-4 w-4" />}
+                    {activity.type === 'draw_completed' && <BarChart3 className="h-4 w-4" />}
+                    {activity.type === 'product_delivered' && <Package className="h-4 w-4" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-gray-900 dark:text-white">{activity.message}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {activity.timestamp.toLocaleString('es-ES')}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  };
 
   const DashboardContent = () => (
     <div className="space-y-4">
@@ -320,7 +322,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
       {/* Activity Feed */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <ActivityFeed activities={currentStats.recentActivity} />
+          <ActivityFeed activities={currentActivities} />
         </div>
 
         <div className="space-y-4">

@@ -6,7 +6,19 @@ import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LoadingSpinner } from '@/components/atoms';
 import { UserAvatar } from '@/components/atoms';
-import { Upload, Camera, X, Check } from 'lucide-react';
+import {
+  Upload,
+  Camera,
+  X,
+  Check,
+  User,
+  Mail,
+  Phone,
+  CreditCard,
+  Calendar,
+  Shield,
+  Award,
+} from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { apiClient } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
@@ -147,106 +159,75 @@ const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Mi Perfil</h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-2">
-          Gestiona tu información personal y foto de perfil
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Información del usuario */}
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Información Personal</CardTitle>
-              <CardDescription>
-                Tus datos personales y de contacto
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="nombre">Nombre</Label>
-                  <Input id="nombre" value={user.nombre} disabled />
-                </div>
-                <div>
-                  <Label htmlFor="apellido">Apellido</Label>
-                  <Input id="apellido" value={user.apellido} disabled />
-                </div>
-                <div>
-                  <Label htmlFor="cedula">Cédula</Label>
-                  <Input id="cedula" value={user.cedula} disabled />
-                </div>
-                <div>
-                  <Label htmlFor="telefono">Teléfono</Label>
-                  <Input id="telefono" value={user.telefono} disabled />
-                </div>
-                <div className="md:col-span-2">
-                  <Label htmlFor="email">Correo Electrónico</Label>
-                  <Input id="email" type="email" value={user.correoElectronico} disabled />
-                </div>
+    <div className="flex-1 p-6 space-y-4">
+      {/* Header con gradiente */}
+      <Card className="bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-xl">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold mb-2">Mi Perfil</h1>
+              <p className="text-blue-100">Gestiona tu información personal</p>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="text-right">
+                <p className="text-sm text-blue-100">Estado</p>
+                <p className="font-semibold">
+                  {user.estado === 'APROBADO'
+                    ? '✅ Verificado'
+                    : user.estado === 'PENDIENTE'
+                      ? '⏳ En revisión'
+                      : '❌ ' + user.estado.toLowerCase()}
+                </p>
               </div>
+              <UserAvatar
+                name={user.nombre}
+                lastname={user.apellido}
+                imageUrl={previewUrl || user.imagenPerfil || user.imagenCedula}
+                size="lg"
+                className="ring-4 ring-white/20"
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-              <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="font-medium text-gray-500 dark:text-gray-400">Tipo de usuario:</span>
-                    <p className="text-gray-900 dark:text-white capitalize">
-                      {user.tipo.toLowerCase()}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="font-medium text-gray-500 dark:text-gray-400">Estado:</span>
-                    <p className="text-gray-900 dark:text-white capitalize">
-                      {user.estado.toLowerCase()}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="font-medium text-gray-500 dark:text-gray-400">Fecha de registro:</span>
-                    <p className="text-gray-900 dark:text-white">
-                      {formatDate(user.fechaRegistro)}
-                    </p>
-                  </div>
-                  {user.ultimoAcceso && (
-                    <div>
-                      <span className="font-medium text-gray-500 dark:text-gray-400">Último acceso:</span>
-                      <p className="text-gray-900 dark:text-white">
-                        {formatDate(user.ultimoAcceso)}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Foto de perfil */}
-        <div>
-          <Card>
-            <CardHeader>
-              <CardTitle>Foto de Perfil</CardTitle>
-              <CardDescription>
-                Actualiza tu foto de perfil
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Avatar actual */}
-              <div className="flex justify-center">
+      {/* Foto de Perfil Section */}
+      <Card className="shadow-lg">
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Camera className="h-5 w-5 text-blue-600" />
+            <span>Foto de Perfil</span>
+          </CardTitle>
+          <CardDescription>
+            Actualiza tu imagen de perfil para una mejor experiencia
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="relative">
                 <UserAvatar
                   name={user.nombre}
                   lastname={user.apellido}
                   imageUrl={previewUrl || user.imagenPerfil || user.imagenCedula}
-                  size="xl"
+                  size="lg"
                 />
+                {selectedFile && (
+                  <div className="absolute -top-1 -right-1 bg-green-500 text-white rounded-full p-1">
+                    <Check className="h-4 w-4" />
+                  </div>
+                )}
               </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 dark:text-white">Imagen de perfil</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {selectedFile ? 'Nueva imagen seleccionada' : 'Haz click para cambiar'}
+                </p>
+              </div>
+            </div>
 
-              {/* Selector de archivo */}
-              <div className="space-y-2">
-                <Label htmlFor="profile-image">Nueva imagen</Label>
+            <div className="flex items-center space-x-3">
+              <div className="relative">
                 <Input
                   id="profile-image"
                   type="file"
@@ -254,46 +235,161 @@ const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
                   onChange={handleFileSelect}
                   ref={fileInputRef}
                   disabled={isLoading}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                 />
-                <p className="text-xs text-gray-500">
-                  Formatos permitidos: JPG, PNG, WebP. Tamaño máximo: 5MB
-                </p>
+                <Button variant="outline" size="sm" className="pointer-events-none">
+                  <Camera className="h-4 w-4 mr-2" />
+                  Cambiar
+                </Button>
               </div>
 
-              {/* Acciones */}
               {selectedFile && (
-                <div className="flex space-x-2">
+                <>
                   <Button
                     onClick={handleUpload}
                     disabled={isLoading}
-                    className="flex-1"
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700"
                   >
                     {isLoading && <LoadingSpinner size="sm" className="mr-2" />}
                     <Upload className="h-4 w-4 mr-2" />
-                    Subir imagen
+                    Subir
                   </Button>
                   <Button
                     variant="outline"
                     onClick={handleClearSelection}
                     disabled={isLoading}
+                    size="sm"
                   >
                     <X className="h-4 w-4" />
                   </Button>
-                </div>
+                </>
               )}
+            </div>
+          </div>
 
-              {/* Estado de carga */}
-              {isLoading && (
-                <div className="text-center py-2">
-                  <LoadingSpinner size="sm" className="inline mr-2" />
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    Actualizando perfil...
+          <div className="mt-4 text-xs text-gray-500 flex items-center space-x-4">
+            <span>• JPG, PNG, WebP</span>
+            <span>• Máximo 5MB</span>
+          </div>
+
+          {isLoading && (
+            <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <div className="flex items-center space-x-2 text-sm text-blue-700 dark:text-blue-300">
+                <LoadingSpinner size="sm" />
+                <span>Actualizando foto de perfil...</span>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Información Personal */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="shadow-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <User className="h-5 w-5 text-blue-600" />
+              <span>Información Personal</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                  Nombre completo
+                </span>
+                <span className="font-semibold text-gray-900 dark:text-white">
+                  {user.nombre} {user.apellido}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Cédula</span>
+                <span className="font-semibold text-gray-900 dark:text-white">{user.cedula}</span>
+              </div>
+
+              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                  Teléfono
+                </span>
+                <span className="font-semibold text-gray-900 dark:text-white">{user.telefono}</span>
+              </div>
+
+              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                  Correo electrónico
+                </span>
+                <span className="font-semibold text-gray-900 dark:text-white text-right max-w-xs truncate">
+                  {user.correoElectronico}
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Estado de la Cuenta */}
+        <Card className="shadow-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Shield className="h-5 w-5 text-purple-600" />
+              <span>Estado de la Cuenta</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                  Tipo de usuario
+                </span>
+                <span className="font-semibold text-gray-900 dark:text-white capitalize">
+                  {user.tipo.toLowerCase()}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                  Estado de verificación
+                </span>
+                <span
+                  className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    user.estado === 'APROBADO'
+                      ? 'bg-green-100 text-green-800'
+                      : user.estado === 'PENDIENTE'
+                        ? 'bg-yellow-100 text-yellow-800'
+                        : 'bg-red-100 text-red-800'
+                  }`}
+                >
+                  {user.estado === 'APROBADO'
+                    ? '✅ Verificado'
+                    : user.estado === 'PENDIENTE'
+                      ? '⏳ En revisión'
+                      : '❌ ' + user.estado.toLowerCase()}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                  Fecha de registro
+                </span>
+                <span className="font-semibold text-gray-900 dark:text-white text-sm">
+                  {formatDate(user.fechaRegistro)}
+                </span>
+              </div>
+
+              {user.ultimoAcceso && (
+                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Último acceso
+                  </span>
+                  <span className="font-semibold text-gray-900 dark:text-white text-sm">
+                    {formatDate(user.ultimoAcceso)}
                   </span>
                 </div>
               )}
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
