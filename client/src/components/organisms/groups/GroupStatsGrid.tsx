@@ -21,7 +21,7 @@ interface GroupStatsGridProps {
 
 export const GroupStatsGrid: React.FC<GroupStatsGridProps> = ({ stats }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 my-4">
       <GroupStatsCard
         title="Total Grupos"
         value={stats.totalGroups}
@@ -43,12 +43,7 @@ export const GroupStatsGrid: React.FC<GroupStatsGridProps> = ({ stats }) => {
         variant="success"
       />
 
-      <GroupStatsCard
-        title="En Marcha"
-        value={stats.activeGroups}
-        icon={Play}
-        variant="default"
-      />
+      <GroupStatsCard title="En Marcha" value={stats.activeGroups} icon={Play} variant="default" />
 
       <GroupStatsCard
         title="Completados"

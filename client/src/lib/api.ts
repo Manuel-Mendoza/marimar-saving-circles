@@ -270,8 +270,8 @@ class ApiClient {
   async startDraw(groupId: number) {
     return this.request<{
       groupId: number;
-      finalPositions: { userId: number; position: number }[];
-      animationSequence: number[];
+      finalPositions: { position: number; userId: number; name: string }[];
+      animationSequence: { position: number; userId: number; name: string; delay?: number }[];
     }>(`/groups/${groupId}/start-draw`, {
       method: 'POST',
     });

@@ -93,6 +93,9 @@ export const GroupsTable: React.FC<GroupsTableProps> = ({
                   {group.turnoActual > 0 ? group.turnoActual : '-'}
                 </TableCell>
                 <TableCell>
+                  Posiciones: {group.estado === 'EN_MARCHA' ? 'Asignadas' : 'Sin definir'}
+                </TableCell>
+                <TableCell>
                   <GroupActionButtons
                     group={group}
                     actionLoadingId={actionLoadingId}

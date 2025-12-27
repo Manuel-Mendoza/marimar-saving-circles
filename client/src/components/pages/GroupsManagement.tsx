@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/atoms';
 import { GroupSearchFilter } from '@/components/molecules/groups';
-import { GroupStatsGrid, GroupsTable, GroupActionDialogs, GroupDetailView } from '@/components/organisms/groups';
+import { GroupStatsGrid, GroupsTable, GroupActionDialogs, GroupDetailModal, DrawAnimation } from '@/components/organisms/groups';
 import { useToast } from '@/hooks/use-toast';
 import api from '@/lib/api';
 import { Grupo, GroupAdminDetails } from '@/lib/types';
-import { Plus, ArrowLeft } from 'lucide-react';
 
 /**
  * Page: Groups Management
@@ -41,9 +39,15 @@ export const GroupsManagement: React.FC<GroupsManagementProps> = ({ user }) => {
   const [selectedGroup, setSelectedGroup] = useState<Grupo | null>(null);
   const [deleteReason, setDeleteReason] = useState('');
 
-  // Detail view state
-  const [viewingDetails, setViewingDetails] = useState(false);
+  // Detail modal state
+  const [showDetailModal, setShowDetailModal] = useState(false);
   const [groupDetails, setGroupDetails] = useState<GroupAdminDetails | null>(null);
+  const [loadingDetails, setLoadingDetails] = useState(false);
+
+  // Draw animation state
+  const [showDrawAnimation, setShowDrawAnimation] = useState(false);
+  const [currentDrawGroup, setCurrentDrawGroup] = useState<Grupo | null>(null);
+  const [drawPositions, setDrawPositions] = useState<{ position: number; userId: number; name: string }[]>([]);
 
   const { toast } = useToast();
 
@@ -119,18 +123,19 @@ export const GroupsManagement: React.FC<GroupsManagementProps> = ({ user }) => {
   // Handle group actions
   const handleViewGroup = async (group: Grupo) => {
     try {
-      setActionLoading(group.id);
+      setLoadingDetails(true);
+      setShowDetailModal(true);
       const response = await api.getGroupAdminDetails(group.id);
 
       if (response.success) {
         setGroupDetails(response.data);
-        setViewingDetails(true);
       } else {
         toast({
           title: 'Error',
           description: 'No se pudieron cargar los detalles del grupo',
           variant: 'destructive',
         });
+        setShowDetailModal(false);
       }
     } catch (error) {
       console.error('Error loading group details:', error);
@@ -139,8 +144,9 @@ export const GroupsManagement: React.FC<GroupsManagementProps> = ({ user }) => {
         description: 'Error interno del servidor',
         variant: 'destructive',
       });
+      setShowDetailModal(false);
     } finally {
-      setActionLoading(null);
+      setLoadingDetails(false);
     }
   };
 
@@ -155,17 +161,19 @@ export const GroupsManagement: React.FC<GroupsManagementProps> = ({ user }) => {
       const response = await api.startDraw(group.id);
 
       if (response.success) {
-        toast({
-          title: 'Éxito',
-          description: 'Sorteo iniciado exitosamente',
-        });
-        await loadGroups(); // Reload groups
+        // Set up the animation with the final positions
+        setCurrentDrawGroup(group);
+        setDrawPositions(response.data.finalPositions);
+        setShowDrawAnimation(true);
+
+        // Don't reload groups yet, wait for animation to complete
       } else {
         toast({
           title: 'Error',
           description: 'No se pudo iniciar el sorteo',
           variant: 'destructive',
         });
+        setActionLoading(null);
       }
     } catch (error) {
       console.error('Error starting draw:', error);
@@ -174,7 +182,6 @@ export const GroupsManagement: React.FC<GroupsManagementProps> = ({ user }) => {
         description: 'Error interno del servidor',
         variant: 'destructive',
       });
-    } finally {
       setActionLoading(null);
     }
   };
@@ -283,6 +290,20 @@ export const GroupsManagement: React.FC<GroupsManagementProps> = ({ user }) => {
     }
   };
 
+  // Handle draw animation events
+  const handleDrawAnimationClose = () => {
+    setShowDrawAnimation(false);
+    setCurrentDrawGroup(null);
+    setDrawPositions([]);
+    setActionLoading(null);
+  };
+
+  const handleDrawAnimationComplete = async () => {
+    // Reload groups data after animation completes
+    await loadGroups();
+    handleDrawAnimationClose();
+  };
+
   // Calculate statistics
   const stats = {
     totalGroups: groups.length,
@@ -298,28 +319,6 @@ export const GroupsManagement: React.FC<GroupsManagementProps> = ({ user }) => {
         <div className="flex items-center justify-center h-64">
           <LoadingSpinner size="lg" text="Cargando grupos..." />
         </div>
-      </div>
-    );
-  }
-
-  if (viewingDetails && groupDetails) {
-    return (
-      <div className="flex-1 p-6">
-        <div className="mb-6">
-          <Button
-            variant="outline"
-            onClick={() => setViewingDetails(false)}
-            className="mb-4"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Volver a la lista
-          </Button>
-        </div>
-
-        <GroupDetailView
-          groupDetails={groupDetails}
-          onClose={() => setViewingDetails(false)}
-        />
       </div>
     );
   }
@@ -347,13 +346,7 @@ export const GroupsManagement: React.FC<GroupsManagementProps> = ({ user }) => {
       {/* Stats Grid */}
       <GroupStatsGrid stats={stats} />
 
-      {/* Create Group Button */}
-      <div className="mb-6">
-        <Button onClick={() => setShowCreateDialog(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Crear Nuevo Grupo
-        </Button>
-      </div>
+
 
       {/* Groups Table */}
       <GroupsTable
@@ -382,6 +375,28 @@ export const GroupsManagement: React.FC<GroupsManagementProps> = ({ user }) => {
         onDeleteGroup={handleConfirmDelete}
         onDeleteReasonChange={setDeleteReason}
       />
+
+      {/* Group Detail Modal */}
+      <GroupDetailModal
+        isOpen={showDetailModal}
+        onClose={() => {
+          setShowDetailModal(false);
+          setGroupDetails(null);
+        }}
+        groupDetails={groupDetails}
+        isLoading={loadingDetails}
+      />
+
+      {/* Draw Animation */}
+      {showDrawAnimation && currentDrawGroup && (
+        <DrawAnimation
+          isActive={showDrawAnimation}
+          groupId={currentDrawGroup.id}
+          finalPositions={drawPositions}
+          onClose={handleDrawAnimationClose}
+          onComplete={handleDrawAnimationComplete}
+        />
+      )}
     </div>
   );
 };
