@@ -1,18 +1,18 @@
-import React, { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+import React, { useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { useProducts } from "@/hooks/useProducts";
-import ProductFilters from "./ProductFilters";
-import { getTagColor, getAvailableTags } from "@/lib/tagUtils";
+} from '@/components/ui/dialog';
+import { useProducts } from '@/hooks/useProducts';
+import ProductFilters from './ProductFilters';
+import { getTagColor, getAvailableTags } from '@/lib/tagUtils';
 
 interface Producto {
   id: number;
@@ -27,8 +27,14 @@ interface Producto {
 }
 
 const ProductsView: React.FC = () => {
-  const { allProducts, productsLoading, handleCreateProduct, handleUpdateProduct, handleDeleteProduct } = useProducts();
-  const [productSearchTerm, setProductSearchTerm] = useState("");
+  const {
+    allProducts,
+    productsLoading,
+    handleCreateProduct,
+    handleUpdateProduct,
+    handleDeleteProduct,
+  } = useProducts();
+  const [productSearchTerm, setProductSearchTerm] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   // Dialog states
@@ -39,53 +45,51 @@ const ProductsView: React.FC = () => {
 
   // Form state
   const [productForm, setProductForm] = useState({
-    nombre: "",
-    precioUsd: "",
-    precioVes: "",
-    tiempoDuracion: "",
-    descripcion: "",
-    imagen: "",
+    nombre: '',
+    precioUsd: '',
+    precioVes: '',
+    tiempoDuracion: '',
+    descripcion: '',
+    imagen: '',
     tags: [] as string[],
-    activo: true
+    activo: true,
   });
 
   const availableTags = getAvailableTags();
 
-  const filteredProducts = allProducts.filter((product) => {
+  const filteredProducts = allProducts.filter(product => {
     const matchesSearch =
       product.nombre.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
       product.descripcion.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
-      (product.tags && product.tags.some(tag => tag.toLowerCase().includes(productSearchTerm.toLowerCase())));
+      (product.tags &&
+        product.tags.some(tag => tag.toLowerCase().includes(productSearchTerm.toLowerCase())));
 
-    const matchesTags = selectedTags.length === 0 ||
+    const matchesTags =
+      selectedTags.length === 0 ||
       (product.tags && selectedTags.some(selectedTag => product.tags?.includes(selectedTag)));
 
     return matchesSearch && matchesTags;
   });
 
   const handleFilterTagToggle = (tag: string) => {
-    setSelectedTags(prev =>
-      prev.includes(tag)
-        ? prev.filter(t => t !== tag)
-        : [...prev, tag]
-    );
+    setSelectedTags(prev => (prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]));
   };
 
   const handleClearFilters = () => {
-    setProductSearchTerm("");
+    setProductSearchTerm('');
     setSelectedTags([]);
   };
 
   const resetProductForm = () => {
     setProductForm({
-      nombre: "",
-      precioUsd: "",
-      precioVes: "",
-      tiempoDuracion: "",
-      descripcion: "",
-      imagen: "",
+      nombre: '',
+      precioUsd: '',
+      precioVes: '',
+      tiempoDuracion: '',
+      descripcion: '',
+      imagen: '',
       tags: [],
-      activo: true
+      activo: true,
     });
   };
 
@@ -101,9 +105,9 @@ const ProductsView: React.FC = () => {
       precioVes: product.precioVes.toString(),
       tiempoDuracion: product.tiempoDuracion.toString(),
       descripcion: product.descripcion,
-      imagen: product.imagen || "",
+      imagen: product.imagen || '',
       tags: product.tags || [],
-      activo: product.activo
+      activo: product.activo,
     });
     setEditingProduct(product);
     setIsEditDialogOpen(true);
@@ -129,8 +133,13 @@ const ProductsView: React.FC = () => {
   };
 
   const onSubmitCreate = async () => {
-    if (!productForm.nombre || !productForm.precioUsd || !productForm.precioVes ||
-        !productForm.tiempoDuracion || !productForm.descripcion) {
+    if (
+      !productForm.nombre ||
+      !productForm.precioUsd ||
+      !productForm.precioVes ||
+      !productForm.tiempoDuracion ||
+      !productForm.descripcion
+    ) {
       return;
     }
 
@@ -142,7 +151,7 @@ const ProductsView: React.FC = () => {
       descripcion: productForm.descripcion,
       imagen: productForm.imagen || undefined,
       tags: productForm.tags,
-      activo: productForm.activo
+      activo: productForm.activo,
     });
 
     if (success) {
@@ -153,8 +162,13 @@ const ProductsView: React.FC = () => {
   const onSubmitUpdate = async () => {
     if (!editingProduct) return;
 
-    if (!productForm.nombre || !productForm.precioUsd || !productForm.precioVes ||
-        !productForm.tiempoDuracion || !productForm.descripcion) {
+    if (
+      !productForm.nombre ||
+      !productForm.precioUsd ||
+      !productForm.precioVes ||
+      !productForm.tiempoDuracion ||
+      !productForm.descripcion
+    ) {
       return;
     }
 
@@ -166,7 +180,7 @@ const ProductsView: React.FC = () => {
       descripcion: productForm.descripcion,
       imagen: productForm.imagen || undefined,
       tags: productForm.tags,
-      activo: productForm.activo
+      activo: productForm.activo,
     });
 
     if (success) {
@@ -186,9 +200,7 @@ const ProductsView: React.FC = () => {
   const handleTagToggle = (tag: string) => {
     setProductForm(prev => ({
       ...prev,
-      tags: prev.tags.includes(tag)
-        ? prev.tags.filter(t => t !== tag)
-        : [...prev.tags, tag]
+      tags: prev.tags.includes(tag) ? prev.tags.filter(t => t !== tag) : [...prev.tags, tag],
     }));
   };
 
@@ -198,7 +210,9 @@ const ProductsView: React.FC = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Gestión de Productos</h1>
-            <p className="text-gray-600 mt-1">Administra el catálogo de productos para círculos de ahorro</p>
+            <p className="text-gray-600 mt-1">
+              Administra el catálogo de productos para círculos de ahorro
+            </p>
           </div>
           <Button onClick={openCreateDialog} className="bg-green-600 hover:bg-green-700">
             Nuevo Producto
@@ -230,14 +244,14 @@ const ProductsView: React.FC = () => {
             <CardContent className="p-8 text-center">
               <p className="text-gray-500">
                 {productSearchTerm || selectedTags.length > 0
-                  ? "No se encontraron productos con los filtros aplicados"
-                  : "No hay productos registrados"}
+                  ? 'No se encontraron productos con los filtros aplicados'
+                  : 'No hay productos registrados'}
               </p>
             </CardContent>
           </Card>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filteredProducts.map((product) => (
+            {filteredProducts.map(product => (
               <Card key={product.id}>
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between mb-4">
@@ -249,18 +263,16 @@ const ProductsView: React.FC = () => {
                         <p>Duración: {product.tiempoDuracion} meses</p>
                       </div>
                     </div>
-                    <Badge variant={product.activo ? "default" : "secondary"}>
-                      {product.activo ? "Activo" : "Inactivo"}
+                    <Badge variant={product.activo ? 'default' : 'secondary'}>
+                      {product.activo ? 'Activo' : 'Inactivo'}
                     </Badge>
                   </div>
 
-                  <p className="text-sm text-gray-700 mb-4 line-clamp-2">
-                    {product.descripcion}
-                  </p>
+                  <p className="text-sm text-gray-700 mb-4 line-clamp-2">{product.descripcion}</p>
 
                   {product.tags && product.tags.length > 0 && (
                     <div className="flex flex-wrap gap-1 mb-4">
-                      {product.tags.map((tag) => (
+                      {product.tags.map(tag => (
                         <Badge key={tag} className={`text-xs border ${getTagColor(tag)}`}>
                           {tag}
                         </Badge>
@@ -310,7 +322,7 @@ const ProductsView: React.FC = () => {
               <Input
                 id="product-nombre"
                 value={productForm.nombre}
-                onChange={(e) => setProductForm(prev => ({ ...prev, nombre: e.target.value }))}
+                onChange={e => setProductForm(prev => ({ ...prev, nombre: e.target.value }))}
                 className="col-span-3"
                 placeholder="Ej: Lavadora Samsung 18kg"
               />
@@ -324,7 +336,7 @@ const ProductsView: React.FC = () => {
                 type="number"
                 step="0.01"
                 value={productForm.precioUsd}
-                onChange={(e) => setProductForm(prev => ({ ...prev, precioUsd: e.target.value }))}
+                onChange={e => setProductForm(prev => ({ ...prev, precioUsd: e.target.value }))}
                 className="col-span-3"
                 placeholder="450.00"
               />
@@ -338,7 +350,7 @@ const ProductsView: React.FC = () => {
                 type="number"
                 step="1000"
                 value={productForm.precioVes}
-                onChange={(e) => setProductForm(prev => ({ ...prev, precioVes: e.target.value }))}
+                onChange={e => setProductForm(prev => ({ ...prev, precioVes: e.target.value }))}
                 className="col-span-3"
                 placeholder="18000000"
               />
@@ -351,7 +363,9 @@ const ProductsView: React.FC = () => {
                 id="product-duracion"
                 type="number"
                 value={productForm.tiempoDuracion}
-                onChange={(e) => setProductForm(prev => ({ ...prev, tiempoDuracion: e.target.value }))}
+                onChange={e =>
+                  setProductForm(prev => ({ ...prev, tiempoDuracion: e.target.value }))
+                }
                 className="col-span-3"
                 placeholder="12"
               />
@@ -363,7 +377,7 @@ const ProductsView: React.FC = () => {
               <Input
                 id="product-imagen"
                 value={productForm.imagen}
-                onChange={(e) => setProductForm(prev => ({ ...prev, imagen: e.target.value }))}
+                onChange={e => setProductForm(prev => ({ ...prev, imagen: e.target.value }))}
                 className="col-span-3"
                 placeholder="https://..."
               />
@@ -372,14 +386,14 @@ const ProductsView: React.FC = () => {
               <label className="text-right pt-2">Tags</label>
               <div className="col-span-3 space-y-2">
                 <div className="flex flex-wrap gap-2">
-                  {availableTags.map((tag) => (
+                  {availableTags.map(tag => (
                     <Button
                       key={tag}
                       type="button"
-                      variant={productForm.tags.includes(tag) ? "default" : "outline"}
+                      variant={productForm.tags.includes(tag) ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => handleTagToggle(tag)}
-                      className={productForm.tags.includes(tag) ? "" : getTagColor(tag)}
+                      className={productForm.tags.includes(tag) ? '' : getTagColor(tag)}
                     >
                       {tag}
                     </Button>
@@ -394,7 +408,7 @@ const ProductsView: React.FC = () => {
               <textarea
                 id="product-descripcion"
                 value={productForm.descripcion}
-                onChange={(e) => setProductForm(prev => ({ ...prev, descripcion: e.target.value }))}
+                onChange={e => setProductForm(prev => ({ ...prev, descripcion: e.target.value }))}
                 className="col-span-3 min-h-[80px] p-3 border rounded-md resize-none"
                 placeholder="Describe el producto..."
               />
@@ -406,7 +420,7 @@ const ProductsView: React.FC = () => {
                   type="checkbox"
                   id="product-activo"
                   checked={productForm.activo}
-                  onChange={(e) => setProductForm(prev => ({ ...prev, activo: e.target.checked }))}
+                  onChange={e => setProductForm(prev => ({ ...prev, activo: e.target.checked }))}
                   className="rounded"
                 />
                 <label htmlFor="product-activo">Producto activo</label>
@@ -429,9 +443,7 @@ const ProductsView: React.FC = () => {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Editar Producto</DialogTitle>
-            <DialogDescription>
-              Modifica la información del producto seleccionado
-            </DialogDescription>
+            <DialogDescription>Modifica la información del producto seleccionado</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
@@ -441,7 +453,7 @@ const ProductsView: React.FC = () => {
               <Input
                 id="edit-product-nombre"
                 value={productForm.nombre}
-                onChange={(e) => setProductForm(prev => ({ ...prev, nombre: e.target.value }))}
+                onChange={e => setProductForm(prev => ({ ...prev, nombre: e.target.value }))}
                 className="col-span-3"
               />
             </div>
@@ -454,7 +466,7 @@ const ProductsView: React.FC = () => {
                 type="number"
                 step="0.01"
                 value={productForm.precioUsd}
-                onChange={(e) => setProductForm(prev => ({ ...prev, precioUsd: e.target.value }))}
+                onChange={e => setProductForm(prev => ({ ...prev, precioUsd: e.target.value }))}
                 className="col-span-3"
               />
             </div>
@@ -467,7 +479,7 @@ const ProductsView: React.FC = () => {
                 type="number"
                 step="1000"
                 value={productForm.precioVes}
-                onChange={(e) => setProductForm(prev => ({ ...prev, precioVes: e.target.value }))}
+                onChange={e => setProductForm(prev => ({ ...prev, precioVes: e.target.value }))}
                 className="col-span-3"
               />
             </div>
@@ -479,7 +491,9 @@ const ProductsView: React.FC = () => {
                 id="edit-product-duracion"
                 type="number"
                 value={productForm.tiempoDuracion}
-                onChange={(e) => setProductForm(prev => ({ ...prev, tiempoDuracion: e.target.value }))}
+                onChange={e =>
+                  setProductForm(prev => ({ ...prev, tiempoDuracion: e.target.value }))
+                }
                 className="col-span-3"
               />
             </div>
@@ -490,7 +504,7 @@ const ProductsView: React.FC = () => {
               <Input
                 id="edit-product-imagen"
                 value={productForm.imagen}
-                onChange={(e) => setProductForm(prev => ({ ...prev, imagen: e.target.value }))}
+                onChange={e => setProductForm(prev => ({ ...prev, imagen: e.target.value }))}
                 className="col-span-3"
               />
             </div>
@@ -498,14 +512,14 @@ const ProductsView: React.FC = () => {
               <label className="text-right pt-2">Tags</label>
               <div className="col-span-3 space-y-2">
                 <div className="flex flex-wrap gap-2">
-                  {availableTags.map((tag) => (
+                  {availableTags.map(tag => (
                     <Button
                       key={tag}
                       type="button"
-                      variant={productForm.tags.includes(tag) ? "default" : "outline"}
+                      variant={productForm.tags.includes(tag) ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => handleTagToggle(tag)}
-                      className={productForm.tags.includes(tag) ? "" : getTagColor(tag)}
+                      className={productForm.tags.includes(tag) ? '' : getTagColor(tag)}
                     >
                       {tag}
                     </Button>
@@ -520,7 +534,7 @@ const ProductsView: React.FC = () => {
               <textarea
                 id="edit-product-descripcion"
                 value={productForm.descripcion}
-                onChange={(e) => setProductForm(prev => ({ ...prev, descripcion: e.target.value }))}
+                onChange={e => setProductForm(prev => ({ ...prev, descripcion: e.target.value }))}
                 className="col-span-3 min-h-[80px] p-3 border rounded-md resize-none"
               />
             </div>
@@ -531,7 +545,7 @@ const ProductsView: React.FC = () => {
                   type="checkbox"
                   id="edit-product-activo"
                   checked={productForm.activo}
-                  onChange={(e) => setProductForm(prev => ({ ...prev, activo: e.target.checked }))}
+                  onChange={e => setProductForm(prev => ({ ...prev, activo: e.target.checked }))}
                   className="rounded"
                 />
                 <label htmlFor="edit-product-activo">Producto activo</label>
@@ -550,7 +564,7 @@ const ProductsView: React.FC = () => {
       </Dialog>
 
       {/* Delete Product Dialog */}
-      <Dialog open={!!productToDelete} onOpenChange={(open) => !open && closeDeleteDialog()}>
+      <Dialog open={!!productToDelete} onOpenChange={open => !open && closeDeleteDialog()}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-red-600">
@@ -565,7 +579,9 @@ const ProductsView: React.FC = () => {
               <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
                 <div className="flex-1">
                   <h4 className="font-semibold">{productToDelete.nombre}</h4>
-                  <p className="text-sm text-gray-600">USD: ${productToDelete.precioUsd.toLocaleString()}</p>
+                  <p className="text-sm text-gray-600">
+                    USD: ${productToDelete.precioUsd.toLocaleString()}
+                  </p>
                 </div>
                 <Badge variant="destructive">Eliminar</Badge>
               </div>

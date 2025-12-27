@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -15,7 +14,7 @@ const LoginForm = ({ onNewUser }: LoginFormProps) => {
   const { login } = useAuth();
   const [credentials, setCredentials] = useState({
     email: '',
-    password: ''
+    password: '',
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -48,7 +47,7 @@ const LoginForm = ({ onNewUser }: LoginFormProps) => {
             Sistema de ahorro colaborativo
           </CardDescription>
         </CardHeader>
-        
+
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">Correo Electrónico</Label>
@@ -57,7 +56,7 @@ const LoginForm = ({ onNewUser }: LoginFormProps) => {
               type="email"
               placeholder="usuario@ejemplo.com"
               value={credentials.email}
-              onChange={(e) => setCredentials(prev => ({ ...prev, email: e.target.value }))}
+              onChange={e => setCredentials(prev => ({ ...prev, email: e.target.value }))}
             />
           </div>
 
@@ -66,10 +65,10 @@ const LoginForm = ({ onNewUser }: LoginFormProps) => {
             <div className="relative">
               <Input
                 id="password"
-                type={showPassword ? "text" : "password"}
+                type={showPassword ? 'text' : 'password'}
                 placeholder="••••••••"
                 value={credentials.password}
-                onChange={(e) => setCredentials(prev => ({ ...prev, password: e.target.value }))}
+                onChange={e => setCredentials(prev => ({ ...prev, password: e.target.value }))}
                 className="pr-10"
               />
               <Button
@@ -89,11 +88,7 @@ const LoginForm = ({ onNewUser }: LoginFormProps) => {
             </div>
           </div>
 
-          {error && (
-            <div className="text-red-600 text-sm text-center">
-              {error}
-            </div>
-          )}
+          {error && <div className="text-red-600 text-sm text-center">{error}</div>}
 
           <Button
             className="w-full bg-blue-600 hover:bg-blue-700"
@@ -103,11 +98,7 @@ const LoginForm = ({ onNewUser }: LoginFormProps) => {
             {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
           </Button>
 
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={onNewUser}
-          >
+          <Button variant="outline" className="w-full" onClick={onNewUser}>
             ¿Nuevo usuario? Registrarse
           </Button>
         </CardContent>

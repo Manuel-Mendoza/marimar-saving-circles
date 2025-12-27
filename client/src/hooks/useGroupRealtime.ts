@@ -53,7 +53,7 @@ export const useGroupRealtime = (groupId: number | null) => {
       setConnectionAttempts(0); // Reset on successful connection
     };
 
-    ws.onmessage = (event) => {
+    ws.onmessage = event => {
       try {
         const message: WebSocketMessage = JSON.parse(event.data);
         console.log('WebSocket message received:', message);
@@ -63,7 +63,7 @@ export const useGroupRealtime = (groupId: number | null) => {
       }
     };
 
-    ws.onclose = (event) => {
+    ws.onclose = event => {
       setIsConnected(false);
 
       // Check if we should stop retrying
@@ -75,7 +75,7 @@ export const useGroupRealtime = (groupId: number | null) => {
       setConnectionAttempts(prev => prev + 1);
     };
 
-    ws.onerror = (error) => {
+    ws.onerror = error => {
       console.error('WebSocket error:', error);
       setConnectionAttempts(prev => prev + 1);
 
@@ -97,13 +97,16 @@ export const useGroupRealtime = (groupId: number | null) => {
     };
   }, [groupId, maxConnectionAttempts, connectionAttempts]);
 
-  const sendMessage = useCallback((message: WebSocketMessage) => {
-    if (socket && socket.readyState === WebSocket.OPEN) {
-      socket.send(JSON.stringify(message));
-    } else {
-      console.warn('WebSocket is not connected');
-    }
-  }, [socket]);
+  const sendMessage = useCallback(
+    (message: WebSocketMessage) => {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify(message));
+      } else {
+        console.warn('WebSocket is not connected');
+      }
+    },
+    [socket]
+  );
 
   return {
     isConnected,

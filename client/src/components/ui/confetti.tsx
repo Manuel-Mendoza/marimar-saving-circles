@@ -6,10 +6,7 @@ interface ConfettiProps {
   intensity?: 'low' | 'medium' | 'high' | 'extreme';
 }
 
-export const Confetti: React.FC<ConfettiProps> = ({
-  duration = 6000,
-  intensity = 'high'
-}) => {
+export const Confetti: React.FC<ConfettiProps> = ({ duration = 6000, intensity = 'high' }) => {
   const [isClient, setIsClient] = useState(false);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [isRunning, setIsRunning] = useState(true);
@@ -22,7 +19,7 @@ export const Confetti: React.FC<ConfettiProps> = ({
     const updateDimensions = () => {
       setDimensions({
         width: window.innerWidth,
-        height: window.innerHeight
+        height: window.innerHeight,
       });
     };
 
@@ -51,7 +48,7 @@ export const Confetti: React.FC<ConfettiProps> = ({
           gravity: 0.15,
           wind: 0.01,
           recycle: false,
-          colors: ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4']
+          colors: ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4'],
         };
       case 'medium':
         return {
@@ -59,7 +56,16 @@ export const Confetti: React.FC<ConfettiProps> = ({
           gravity: 0.12,
           wind: 0.02,
           recycle: false,
-          colors: ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8']
+          colors: [
+            '#FFD700',
+            '#FF6B6B',
+            '#4ECDC4',
+            '#45B7D1',
+            '#96CEB4',
+            '#FFEAA7',
+            '#DDA0DD',
+            '#98D8C8',
+          ],
         };
       case 'high':
         return {
@@ -67,7 +73,19 @@ export const Confetti: React.FC<ConfettiProps> = ({
           gravity: 0.1,
           wind: 0.03,
           recycle: true,
-          colors: ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9']
+          colors: [
+            '#FFD700',
+            '#FF6B6B',
+            '#4ECDC4',
+            '#45B7D1',
+            '#96CEB4',
+            '#FFEAA7',
+            '#DDA0DD',
+            '#98D8C8',
+            '#F7DC6F',
+            '#BB8FCE',
+            '#85C1E9',
+          ],
         };
       case 'extreme':
         return {
@@ -75,7 +93,22 @@ export const Confetti: React.FC<ConfettiProps> = ({
           gravity: 0.08,
           wind: 0.05,
           recycle: true,
-          colors: ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9', '#F1948A', '#82E0AA', '#F8C471']
+          colors: [
+            '#FFD700',
+            '#FF6B6B',
+            '#4ECDC4',
+            '#45B7D1',
+            '#96CEB4',
+            '#FFEAA7',
+            '#DDA0DD',
+            '#98D8C8',
+            '#F7DC6F',
+            '#BB8FCE',
+            '#85C1E9',
+            '#F1948A',
+            '#82E0AA',
+            '#F8C471',
+          ],
         };
       default:
         return {
@@ -83,7 +116,16 @@ export const Confetti: React.FC<ConfettiProps> = ({
           gravity: 0.1,
           wind: 0.03,
           recycle: true,
-          colors: ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8']
+          colors: [
+            '#FFD700',
+            '#FF6B6B',
+            '#4ECDC4',
+            '#45B7D1',
+            '#96CEB4',
+            '#FFEAA7',
+            '#DDA0DD',
+            '#98D8C8',
+          ],
         };
     }
   };
@@ -107,7 +149,7 @@ export const Confetti: React.FC<ConfettiProps> = ({
           position: 'fixed',
           top: 0,
           left: 0,
-          zIndex: 50
+          zIndex: 50,
         }}
       />
 
@@ -126,11 +168,9 @@ export const Confetti: React.FC<ConfettiProps> = ({
           position: 'fixed',
           top: 0,
           left: 0,
-          zIndex: 51
+          zIndex: 51,
         }}
       />
-
-
     </div>
   );
 };

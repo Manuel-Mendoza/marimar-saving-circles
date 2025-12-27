@@ -31,7 +31,7 @@ class ExchangeRateService {
     const now = Date.now();
 
     // Return cached rate if still valid
-    if (this.rate && (now - this.lastFetch) < this.CACHE_DURATION) {
+    if (this.rate && now - this.lastFetch < this.CACHE_DURATION) {
       return this.rate;
     }
 
@@ -110,5 +110,4 @@ export const convertVESToUSD = (vesAmount: number): Promise<number> =>
 export const convertUSDtoVES = (usdAmount: number): Promise<number> =>
   exchangeRateService.convertUSDtoVES(usdAmount);
 
-export const getCurrentExchangeRate = (): Promise<number> =>
-  exchangeRateService.getCurrentRate();
+export const getCurrentExchangeRate = (): Promise<number> => exchangeRateService.getCurrentRate();

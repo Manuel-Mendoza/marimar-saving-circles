@@ -1,23 +1,8 @@
-import React from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Users,
-  Package,
-  CheckCircle,
-  TrendingUp,
-} from "lucide-react";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
-import {
-  Bar,
-  BarChart,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-} from "recharts";
+import React from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Users, Package, CheckCircle, TrendingUp } from 'lucide-react';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { Bar, BarChart, XAxis, YAxis, CartesianGrid } from 'recharts';
 
 interface DashboardViewProps {
   allUsersCount: number;
@@ -31,26 +16,26 @@ const DashboardView: React.FC<DashboardViewProps> = ({
   productsCount,
 }) => {
   const chartData = [
-    { month: "Ene", usuarios: 12, contribuciones: 2450, grupos: 3 },
-    { month: "Feb", usuarios: 19, contribuciones: 3200, grupos: 5 },
-    { month: "Mar", usuarios: 28, contribuciones: 4100, grupos: 7 },
-    { month: "Abr", usuarios: 35, contribuciones: 5800, grupos: 9 },
-    { month: "May", usuarios: 42, contribuciones: 7200, grupos: 11 },
-    { month: "Jun", usuarios: 51, contribuciones: 8900, grupos: 13 },
+    { month: 'Ene', usuarios: 12, contribuciones: 2450, grupos: 3 },
+    { month: 'Feb', usuarios: 19, contribuciones: 3200, grupos: 5 },
+    { month: 'Mar', usuarios: 28, contribuciones: 4100, grupos: 7 },
+    { month: 'Abr', usuarios: 35, contribuciones: 5800, grupos: 9 },
+    { month: 'May', usuarios: 42, contribuciones: 7200, grupos: 11 },
+    { month: 'Jun', usuarios: 51, contribuciones: 8900, grupos: 13 },
   ];
 
   const chartConfig = {
     usuarios: {
-      label: "Nuevos Usuarios",
-      color: "hsl(var(--chart-1))",
+      label: 'Nuevos Usuarios',
+      color: 'hsl(var(--chart-1))',
     },
     contribuciones: {
-      label: "Contribuciones ($)",
-      color: "hsl(var(--chart-2))",
+      label: 'Contribuciones ($)',
+      color: 'hsl(var(--chart-2))',
     },
     grupos: {
-      label: "Grupos Activos",
-      color: "hsl(var(--chart-3))",
+      label: 'Grupos Activos',
+      color: 'hsl(var(--chart-3))',
     },
   };
 
@@ -115,7 +100,9 @@ const DashboardView: React.FC<DashboardViewProps> = ({
             <TrendingUp className="h-5 w-5 text-blue-600" />
             Crecimiento del Sistema
           </CardTitle>
-          <CardDescription>Estadísticas mensuales de usuarios, contribuciones y grupos activos</CardDescription>
+          <CardDescription>
+            Estadísticas mensuales de usuarios, contribuciones y grupos activos
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <ChartContainer config={chartConfig} className="h-[300px] w-full">

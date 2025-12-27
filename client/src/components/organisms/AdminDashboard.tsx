@@ -17,7 +17,7 @@ import {
   DollarSign,
   UserPlus,
   ShoppingCart,
-  Activity
+  Activity,
 } from 'lucide-react';
 
 interface DashboardStats {
@@ -70,7 +70,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   stats,
   onNavigate,
   onLogout,
-  isLoading = false
+  isLoading = false,
 }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
@@ -91,7 +91,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     totalPayments: 0,
     pendingPayments: 0,
     monthlyRevenue: 0,
-    recentActivity: []
+    recentActivity: [],
   };
 
   const currentStats = stats || defaultStats;
@@ -107,7 +107,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
       default: 'bg-blue-50 border-blue-200 dark:bg-blue-950 dark:border-blue-800',
       success: 'bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800',
       warning: 'bg-yellow-50 border-yellow-200 dark:bg-yellow-950 dark:border-yellow-800',
-      danger: 'bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800'
+      danger: 'bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800',
     };
 
     return (
@@ -119,16 +119,22 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
               {trend && (
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  {trend.value > 0 ? '+' : ''}{trend.value}% {trend.label}
+                  {trend.value > 0 ? '+' : ''}
+                  {trend.value}% {trend.label}
                 </p>
               )}
             </div>
-            <div className={`p-3 rounded-full ${
-              variant === 'success' ? 'bg-green-100 text-green-600' :
-              variant === 'warning' ? 'bg-yellow-100 text-yellow-600' :
-              variant === 'danger' ? 'bg-red-100 text-red-600' :
-              'bg-blue-100 text-blue-600'
-            } dark:bg-opacity-20`}>
+            <div
+              className={`p-3 rounded-full ${
+                variant === 'success'
+                  ? 'bg-green-100 text-green-600'
+                  : variant === 'warning'
+                    ? 'bg-yellow-100 text-yellow-600'
+                    : variant === 'danger'
+                      ? 'bg-red-100 text-red-600'
+                      : 'bg-blue-100 text-blue-600'
+              } dark:bg-opacity-20`}
+            >
               <Icon className="h-6 w-6" />
             </div>
           </div>
@@ -152,14 +158,19 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </p>
         ) : (
           <div className="space-y-3">
-            {activities.slice(0, 5).map((activity) => (
+            {activities.slice(0, 5).map(activity => (
               <div key={activity.id} className="flex items-start space-x-3">
-                <div className={`p-2 rounded-full ${
-                  activity.type === 'user_registered' ? 'bg-blue-100 text-blue-600' :
-                  activity.type === 'payment_approved' ? 'bg-green-100 text-green-600' :
-                  activity.type === 'group_created' ? 'bg-purple-100 text-purple-600' :
-                  'bg-gray-100 text-gray-600'
-                }`}>
+                <div
+                  className={`p-2 rounded-full ${
+                    activity.type === 'user_registered'
+                      ? 'bg-blue-100 text-blue-600'
+                      : activity.type === 'payment_approved'
+                        ? 'bg-green-100 text-green-600'
+                        : activity.type === 'group_created'
+                          ? 'bg-purple-100 text-purple-600'
+                          : 'bg-gray-100 text-gray-600'
+                  }`}
+                >
                   {activity.type === 'user_registered' && <UserPlus className="h-4 w-4" />}
                   {activity.type === 'payment_approved' && <CheckCircle className="h-4 w-4" />}
                   {activity.type === 'group_created' && <BarChart3 className="h-4 w-4" />}

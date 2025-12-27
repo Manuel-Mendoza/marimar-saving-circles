@@ -14,9 +14,7 @@ const PendingApproval = () => {
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
             <Clock className="h-8 w-8 text-blue-600" />
           </div>
-          <CardTitle className="text-2xl font-bold text-gray-900">
-            Cuenta en Revisión
-          </CardTitle>
+          <CardTitle className="text-2xl font-bold text-gray-900">Cuenta en Revisión</CardTitle>
           <CardDescription className="text-gray-600">
             Tu solicitud de registro está siendo revisada por nuestros administradores
           </CardDescription>
@@ -32,9 +30,16 @@ const PendingApproval = () => {
             </div>
 
             <div className="space-y-2 text-sm text-gray-600">
-              <p><strong>Nombre:</strong> {user?.nombre} {user?.apellido}</p>
-              <p><strong>Correo:</strong> {user?.correoElectronico}</p>
-              <p><strong>Fecha de registro:</strong> {user?.fechaRegistro.toLocaleDateString('es-ES')}</p>
+              <p>
+                <strong>Nombre:</strong> {user?.nombre} {user?.apellido}
+              </p>
+              <p>
+                <strong>Correo:</strong> {user?.correoElectronico}
+              </p>
+              <p>
+                <strong>Fecha de registro:</strong>{' '}
+                {user?.fechaRegistro.toLocaleDateString('es-ES')}
+              </p>
             </div>
           </div>
 
@@ -42,9 +47,7 @@ const PendingApproval = () => {
             <div className="flex items-start gap-3">
               <Mail className="h-5 w-5 text-yellow-600 mt-0.5" />
               <div className="text-sm">
-                <p className="font-medium text-yellow-800 mb-1">
-                  ¿Qué sucede ahora?
-                </p>
+                <p className="font-medium text-yellow-800 mb-1">¿Qué sucede ahora?</p>
                 <ul className="text-yellow-700 space-y-1">
                   <li>• Un administrador revisará tu información</li>
                   <li>• Verificarán tu cédula de identidad</li>
@@ -59,9 +62,7 @@ const PendingApproval = () => {
             <div className="flex items-start gap-3">
               <UserCheck className="h-5 w-5 text-green-600 mt-0.5" />
               <div className="text-sm">
-                <p className="font-medium text-green-800 mb-1">
-                  Una vez aprobado podrás:
-                </p>
+                <p className="font-medium text-green-800 mb-1">Una vez aprobado podrás:</p>
                 <ul className="text-green-700 space-y-1">
                   <li>• Acceder a tu dashboard personal</li>
                   <li>• Elegir productos para ahorrar</li>
@@ -73,11 +74,7 @@ const PendingApproval = () => {
           </div>
 
           <div className="pt-4 border-t">
-            <Button
-              onClick={logout}
-              variant="outline"
-              className="w-full"
-            >
+            <Button onClick={logout} variant="outline" className="w-full">
               Cerrar Sesión
             </Button>
           </div>

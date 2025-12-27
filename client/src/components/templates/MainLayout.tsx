@@ -60,7 +60,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   onLogout,
   notificationsCount = 0,
   isLoading = false,
-  className
+  className,
 }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(initialCollapsed);
 
@@ -100,9 +100,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                 </h1>
               )}
               {subtitle && (
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  {subtitle}
-                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{subtitle}</p>
               )}
             </div>
           </div>
@@ -194,9 +192,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
               </div>
             </div>
           ) : (
-            <div className="p-4 lg:p-6">
-              {children}
-            </div>
+            <div className="p-4 lg:p-6">{children}</div>
           )}
         </main>
       </div>
@@ -211,14 +207,16 @@ const MainLayout: React.FC<MainLayoutProps> = ({
 
       {/* Mobile Sidebar */}
       {showSidebar && (
-        <div className={cn(
-          'fixed top-0 left-0 z-50 h-full lg:hidden transition-transform duration-300',
-          sidebarCollapsed ? '-translate-x-full' : 'translate-x-0'
-        )}>
+        <div
+          className={cn(
+            'fixed top-0 left-0 z-50 h-full lg:hidden transition-transform duration-300',
+            sidebarCollapsed ? '-translate-x-full' : 'translate-x-0'
+          )}
+        >
           <NavigationSidebar
             user={user}
             collapsed={false}
-            onNavigate={(itemId) => {
+            onNavigate={itemId => {
               handleSidebarNavigate(itemId);
               setSidebarCollapsed(true); // Close mobile sidebar after navigation
             }}

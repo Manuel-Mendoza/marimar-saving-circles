@@ -64,7 +64,7 @@ export function useCurrencyConversion(vesPrice: number): CurrencyConversionResul
     usdPrice,
     exchangeRate,
     isLoading,
-    error
+    error,
   };
 }
 
@@ -109,6 +109,6 @@ export function useExchangeRate() {
   return {
     exchangeRate,
     isLoading,
-    error
+    error,
   };
 }

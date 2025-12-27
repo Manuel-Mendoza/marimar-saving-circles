@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
-import { apiClient } from "@/lib/api";
-import { useToast } from "@/hooks/use-toast";
-import type { User } from "../../../shared/types";
+import { useState, useEffect } from 'react';
+import { apiClient } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
+import type { User } from '../../../shared/types';
 
 export const useUsers = () => {
   const { toast } = useToast();
@@ -18,9 +18,7 @@ export const useUsers = () => {
           ...user,
           fechaRegistro: new Date(user.fechaRegistro),
           ultimoAcceso: user.ultimoAcceso ? new Date(user.ultimoAcceso) : null,
-          fechaAprobacion: user.fechaAprobacion
-            ? new Date(user.fechaAprobacion)
-            : null,
+          fechaAprobacion: user.fechaAprobacion ? new Date(user.fechaAprobacion) : null,
         }));
         console.log('🔄 useUsers - fetchAllUsers setting users:', usersWithDates.length, 'users');
 
@@ -29,7 +27,7 @@ export const useUsers = () => {
         setAllUsers([]);
       }
     } catch (error) {
-      console.error("🔄 useUsers - Error cargando todos los usuarios:", error);
+      console.error('🔄 useUsers - Error cargando todos los usuarios:', error);
       setAllUsers([]);
     } finally {
       setUsersLoading(false);
@@ -40,13 +38,11 @@ export const useUsers = () => {
     const userExists = allUsers.some(u => u.id === userId);
     const userData = allUsers.find(u => u.id === userId);
 
-
-
     if (!userExists) {
       toast({
-        title: "Usuario no encontrado",
-        description: "Este usuario ya no está disponible para procesamiento.",
-        variant: "destructive",
+        title: 'Usuario no encontrado',
+        description: 'Este usuario ya no está disponible para procesamiento.',
+        variant: 'destructive',
       });
       fetchAllUsers();
       return;
@@ -56,31 +52,33 @@ export const useUsers = () => {
     try {
       const response = await apiClient.suspendUser(userId);
       if (response.success) {
-        setAllUsers((prev) =>
-          prev.map((user) =>
+        setAllUsers(prev =>
+          prev.map(user =>
             user.id === userId
-              ? { ...user, estado: "SUSPENDIDO", fechaAprobacion: new Date() }
+              ? { ...user, estado: 'SUSPENDIDO', fechaAprobacion: new Date() }
               : user
           )
         );
         toast({
-          title: "Usuario suspendido",
-          description: "El usuario ha sido suspendido y no podrá acceder al sistema.",
+          title: 'Usuario suspendido',
+          description: 'El usuario ha sido suspendido y no podrá acceder al sistema.',
         });
       }
     } catch (error) {
-      console.error("useUsers - Error suspendiendo usuario:", error);
-      const errorMessage = (error as Error).message?.includes("ya procesado") || (error as Error).message?.includes("no encontrado")
-        ? "Este usuario ya no existe en el sistema. Los datos se actualizarán automáticamente."
-        : (error as Error).message || "No se pudo suspender al usuario. Inténtalo de nuevo.";
+      console.error('useUsers - Error suspendiendo usuario:', error);
+      const errorMessage =
+        (error as Error).message?.includes('ya procesado') ||
+        (error as Error).message?.includes('no encontrado')
+          ? 'Este usuario ya no existe en el sistema. Los datos se actualizarán automáticamente.'
+          : (error as Error).message || 'No se pudo suspender al usuario. Inténtalo de nuevo.';
 
-      console.warn("🔄 useUsers - Desincronización detectada - forzando recarga completa de datos");
+      console.warn('🔄 useUsers - Desincronización detectada - forzando recarga completa de datos');
       fetchAllUsers();
 
       toast({
-        title: "Datos desactualizados",
+        title: 'Datos desactualizados',
         description: errorMessage,
-        variant: "destructive",
+        variant: 'destructive',
       });
     } finally {
       setProcessingUser(null);
@@ -92,9 +90,9 @@ export const useUsers = () => {
 
     if (!userExists) {
       toast({
-        title: "Usuario no encontrado",
-        description: "Este usuario ya no está disponible para procesamiento.",
-        variant: "destructive",
+        title: 'Usuario no encontrado',
+        description: 'Este usuario ya no está disponible para procesamiento.',
+        variant: 'destructive',
       });
       fetchAllUsers();
       return;
@@ -104,30 +102,32 @@ export const useUsers = () => {
     try {
       const response = await apiClient.reactivateUser(userId);
       if (response.success) {
-        setAllUsers((prev) =>
-          prev.map((user) =>
+        setAllUsers(prev =>
+          prev.map(user =>
             user.id === userId
-              ? { ...user, estado: "REACTIVADO", fechaAprobacion: new Date() }
+              ? { ...user, estado: 'REACTIVADO', fechaAprobacion: new Date() }
               : user
           )
         );
         toast({
-          title: "Usuario reactivado",
-          description: "El usuario ha sido reactivado y ahora puede acceder al sistema.",
+          title: 'Usuario reactivado',
+          description: 'El usuario ha sido reactivado y ahora puede acceder al sistema.',
         });
       }
     } catch (error) {
-      console.error("useUsers - Error reactivando usuario:", error);
-      const errorMessage = (error as Error).message?.includes("ya procesado") || (error as Error).message?.includes("no encontrado")
-        ? "Este usuario ya ha sido procesado anteriormente o no existe."
-        : (error as Error).message || "No se pudo reactivar al usuario. Inténtalo de nuevo.";
+      console.error('useUsers - Error reactivando usuario:', error);
+      const errorMessage =
+        (error as Error).message?.includes('ya procesado') ||
+        (error as Error).message?.includes('no encontrado')
+          ? 'Este usuario ya ha sido procesado anteriormente o no existe.'
+          : (error as Error).message || 'No se pudo reactivar al usuario. Inténtalo de nuevo.';
 
       fetchAllUsers();
 
       toast({
-        title: "Error al reactivar usuario",
+        title: 'Error al reactivar usuario',
         description: errorMessage,
-        variant: "destructive",
+        variant: 'destructive',
       });
     } finally {
       setProcessingUser(null);
@@ -139,9 +139,9 @@ export const useUsers = () => {
 
     if (!userExists) {
       toast({
-        title: "Usuario no encontrado",
-        description: "Este usuario ya no está disponible para procesamiento.",
-        variant: "destructive",
+        title: 'Usuario no encontrado',
+        description: 'Este usuario ya no está disponible para procesamiento.',
+        variant: 'destructive',
       });
       fetchAllUsers();
       return;
@@ -151,24 +151,24 @@ export const useUsers = () => {
     try {
       const response = await apiClient.deleteUser(userId, reason);
       if (response.success) {
-        setAllUsers((prev) => prev.filter((user) => user.id !== userId));
+        setAllUsers(prev => prev.filter(user => user.id !== userId));
         toast({
-          title: "Usuario eliminado",
-          description: "El usuario ha sido eliminado permanentemente del sistema.",
+          title: 'Usuario eliminado',
+          description: 'El usuario ha sido eliminado permanentemente del sistema.',
         });
       }
     } catch (error) {
-      console.error("useUsers - Error eliminando usuario:", error);
-      const errorMessage = (error as Error).message?.includes("no encontrado")
-        ? "Este usuario ya no existe."
-        : (error as Error).message || "No se pudo eliminar al usuario. Inténtalo de nuevo.";
+      console.error('useUsers - Error eliminando usuario:', error);
+      const errorMessage = (error as Error).message?.includes('no encontrado')
+        ? 'Este usuario ya no existe.'
+        : (error as Error).message || 'No se pudo eliminar al usuario. Inténtalo de nuevo.';
 
       fetchAllUsers();
 
       toast({
-        title: "Error al eliminar usuario",
+        title: 'Error al eliminar usuario',
         description: errorMessage,
-        variant: "destructive",
+        variant: 'destructive',
       });
     } finally {
       setProcessingUser(null);

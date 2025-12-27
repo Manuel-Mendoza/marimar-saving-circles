@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -27,7 +26,7 @@ const RegistrationForm = ({ onBack }: RegistrationFormProps) => {
     telefono: '',
     direccion: '',
     correoElectronico: '',
-    password: ''
+    password: '',
   });
   const [imagenCedula, setImagenCedula] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -73,7 +72,9 @@ const RegistrationForm = ({ onBack }: RegistrationFormProps) => {
 
       if (data.success) {
         // Mostrar mensaje de éxito - cuenta creada y pendiente de aprobación
-        setSuccessMessage('¡Cuenta creada exitosamente! Su registro está pendiente de aprobación por un administrador. Recibirá una notificación cuando sea aprobado.');
+        setSuccessMessage(
+          '¡Cuenta creada exitosamente! Su registro está pendiente de aprobación por un administrador. Recibirá una notificación cuando sea aprobado.'
+        );
         setShowSuccessDialog(true);
         setError('');
       } else {
@@ -103,13 +104,11 @@ const RegistrationForm = ({ onBack }: RegistrationFormProps) => {
               <CardTitle className="text-2xl font-bold text-blue-800">
                 Registro de Usuario
               </CardTitle>
-              <CardDescription>
-                Complete el formulario para crear su cuenta
-              </CardDescription>
+              <CardDescription>Complete el formulario para crear su cuenta</CardDescription>
             </div>
           </div>
         </CardHeader>
-        
+
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -119,56 +118,56 @@ const RegistrationForm = ({ onBack }: RegistrationFormProps) => {
                   id="nombre"
                   required
                   value={formData.nombre}
-                  onChange={(e) => handleChange('nombre', e.target.value)}
+                  onChange={e => handleChange('nombre', e.target.value)}
                   placeholder="Juan"
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="apellido">Apellido *</Label>
                 <Input
                   id="apellido"
                   required
                   value={formData.apellido}
-                  onChange={(e) => handleChange('apellido', e.target.value)}
+                  onChange={e => handleChange('apellido', e.target.value)}
                   placeholder="Pérez"
                 />
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="cedula">Cédula *</Label>
               <Input
                 id="cedula"
                 required
                 value={formData.cedula}
-                onChange={(e) => handleChange('cedula', e.target.value)}
+                onChange={e => handleChange('cedula', e.target.value)}
                 placeholder="12.345.678"
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="telefono">Teléfono *</Label>
               <Input
                 id="telefono"
                 required
                 value={formData.telefono}
-                onChange={(e) => handleChange('telefono', e.target.value)}
+                onChange={e => handleChange('telefono', e.target.value)}
                 placeholder="+58 424 123 4567"
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="direccion">Dirección *</Label>
               <Input
                 id="direccion"
                 required
                 value={formData.direccion}
-                onChange={(e) => handleChange('direccion', e.target.value)}
+                onChange={e => handleChange('direccion', e.target.value)}
                 placeholder="Caracas, Venezuela"
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="correoElectronico">Correo Electrónico *</Label>
               <Input
@@ -176,7 +175,7 @@ const RegistrationForm = ({ onBack }: RegistrationFormProps) => {
                 type="email"
                 required
                 value={formData.correoElectronico}
-                onChange={(e) => handleChange('correoElectronico', e.target.value)}
+                onChange={e => handleChange('correoElectronico', e.target.value)}
                 placeholder="usuario@ejemplo.com"
               />
             </div>
@@ -186,10 +185,10 @@ const RegistrationForm = ({ onBack }: RegistrationFormProps) => {
               <div className="relative">
                 <Input
                   id="password"
-                  type={showPassword ? "text" : "password"}
+                  type={showPassword ? 'text' : 'password'}
                   required
                   value={formData.password}
-                  onChange={(e) => handleChange('password', e.target.value)}
+                  onChange={e => handleChange('password', e.target.value)}
                   placeholder="••••••••"
                   minLength={6}
                   className="pr-10"
@@ -218,7 +217,7 @@ const RegistrationForm = ({ onBack }: RegistrationFormProps) => {
                 type="file"
                 accept="image/*"
                 required
-                onChange={(e) => {
+                onChange={e => {
                   const file = e.target.files?.[0];
                   if (file) {
                     // Validar tamaño del archivo (max 5MB)
@@ -238,13 +237,7 @@ const RegistrationForm = ({ onBack }: RegistrationFormProps) => {
               </p>
             </div>
 
-            {error && (
-              <div className="text-red-600 text-sm text-center">
-                {error}
-              </div>
-            )}
-
-
+            {error && <div className="text-red-600 text-sm text-center">{error}</div>}
 
             <Button
               type="submit"
@@ -265,9 +258,7 @@ const RegistrationForm = ({ onBack }: RegistrationFormProps) => {
               <CheckCircle className="h-6 w-6 text-green-600" />
               ¡Registro Exitoso!
             </DialogTitle>
-            <DialogDescription className="text-center">
-              {successMessage}
-            </DialogDescription>
+            <DialogDescription className="text-center">{successMessage}</DialogDescription>
           </DialogHeader>
           <div className="flex justify-center">
             <Button

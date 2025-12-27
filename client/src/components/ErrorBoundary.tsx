@@ -40,20 +40,14 @@ class ErrorBoundary extends Component<Props, State> {
                 <AlertTriangle className="w-6 h-6 text-red-600" />
               </div>
               <CardTitle className="text-red-900">¡Ups! Algo salió mal</CardTitle>
-              <CardDescription>
-                Ha ocurrido un error inesperado en la aplicación.
-              </CardDescription>
+              <CardDescription>Ha ocurrido un error inesperado en la aplicación.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-md">
                 <strong>Error:</strong> {this.state.error?.message || 'Error desconocido'}
               </div>
               <div className="flex gap-2">
-                <Button
-                  onClick={this.handleRetry}
-                  className="flex-1"
-                  variant="default"
-                >
+                <Button onClick={this.handleRetry} className="flex-1" variant="default">
                   <RefreshCw className="w-4 h-4 mr-2" />
                   Reintentar
                 </Button>

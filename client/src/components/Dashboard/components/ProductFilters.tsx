@@ -1,9 +1,9 @@
-import React from "react";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Search, X } from "lucide-react";
-import { getAvailableTags, getTagColor } from "@/lib/tagUtils";
+import React from 'react';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Search, X } from 'lucide-react';
+import { getAvailableTags, getTagColor } from '@/lib/tagUtils';
 
 interface ProductFiltersProps {
   searchTerm: string;
@@ -33,7 +33,7 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
           <Input
             placeholder="Buscar productos..."
             value={searchTerm}
-            onChange={(e) => onSearchChange(e.target.value)}
+            onChange={e => onSearchChange(e.target.value)}
             className="pl-10"
           />
         </div>
@@ -56,29 +56,25 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-medium text-gray-700">Filtrar por categorías:</h3>
           {selectedTags.length > 0 && (
-            <span className="text-sm text-gray-500">
-              {selectedTags.length} seleccionadas
-            </span>
+            <span className="text-sm text-gray-500">{selectedTags.length} seleccionadas</span>
           )}
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {availableTags.map((tag) => {
+          {availableTags.map(tag => {
             const isSelected = selectedTags.includes(tag);
             return (
               <Badge
                 key={tag}
                 className={`cursor-pointer transition-all hover:shadow-sm border ${
                   isSelected
-                    ? "bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
+                    ? 'bg-blue-600 hover:bg-blue-700 text-white border-blue-600'
                     : `${getTagColor(tag)} hover:opacity-80`
                 }`}
                 onClick={() => onTagToggle(tag)}
               >
                 {tag}
-                {isSelected && (
-                  <X className="ml-1 h-3 w-3" />
-                )}
+                {isSelected && <X className="ml-1 h-3 w-3" />}
               </Badge>
             );
           })}
@@ -87,7 +83,7 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
         {selectedTags.length > 0 && (
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <span>Filtros activos:</span>
-            {selectedTags.map((tag) => (
+            {selectedTags.map(tag => (
               <Badge
                 key={`active-${tag}`}
                 className={`flex items-center gap-1 border ${getTagColor(tag)}`}

@@ -1,13 +1,13 @@
-import React, { useState, useMemo, useEffect, useRef } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { motion } from "framer-motion";
-import { Confetti } from "../../../components/ui/confetti";
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { motion } from 'framer-motion';
+import { Confetti } from '../../../components/ui/confetti';
 import {
   Users,
   Clock,
@@ -19,17 +19,17 @@ import {
   BarChart3,
   Calendar,
   DollarSign,
-  Shuffle
-} from "lucide-react";
-import { useGroups } from "@/hooks/useGroups";
-import { useGroupRealtime, DrawMessage } from "@/hooks/useGroupRealtime";
-import api from "@/lib/api";
-import { toast } from "@/hooks/use-toast";
-import GroupDetailsView from "./GroupDetailsView";
-import { Grupo } from "../../../../../shared/types";
+  Shuffle,
+} from 'lucide-react';
+import { useGroups } from '@/hooks/useGroups';
+import { useGroupRealtime, DrawMessage } from '@/hooks/useGroupRealtime';
+import api from '@/lib/api';
+import { toast } from '@/hooks/use-toast';
+import GroupDetailsView from './GroupDetailsView';
+import { Grupo } from '../../../../../shared/types';
 
 // Animation component for the draw
-const DrawAnimation = ({ data, onComplete }: { data: DrawMessage, onComplete?: () => void }) => {
+const DrawAnimation = ({ data, onComplete }: { data: DrawMessage; onComplete?: () => void }) => {
   const [revealedPositions, setRevealedPositions] = useState<number[]>([]);
   const [animationCompleted, setAnimationCompleted] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -80,12 +80,8 @@ const DrawAnimation = ({ data, onComplete }: { data: DrawMessage, onComplete?: (
   return (
     <div className="space-y-4">
       <div className="text-center">
-        <h3 className="text-xl font-bold text-gray-900 mb-1">
-          ¡Sorteo de Posiciones Iniciado!
-        </h3>
-        <p className="text-sm text-gray-600">
-          Las posiciones se están asignando en tiempo real
-        </p>
+        <h3 className="text-xl font-bold text-gray-900 mb-1">¡Sorteo de Posiciones Iniciado!</h3>
+        <p className="text-sm text-gray-600">Las posiciones se están asignando en tiempo real</p>
       </div>
 
       <div className="grid gap-2 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -95,7 +91,7 @@ const DrawAnimation = ({ data, onComplete }: { data: DrawMessage, onComplete?: (
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{
               opacity: revealedPositions.includes(index + 1) ? 1 : 0.3,
-              scale: revealedPositions.includes(index + 1) ? 1 : 0.8
+              scale: revealedPositions.includes(index + 1) ? 1 : 0.8,
             }}
             transition={{ duration: 0.3 }}
             className={`p-2 rounded-md border ${
@@ -113,14 +109,18 @@ const DrawAnimation = ({ data, onComplete }: { data: DrawMessage, onComplete?: (
                   width: '32px',
                   height: '32px',
                   minWidth: '32px',
-                  minHeight: '32px'
+                  minHeight: '32px',
                 }}
               >
                 {pos.position}
               </div>
-              <span className={`text-sm truncate ${
-                revealedPositions.includes(index + 1) ? 'text-gray-900 font-medium' : 'text-gray-500'
-              }`}>
+              <span
+                className={`text-sm truncate ${
+                  revealedPositions.includes(index + 1)
+                    ? 'text-gray-900 font-medium'
+                    : 'text-gray-500'
+                }`}
+              >
                 {revealedPositions.includes(index + 1) ? pos.name : '???'}
               </span>
             </div>
@@ -135,7 +135,7 @@ const DrawAnimation = ({ data, onComplete }: { data: DrawMessage, onComplete?: (
 
 const GroupsView: React.FC = () => {
   const { allGroups, groupsLoading, refetch } = useGroups();
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Group details state
   const [selectedGroupForDetails, setSelectedGroupForDetails] = useState<number | null>(null);
@@ -181,9 +181,9 @@ const GroupsView: React.FC = () => {
     // Check WebSocket connection
     if (!isConnected) {
       toast({
-        title: "Conexión requerida",
-        description: "Esperando conexión en tiempo real...",
-        variant: "destructive",
+        title: 'Conexión requerida',
+        description: 'Esperando conexión en tiempo real...',
+        variant: 'destructive',
       });
       return;
     }
@@ -197,15 +197,15 @@ const GroupsView: React.FC = () => {
       }
 
       toast({
-        title: "Sorteo iniciado",
-        description: "El sorteo de posiciones ha comenzado",
+        title: 'Sorteo iniciado',
+        description: 'El sorteo de posiciones ha comenzado',
       });
     } catch (error) {
       console.error('Error starting draw:', error);
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "No se pudo iniciar el sorteo",
-        variant: "destructive",
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'No se pudo iniciar el sorteo',
+        variant: 'destructive',
       });
       setIsDrawStarting(false);
     }
@@ -224,7 +224,7 @@ const GroupsView: React.FC = () => {
       sin_completar: [],
       lleno: [],
       en_marcha: [],
-      completado: []
+      completado: [],
     };
 
     filteredGroups.forEach((group: Grupo) => {
@@ -250,10 +250,10 @@ const GroupsView: React.FC = () => {
 
   const getStatusBadge = (estado: string) => {
     const statusConfig = {
-      'SIN_COMPLETAR': { variant: 'secondary' as const, icon: Clock, color: 'text-yellow-600' },
-      'LLENO': { variant: 'default' as const, icon: CheckCircle, color: 'text-green-600' },
-      'EN_MARCHA': { variant: 'default' as const, icon: Play, color: 'text-blue-600' },
-      'COMPLETADO': { variant: 'outline' as const, icon: CheckCircle, color: 'text-gray-600' }
+      SIN_COMPLETAR: { variant: 'secondary' as const, icon: Clock, color: 'text-yellow-600' },
+      LLENO: { variant: 'default' as const, icon: CheckCircle, color: 'text-green-600' },
+      EN_MARCHA: { variant: 'default' as const, icon: Play, color: 'text-blue-600' },
+      COMPLETADO: { variant: 'outline' as const, icon: CheckCircle, color: 'text-gray-600' },
     };
 
     const config = statusConfig[estado] || statusConfig['SIN_COMPLETAR'];
@@ -313,8 +313,7 @@ const GroupsView: React.FC = () => {
                 ? `${group.turnoActual}/${group.duracionMeses} meses`
                 : group.estado === 'COMPLETADO'
                   ? 'Completado'
-                  : 'Esperando inicio'
-              }
+                  : 'Esperando inicio'}
             </span>
           </div>
           <Progress value={getProgressValue(group)} className="h-2" />
@@ -325,7 +324,9 @@ const GroupsView: React.FC = () => {
           <div className="flex items-center gap-2">
             <Users className="w-4 h-4 text-gray-500" />
             <div>
-              <p className="font-medium">{group.participantes || 0}/{group.duracionMeses}</p>
+              <p className="font-medium">
+                {group.participantes || 0}/{group.duracionMeses}
+              </p>
               <p className="text-gray-500">Participantes</p>
             </div>
           </div>
@@ -343,9 +344,8 @@ const GroupsView: React.FC = () => {
             <div>
               <p className="font-medium">
                 {group.fechaInicio
-                  ? new Date(group.fechaInicio).toLocaleDateString("es-ES")
-                  : 'No iniciado'
-                }
+                  ? new Date(group.fechaInicio).toLocaleDateString('es-ES')
+                  : 'No iniciado'}
               </p>
               <p className="text-gray-500">Fecha inicio</p>
             </div>
@@ -454,7 +454,7 @@ const GroupsView: React.FC = () => {
             <Input
               placeholder="Buscar grupos por nombre..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={e => setSearchTerm(e.target.value)}
               className="pl-10"
             />
           </div>
@@ -530,7 +530,9 @@ const GroupsView: React.FC = () => {
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
           <DialogHeader>
             <DialogTitle>
-              {selectedGroupForDraw ? `Sorteo - ${selectedGroupForDraw.nombre}` : 'Sorteo de Posiciones'}
+              {selectedGroupForDraw
+                ? `Sorteo - ${selectedGroupForDraw.nombre}`
+                : 'Sorteo de Posiciones'}
             </DialogTitle>
           </DialogHeader>
 
@@ -542,14 +544,18 @@ const GroupsView: React.FC = () => {
                   ¿Iniciar sorteo de posiciones?
                 </h3>
                 <p className="text-gray-600 mb-4">
-                  Esta acción asignará posiciones aleatorias a todos los miembros del grupo.
-                  Una vez iniciado, no se puede deshacer.
+                  Esta acción asignará posiciones aleatorias a todos los miembros del grupo. Una vez
+                  iniciado, no se puede deshacer.
                 </p>
                 {selectedGroupForDraw && (
                   <div className="bg-gray-50 p-4 rounded-lg text-left">
                     <p className="font-medium">Detalles del grupo:</p>
-                    <p><strong>Participantes:</strong> {selectedGroupForDraw.participantes}</p>
-                    <p><strong>Duración:</strong> {selectedGroupForDraw.duracionMeses} meses</p>
+                    <p>
+                      <strong>Participantes:</strong> {selectedGroupForDraw.participantes}
+                    </p>
+                    <p>
+                      <strong>Duración:</strong> {selectedGroupForDraw.duracionMeses} meses
+                    </p>
                   </div>
                 )}
               </div>
@@ -562,10 +568,7 @@ const GroupsView: React.FC = () => {
                 >
                   Cancelar
                 </Button>
-                <Button
-                  onClick={confirmStartDraw}
-                  disabled={isDrawStarting}
-                >
+                <Button onClick={confirmStartDraw} disabled={isDrawStarting}>
                   {isDrawStarting ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>

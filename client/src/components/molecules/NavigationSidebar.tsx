@@ -15,7 +15,7 @@ import {
   Menu,
   X,
   Bell,
-  User
+  User,
 } from 'lucide-react';
 
 interface NavigationItem {
@@ -67,25 +67,28 @@ const NavigationSidebar: React.FC<NavigationSidebarProps> = ({
   onNavigate,
   onLogout,
   notificationsCount = 0,
-  className
+  className,
 }) => {
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
 
   // Items de navegación por defecto según el rol
-  const defaultNavigationItems: NavigationItem[] = user?.tipo === 'ADMINISTRADOR' ? [
-    { id: 'dashboard', label: 'Dashboard', icon: Home, href: '/dashboard' },
-    { id: 'users', label: 'Usuarios', icon: Users, href: '/dashboard/users', badge: 0 },
-    { id: 'products', label: 'Productos', icon: Package, href: '/dashboard/products' },
-    { id: 'groups', label: 'Grupos', icon: BarChart3, href: '/dashboard/groups' },
-    { id: 'payments', label: 'Pagos', icon: CreditCard, href: '/dashboard/payments' },
-    { id: 'settings', label: 'Configuración', icon: Settings, href: '/dashboard/settings' }
-  ] : [
-    { id: 'dashboard', label: 'Mi Dashboard', icon: Home, href: '/dashboard' },
-    { id: 'products', label: 'Productos', icon: Package, href: '/dashboard/products' },
-    { id: 'groups', label: 'Mis Grupos', icon: BarChart3, href: '/dashboard/groups' },
-    { id: 'payments', label: 'Mis Pagos', icon: CreditCard, href: '/dashboard/payments' },
-    { id: 'profile', label: 'Perfil', icon: User, href: '/dashboard/profile' }
-  ];
+  const defaultNavigationItems: NavigationItem[] =
+    user?.tipo === 'ADMINISTRADOR'
+      ? [
+          { id: 'dashboard', label: 'Dashboard', icon: Home, href: '/dashboard' },
+          { id: 'users', label: 'Usuarios', icon: Users, href: '/dashboard/users', badge: 0 },
+          { id: 'products', label: 'Productos', icon: Package, href: '/dashboard/products' },
+          { id: 'groups', label: 'Grupos', icon: BarChart3, href: '/dashboard/groups' },
+          { id: 'payments', label: 'Pagos', icon: CreditCard, href: '/dashboard/payments' },
+          { id: 'settings', label: 'Configuración', icon: Settings, href: '/dashboard/settings' },
+        ]
+      : [
+          { id: 'dashboard', label: 'Mi Dashboard', icon: Home, href: '/dashboard' },
+          { id: 'products', label: 'Productos', icon: Package, href: '/dashboard/products' },
+          { id: 'groups', label: 'Mis Grupos', icon: BarChart3, href: '/dashboard/groups' },
+          { id: 'payments', label: 'Mis Pagos', icon: CreditCard, href: '/dashboard/payments' },
+          { id: 'profile', label: 'Perfil', icon: User, href: '/dashboard/profile' },
+        ];
 
   const items = navigationItems.length > 0 ? navigationItems : defaultNavigationItems;
 
@@ -120,7 +123,8 @@ const NavigationSidebar: React.FC<NavigationSidebarProps> = ({
             'w-full justify-start h-10 px-3',
             collapsed && 'px-2',
             level > 0 && 'ml-4',
-            isActive && 'bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900 dark:text-blue-300'
+            isActive &&
+              'bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900 dark:text-blue-300'
           )}
           onClick={() => handleItemClick(item)}
         >
@@ -129,7 +133,10 @@ const NavigationSidebar: React.FC<NavigationSidebarProps> = ({
             <>
               <span className="flex-1 text-left">{item.label}</span>
               {item.badge !== undefined && item.badge > 0 && (
-                <Badge variant="destructive" className="ml-auto h-5 w-5 p-0 flex items-center justify-center text-xs">
+                <Badge
+                  variant="destructive"
+                  className="ml-auto h-5 w-5 p-0 flex items-center justify-center text-xs"
+                >
                   {item.badge > 99 ? '99+' : item.badge}
                 </Badge>
               )}
@@ -137,11 +144,21 @@ const NavigationSidebar: React.FC<NavigationSidebarProps> = ({
                 <div className="ml-auto">
                   {isExpanded ? (
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
                     </svg>
                   ) : (
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5l7 7-7 7"
+                      />
                     </svg>
                   )}
                 </div>
@@ -221,10 +238,7 @@ const NavigationSidebar: React.FC<NavigationSidebarProps> = ({
         {/* Notificaciones */}
         <Button
           variant="ghost"
-          className={cn(
-            'w-full justify-start h-10 px-3',
-            collapsed && 'px-2'
-          )}
+          className={cn('w-full justify-start h-10 px-3', collapsed && 'px-2')}
           onClick={() => onNavigate?.('notifications')}
         >
           <div className="relative">

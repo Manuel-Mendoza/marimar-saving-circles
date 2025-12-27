@@ -45,7 +45,7 @@ const PublicTemplate: React.FC<PublicTemplateProps> = ({
   onRegister,
   onGoToDashboard,
   isLoading = false,
-  className
+  className,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
@@ -53,10 +53,12 @@ const PublicTemplate: React.FC<PublicTemplateProps> = ({
     if (!showHeader) return null;
 
     return (
-      <header className={cn(
-        'bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800',
-        fixedHeader && 'fixed top-0 left-0 right-0 z-50'
-      )}>
+      <header
+        className={cn(
+          'bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800',
+          fixedHeader && 'fixed top-0 left-0 right-0 z-50'
+        )}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
@@ -65,21 +67,28 @@ const PublicTemplate: React.FC<PublicTemplateProps> = ({
                 <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                   <span className="text-white font-bold text-sm">SM</span>
                 </div>
-                <span className="text-xl font-bold text-gray-900 dark:text-white">
-                  San Marimar
-                </span>
+                <span className="text-xl font-bold text-gray-900 dark:text-white">San Marimar</span>
               </div>
             </div>
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center space-x-8">
-              <a href="#features" className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">
+              <a
+                href="#features"
+                className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+              >
                 Características
               </a>
-              <a href="#how-it-works" className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">
+              <a
+                href="#how-it-works"
+                className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+              >
                 Cómo funciona
               </a>
-              <a href="#about" className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">
+              <a
+                href="#about"
+                className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+              >
                 Acerca de
               </a>
             </nav>
@@ -87,17 +96,13 @@ const PublicTemplate: React.FC<PublicTemplateProps> = ({
             {/* Auth Buttons */}
             <div className="hidden md:flex items-center space-x-4">
               {user ? (
-                <Button onClick={onGoToDashboard}>
-                  Ir al Dashboard
-                </Button>
+                <Button onClick={onGoToDashboard}>Ir al Dashboard</Button>
               ) : (
                 <>
                   <Button variant="ghost" onClick={onLogin}>
                     Iniciar Sesión
                   </Button>
-                  <Button onClick={onRegister}>
-                    Registrarse
-                  </Button>
+                  <Button onClick={onRegister}>Registrarse</Button>
                 </>
               )}
             </div>
@@ -195,9 +200,7 @@ const PublicTemplate: React.FC<PublicTemplateProps> = ({
                 <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                   <span className="text-white font-bold text-sm">SM</span>
                 </div>
-                <span className="text-xl font-bold text-gray-900 dark:text-white">
-                  San Marimar
-                </span>
+                <span className="text-xl font-bold text-gray-900 dark:text-white">San Marimar</span>
               </div>
               <p className="text-gray-600 dark:text-gray-400 mb-4">
                 Tu plataforma confiable de ahorro colaborativo en Venezuela.
@@ -205,17 +208,21 @@ const PublicTemplate: React.FC<PublicTemplateProps> = ({
             </div>
 
             <div>
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">
-                Producto
-              </h3>
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">Producto</h3>
               <ul className="space-y-2">
                 <li>
-                  <a href="#features" className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
+                  <a
+                    href="#features"
+                    className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+                  >
                     Características
                   </a>
                 </li>
                 <li>
-                  <a href="#how-it-works" className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
+                  <a
+                    href="#how-it-works"
+                    className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+                  >
                     Cómo funciona
                   </a>
                 </li>
@@ -223,17 +230,21 @@ const PublicTemplate: React.FC<PublicTemplateProps> = ({
             </div>
 
             <div>
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">
-                Soporte
-              </h3>
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">Soporte</h3>
               <ul className="space-y-2">
                 <li>
-                  <a href="#help" className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
+                  <a
+                    href="#help"
+                    className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+                  >
                     Centro de ayuda
                   </a>
                 </li>
                 <li>
-                  <a href="#contact" className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
+                  <a
+                    href="#contact"
+                    className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+                  >
                     Contacto
                   </a>
                 </li>

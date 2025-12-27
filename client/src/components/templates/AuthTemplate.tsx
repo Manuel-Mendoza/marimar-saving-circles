@@ -28,19 +28,21 @@ interface AuthTemplateProps {
  */
 const AuthTemplate: React.FC<AuthTemplateProps> = ({
   children,
-  title = "Bienvenido a San Marimar",
-  subtitle = "Tu plataforma de ahorro colaborativo",
+  title = 'Bienvenido a San Marimar',
+  subtitle = 'Tu plataforma de ahorro colaborativo',
   altLinkText,
   onAltLink,
   backgroundImage,
   isLoading = false,
-  className
+  className,
 }) => {
   return (
-    <div className={cn(
-      'min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4',
-      className
-    )}>
+    <div
+      className={cn(
+        'min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4',
+        className
+      )}
+    >
       {/* Background Pattern */}
       <div className="absolute inset-0 bg-grid-pattern opacity-5 dark:opacity-10" />
 
@@ -61,11 +63,7 @@ const AuthTemplate: React.FC<AuthTemplateProps> = ({
           <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white mb-2">
             {title}
           </h1>
-          {subtitle && (
-            <p className="text-gray-600 dark:text-gray-400">
-              {subtitle}
-            </p>
-          )}
+          {subtitle && <p className="text-gray-600 dark:text-gray-400">{subtitle}</p>}
         </div>
 
         {/* Auth Form Card */}

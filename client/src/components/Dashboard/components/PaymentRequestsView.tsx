@@ -1,12 +1,25 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import React, { useState, useEffect, useCallback } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   CheckCircle,
   XCircle,
@@ -18,12 +31,12 @@ import {
   Calendar,
   User,
   CreditCard,
-  Image as ImageIcon
-} from "lucide-react";
-import api from "@/lib/api";
-import { toast } from "@/hooks/use-toast";
-import { usePaymentRequests } from "@/hooks/usePaymentRequests";
-import { PaymentRequest } from "../../../../../shared/types";
+  Image as ImageIcon,
+} from 'lucide-react';
+import api from '@/lib/api';
+import { toast } from '@/hooks/use-toast';
+import { usePaymentRequests } from '@/hooks/usePaymentRequests';
+import { PaymentRequest } from '../../../../../shared/types';
 
 const PaymentRequestsView: React.FC = () => {
   const [requests, setRequests] = useState<PaymentRequest[]>([]);
@@ -48,17 +61,17 @@ const PaymentRequestsView: React.FC = () => {
         await refetchSidebarCount();
       } else {
         toast({
-          title: "Error",
-          description: "No se pudieron cargar las solicitudes de pago",
-          variant: "destructive",
+          title: 'Error',
+          description: 'No se pudieron cargar las solicitudes de pago',
+          variant: 'destructive',
         });
       }
     } catch (error) {
       console.error('Error loading payment requests:', error);
       toast({
-        title: "Error",
-        description: "Error al cargar las solicitudes de pago",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Error al cargar las solicitudes de pago',
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
@@ -76,24 +89,24 @@ const PaymentRequestsView: React.FC = () => {
 
       if (response.success) {
         toast({
-          title: "Éxito",
-          description: "Solicitud de pago aprobada exitosamente",
+          title: 'Éxito',
+          description: 'Solicitud de pago aprobada exitosamente',
         });
         await loadPaymentRequests(); // Refresh the list
         await refetchSidebarCount(); // Refresh sidebar counter immediately
       } else {
         toast({
-          title: "Error",
-          description: response.message || "Error al aprobar la solicitud",
-          variant: "destructive",
+          title: 'Error',
+          description: response.message || 'Error al aprobar la solicitud',
+          variant: 'destructive',
         });
       }
     } catch (error) {
       console.error('Error approving payment request:', error);
       toast({
-        title: "Error",
-        description: "Error al aprobar la solicitud",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Error al aprobar la solicitud',
+        variant: 'destructive',
       });
     } finally {
       setIsProcessing(false);
@@ -109,8 +122,8 @@ const PaymentRequestsView: React.FC = () => {
 
       if (response.success) {
         toast({
-          title: "Éxito",
-          description: "Solicitud de pago rechazada",
+          title: 'Éxito',
+          description: 'Solicitud de pago rechazada',
         });
         await loadPaymentRequests(); // Refresh the list
         await refetchSidebarCount(); // Refresh sidebar counter immediately
@@ -119,17 +132,17 @@ const PaymentRequestsView: React.FC = () => {
         setRejectReason('');
       } else {
         toast({
-          title: "Error",
-          description: response.message || "Error al rechazar la solicitud",
-          variant: "destructive",
+          title: 'Error',
+          description: response.message || 'Error al rechazar la solicitud',
+          variant: 'destructive',
         });
       }
     } catch (error) {
       console.error('Error rejecting payment request:', error);
       toast({
-        title: "Error",
-        description: "Error al rechazar la solicitud",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Error al rechazar la solicitud',
+        variant: 'destructive',
       });
     } finally {
       setIsProcessing(false);
@@ -148,9 +161,9 @@ const PaymentRequestsView: React.FC = () => {
 
   const getStatusBadge = (estado: string) => {
     const statusConfig = {
-      'PENDIENTE': { variant: 'secondary' as const, icon: Clock, color: 'text-yellow-600' },
-      'CONFIRMADO': { variant: 'default' as const, icon: CheckCircle, color: 'text-green-600' },
-      'RECHAZADO': { variant: 'destructive' as const, icon: XCircle, color: 'text-red-600' }
+      PENDIENTE: { variant: 'secondary' as const, icon: Clock, color: 'text-yellow-600' },
+      CONFIRMADO: { variant: 'default' as const, icon: CheckCircle, color: 'text-green-600' },
+      RECHAZADO: { variant: 'destructive' as const, icon: XCircle, color: 'text-red-600' },
     };
 
     const config = statusConfig[estado] || statusConfig['PENDIENTE'];
@@ -266,15 +279,9 @@ const PaymentRequestsView: React.FC = () => {
       {/* Requests by Status */}
       <Tabs defaultValue="pending" className="space-y-4">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="pending">
-            Pendientes ({pendingRequests.length})
-          </TabsTrigger>
-          <TabsTrigger value="approved">
-            Aprobadas ({approvedRequests.length})
-          </TabsTrigger>
-          <TabsTrigger value="rejected">
-            Rechazadas ({rejectedRequests.length})
-          </TabsTrigger>
+          <TabsTrigger value="pending">Pendientes ({pendingRequests.length})</TabsTrigger>
+          <TabsTrigger value="approved">Aprobadas ({approvedRequests.length})</TabsTrigger>
+          <TabsTrigger value="rejected">Rechazadas ({rejectedRequests.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="pending" className="space-y-4">
@@ -304,18 +311,23 @@ const PaymentRequestsView: React.FC = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {pendingRequests.map((request) => (
+                    {pendingRequests.map(request => (
                       <TableRow key={request.id}>
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <Avatar className="w-8 h-8">
                               <AvatarFallback className="text-xs">
-                                {request.user.nombre[0]}{request.user.apellido[0]}
+                                {request.user.nombre[0]}
+                                {request.user.apellido[0]}
                               </AvatarFallback>
                             </Avatar>
                             <div>
-                              <p className="font-medium text-sm">{request.user.nombre} {request.user.apellido}</p>
-                              <p className="text-xs text-gray-500">{request.user.correoElectronico}</p>
+                              <p className="font-medium text-sm">
+                                {request.user.nombre} {request.user.apellido}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {request.user.correoElectronico}
+                              </p>
                             </div>
                           </div>
                         </TableCell>
@@ -323,12 +335,10 @@ const PaymentRequestsView: React.FC = () => {
                           <span className="text-sm">{request.group.nombre}</span>
                         </TableCell>
                         <TableCell>{request.periodo}</TableCell>
-                        <TableCell className="font-medium">
-                          ${request.monto.toFixed(2)}
-                        </TableCell>
+                        <TableCell className="font-medium">${request.monto.toFixed(2)}</TableCell>
                         <TableCell>{getCurrencyBadge(request.moneda)}</TableCell>
                         <TableCell>
-                          {new Date(request.fechaSolicitud).toLocaleDateString("es-ES")}
+                          {new Date(request.fechaSolicitud).toLocaleDateString('es-ES')}
                         </TableCell>
                         <TableCell>{getStatusBadge(request.estado)}</TableCell>
                         <TableCell>
@@ -394,18 +404,23 @@ const PaymentRequestsView: React.FC = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {approvedRequests.map((request) => (
+                    {approvedRequests.map(request => (
                       <TableRow key={request.id}>
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <Avatar className="w-8 h-8">
                               <AvatarFallback className="text-xs">
-                                {request.user.nombre[0]}{request.user.apellido[0]}
+                                {request.user.nombre[0]}
+                                {request.user.apellido[0]}
                               </AvatarFallback>
                             </Avatar>
                             <div>
-                              <p className="font-medium text-sm">{request.user.nombre} {request.user.apellido}</p>
-                              <p className="text-xs text-gray-500">{request.user.correoElectronico}</p>
+                              <p className="font-medium text-sm">
+                                {request.user.nombre} {request.user.apellido}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {request.user.correoElectronico}
+                              </p>
                             </div>
                           </div>
                         </TableCell>
@@ -413,15 +428,12 @@ const PaymentRequestsView: React.FC = () => {
                           <span className="text-sm">{request.group.nombre}</span>
                         </TableCell>
                         <TableCell>{request.periodo}</TableCell>
-                        <TableCell className="font-medium">
-                          ${request.monto.toFixed(2)}
-                        </TableCell>
+                        <TableCell className="font-medium">${request.monto.toFixed(2)}</TableCell>
                         <TableCell>{getCurrencyBadge(request.moneda)}</TableCell>
                         <TableCell>
                           {request.fechaAprobacion
-                            ? new Date(request.fechaAprobacion).toLocaleDateString("es-ES")
-                            : 'N/A'
-                          }
+                            ? new Date(request.fechaAprobacion).toLocaleDateString('es-ES')
+                            : 'N/A'}
                         </TableCell>
                         <TableCell>{getStatusBadge(request.estado)}</TableCell>
                         <TableCell>
@@ -469,18 +481,23 @@ const PaymentRequestsView: React.FC = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {rejectedRequests.map((request) => (
+                    {rejectedRequests.map(request => (
                       <TableRow key={request.id}>
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <Avatar className="w-8 h-8">
                               <AvatarFallback className="text-xs">
-                                {request.user.nombre[0]}{request.user.apellido[0]}
+                                {request.user.nombre[0]}
+                                {request.user.apellido[0]}
                               </AvatarFallback>
                             </Avatar>
                             <div>
-                              <p className="font-medium text-sm">{request.user.nombre} {request.user.apellido}</p>
-                              <p className="text-xs text-gray-500">{request.user.correoElectronico}</p>
+                              <p className="font-medium text-sm">
+                                {request.user.nombre} {request.user.apellido}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {request.user.correoElectronico}
+                              </p>
                             </div>
                           </div>
                         </TableCell>
@@ -488,12 +505,13 @@ const PaymentRequestsView: React.FC = () => {
                           <span className="text-sm">{request.group.nombre}</span>
                         </TableCell>
                         <TableCell>{request.periodo}</TableCell>
-                        <TableCell className="font-medium">
-                          ${request.monto.toFixed(2)}
-                        </TableCell>
+                        <TableCell className="font-medium">${request.monto.toFixed(2)}</TableCell>
                         <TableCell>{getCurrencyBadge(request.moneda)}</TableCell>
                         <TableCell>
-                          <span className="text-sm text-gray-600 max-w-xs truncate" title={request.notasAdmin || ''}>
+                          <span
+                            className="text-sm text-gray-600 max-w-xs truncate"
+                            title={request.notasAdmin || ''}
+                          >
                             {request.notasAdmin || 'Sin razón especificada'}
                           </span>
                         </TableCell>
@@ -533,7 +551,8 @@ const PaymentRequestsView: React.FC = () => {
               <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
                 <Avatar className="w-12 h-12">
                   <AvatarFallback>
-                    {selectedRequest.user.nombre[0]}{selectedRequest.user.apellido[0]}
+                    {selectedRequest.user.nombre[0]}
+                    {selectedRequest.user.apellido[0]}
                   </AvatarFallback>
                 </Avatar>
                 <div>
@@ -556,7 +575,9 @@ const PaymentRequestsView: React.FC = () => {
                   <div className="flex items-center gap-2">
                     <DollarSign className="h-4 w-4 text-gray-500" />
                     <span className="text-sm font-medium">Monto:</span>
-                    <span className="text-sm font-bold">${selectedRequest.monto.toFixed(2)} {selectedRequest.moneda}</span>
+                    <span className="text-sm font-bold">
+                      ${selectedRequest.monto.toFixed(2)} {selectedRequest.moneda}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <CreditCard className="h-4 w-4 text-gray-500" />
@@ -573,13 +594,17 @@ const PaymentRequestsView: React.FC = () => {
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-gray-500" />
                     <span className="text-sm font-medium">Fecha solicitud:</span>
-                    <span className="text-sm">{new Date(selectedRequest.fechaSolicitud).toLocaleDateString("es-ES")}</span>
+                    <span className="text-sm">
+                      {new Date(selectedRequest.fechaSolicitud).toLocaleDateString('es-ES')}
+                    </span>
                   </div>
                   {selectedRequest.fechaAprobacion && (
                     <div className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
                       <span className="text-sm font-medium">Fecha aprobación:</span>
-                      <span className="text-sm">{new Date(selectedRequest.fechaAprobacion).toLocaleDateString("es-ES")}</span>
+                      <span className="text-sm">
+                        {new Date(selectedRequest.fechaAprobacion).toLocaleDateString('es-ES')}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -662,7 +687,8 @@ const PaymentRequestsView: React.FC = () => {
           <DialogHeader>
             <DialogTitle>Rechazar Solicitud de Pago</DialogTitle>
             <DialogDescription>
-              Proporciona una razón para rechazar la solicitud de {selectedRequest?.user.nombre} {selectedRequest?.user.apellido}
+              Proporciona una razón para rechazar la solicitud de {selectedRequest?.user.nombre}{' '}
+              {selectedRequest?.user.apellido}
             </DialogDescription>
           </DialogHeader>
 
@@ -672,7 +698,7 @@ const PaymentRequestsView: React.FC = () => {
               <Textarea
                 placeholder="Explica por qué rechazas esta solicitud..."
                 value={rejectReason}
-                onChange={(e) => setRejectReason(e.target.value)}
+                onChange={e => setRejectReason(e.target.value)}
                 rows={4}
               />
             </div>

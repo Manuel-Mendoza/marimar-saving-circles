@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,12 +29,12 @@ const LandingPage = ({ onGetStarted }: LandingPageProps) => {
             Ahorro Colaborativo <span className="text-blue-600">Inteligente</span>
           </h2>
           <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-            Únete a nuestro sistema de cadenas y juntas colaborativas. 
-            Ahorra de manera organizada y alcanza tus metas financieras junto a otros usuarios.
+            Únete a nuestro sistema de cadenas y juntas colaborativas. Ahorra de manera organizada y
+            alcanza tus metas financieras junto a otros usuarios.
           </p>
-          <Button 
-            onClick={onGetStarted} 
-            size="lg" 
+          <Button
+            onClick={onGetStarted}
+            size="lg"
             className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg"
           >
             Comenzar Ahora
@@ -47,12 +46,10 @@ const LandingPage = ({ onGetStarted }: LandingPageProps) => {
       {/* Features Section */}
       <section className="container mx-auto px-4 py-16">
         <div className="text-center mb-12">
-          <h3 className="text-3xl font-bold text-gray-900 mb-4">
-            ¿Cómo funciona San Marimar?
-          </h3>
+          <h3 className="text-3xl font-bold text-gray-900 mb-4">¿Cómo funciona San Marimar?</h3>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Nuestro sistema de ahorro colaborativo te permite participar en grupos organizados 
-            donde cada miembro contribuye regularmente hasta completar el objetivo común.
+            Nuestro sistema de ahorro colaborativo te permite participar en grupos organizados donde
+            cada miembro contribuye regularmente hasta completar el objetivo común.
           </p>
         </div>
 
@@ -113,16 +110,14 @@ const LandingPage = ({ onGetStarted }: LandingPageProps) => {
           <h3 className="text-3xl font-bold text-gray-900 text-center mb-12">
             Proceso Simple en 4 Pasos
           </h3>
-          
+
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="text-center">
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl font-bold text-blue-600">1</span>
               </div>
               <h4 className="text-xl font-semibold mb-2">Regístrate</h4>
-              <p className="text-gray-600">
-                Crea tu cuenta y completa tu perfil para comenzar.
-              </p>
+              <p className="text-gray-600">Crea tu cuenta y completa tu perfil para comenzar.</p>
             </div>
 
             <div className="text-center">
@@ -161,15 +156,13 @@ const LandingPage = ({ onGetStarted }: LandingPageProps) => {
       {/* CTA Section */}
       <section className="bg-blue-600 text-white py-16">
         <div className="container mx-auto px-4 text-center">
-          <h3 className="text-3xl font-bold mb-4">
-            ¿Listo para comenzar tu ahorro colaborativo?
-          </h3>
+          <h3 className="text-3xl font-bold mb-4">¿Listo para comenzar tu ahorro colaborativo?</h3>
           <p className="text-xl mb-8 opacity-90">
             Únete a miles de usuarios que ya están ahorrando de manera inteligente con San Marimar.
           </p>
-          <Button 
+          <Button
             onClick={onGetStarted}
-            size="lg" 
+            size="lg"
             variant="secondary"
             className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-4 text-lg"
           >

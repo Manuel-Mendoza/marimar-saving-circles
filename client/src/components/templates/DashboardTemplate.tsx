@@ -66,7 +66,7 @@ const DashboardTemplate: React.FC<DashboardTemplateProps> = ({
   notificationsCount = 0,
   isLoading = false,
   showBreadcrumb = true,
-  className
+  className,
 }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(initialCollapsed);
 
@@ -98,9 +98,7 @@ const DashboardTemplate: React.FC<DashboardTemplateProps> = ({
           <React.Fragment key={index}>
             <span className="text-gray-300 dark:text-gray-600">/</span>
             {item.current ? (
-              <span className="font-medium text-gray-900 dark:text-white">
-                {item.label}
-              </span>
+              <span className="font-medium text-gray-900 dark:text-white">{item.label}</span>
             ) : (
               <Button
                 variant="ghost"
@@ -149,9 +147,7 @@ const DashboardTemplate: React.FC<DashboardTemplateProps> = ({
                   {title}
                 </h1>
                 {subtitle && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                    {subtitle}
-                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{subtitle}</p>
                 )}
               </div>
             </div>
@@ -210,9 +206,7 @@ const DashboardTemplate: React.FC<DashboardTemplateProps> = ({
               <LoadingSpinner size="lg" text="Cargando contenido..." />
             </div>
           ) : (
-            <div className="p-4 lg:p-6">
-              {children}
-            </div>
+            <div className="p-4 lg:p-6">{children}</div>
           )}
         </main>
       </div>
@@ -226,14 +220,16 @@ const DashboardTemplate: React.FC<DashboardTemplateProps> = ({
       )}
 
       {/* Mobile Sidebar */}
-      <div className={cn(
-        'fixed top-0 left-0 z-50 h-full lg:hidden transition-transform duration-300',
-        sidebarCollapsed ? '-translate-x-full' : 'translate-x-0'
-      )}>
+      <div
+        className={cn(
+          'fixed top-0 left-0 z-50 h-full lg:hidden transition-transform duration-300',
+          sidebarCollapsed ? '-translate-x-full' : 'translate-x-0'
+        )}
+      >
         <NavigationSidebar
           user={user}
           collapsed={false}
-          onNavigate={(itemId) => {
+          onNavigate={itemId => {
             handleSidebarNavigate(itemId);
             setSidebarCollapsed(true);
           }}

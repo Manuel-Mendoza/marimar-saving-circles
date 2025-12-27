@@ -1,6 +1,6 @@
-import React from "react";
-import { useCurrencyConversion } from "@/hooks/useCurrencyConversion";
-import { Badge } from "./badge";
+import React from 'react';
+import { useCurrencyConversion } from '@/hooks/useCurrencyConversion';
+import { Badge } from './badge';
 
 interface PriceDisplayProps {
   vesPrice: number;
@@ -15,11 +15,10 @@ interface PriceDisplayProps {
 export function PriceDisplay({
   vesPrice,
   showExchangeRate = false,
-  className = "",
+  className = '',
   compact = false,
 }: PriceDisplayProps) {
-  const { usdPrice, exchangeRate, isLoading, error } =
-    useCurrencyConversion(vesPrice);
+  const { usdPrice, exchangeRate, isLoading, error } = useCurrencyConversion(vesPrice);
 
   if (isLoading) {
     return (
@@ -33,9 +32,7 @@ export function PriceDisplay({
   if (error && !usdPrice) {
     return (
       <div className={className}>
-        <div className="text-red-600 text-sm">
-          Bs. {vesPrice.toLocaleString()}
-        </div>
+        <div className="text-red-600 text-sm">Bs. {vesPrice.toLocaleString()}</div>
         <div className="text-xs text-red-500">Error de conversión</div>
       </div>
     );
@@ -48,14 +45,10 @@ export function PriceDisplay({
         <div className="space-y-1">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-gray-700">Dólares:</span>
-            <span className="font-semibold text-green-600">
-              ${usdPrice.toFixed(2)}
-            </span>
+            <span className="font-semibold text-green-600">${usdPrice.toFixed(2)}</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-700">
-              Bolívares:
-            </span>
+            <span className="text-sm font-medium text-gray-700">Bolívares:</span>
             <span className="font-semibold text-blue-600">
               Bs. {vesPrice.toLocaleString()} (${usdPrice.toLocaleString()})
             </span>
@@ -65,25 +58,17 @@ export function PriceDisplay({
               Tasa: {exchangeRate.toFixed(2)} VES/USD
             </div>
           )}
-          {error && (
-            <div className="text-xs text-orange-500 mt-1">
-              ⚠️ Usando tasa de respaldo
-            </div>
-          )}
+          {error && <div className="text-xs text-orange-500 mt-1">⚠️ Usando tasa de respaldo</div>}
         </div>
       ) : (
         // Vista compacta
         <div className="space-y-1">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-gray-600">Dólares:</span>
-            <span className="font-semibold text-green-600 text-sm">
-              ${usdPrice.toFixed(2)}
-            </span>
+            <span className="font-semibold text-green-600 text-sm">${usdPrice.toFixed(2)}</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-gray-600">
-              Bolívares:
-            </span>
+            <span className="text-xs font-medium text-gray-600">Bolívares:</span>
             <span className="font-semibold text-blue-600 text-sm">
               Bs. {vesPrice.toLocaleString()} (${usdPrice.toLocaleString()})
             </span>
@@ -100,7 +85,7 @@ export function PriceDisplay({
 export function SimplePriceDisplay({
   vesPrice,
   usdPrice,
-  className = "",
+  className = '',
   compact = false,
 }: {
   vesPrice: number;
@@ -110,11 +95,7 @@ export function SimplePriceDisplay({
 }) {
   // usdPrice aquí es el precio directo de la BD, pero necesitamos mostrar la conversión
   // Para SimplePriceDisplay: usdPrice es directo de BD, pero en bolívares mostramos la conversión
-  const {
-    usdPrice: convertedUsdPrice,
-    isLoading,
-    error,
-  } = useCurrencyConversion(vesPrice);
+  const { usdPrice: convertedUsdPrice, isLoading, error } = useCurrencyConversion(vesPrice);
 
   if (isLoading) {
     return (
@@ -132,41 +113,27 @@ export function SimplePriceDisplay({
         <div className="space-y-1">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-gray-700">Dólares:</span>
-            <span className="font-semibold text-green-600">
-              ${usdPrice.toFixed(2)}
-            </span>
+            <span className="font-semibold text-green-600">${usdPrice.toFixed(2)}</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-700">
-              Bolívares:
-            </span>
+            <span className="text-sm font-medium text-gray-700">Bolívares:</span>
             <span className="font-semibold text-gray-500">
-              Bs. ${vesPrice.toLocaleString()} //{" "}
-              {convertedUsdPrice.toLocaleString()}
+              Bs. ${vesPrice.toLocaleString()} // {convertedUsdPrice.toLocaleString()}
             </span>
           </div>
-          {error && (
-            <div className="text-xs text-orange-500 mt-1">
-              ⚠️ Usando tasa de respaldo
-            </div>
-          )}
+          {error && <div className="text-xs text-orange-500 mt-1">⚠️ Usando tasa de respaldo</div>}
         </div>
       ) : (
         // Vista compacta
         <div className="space-y-1">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-gray-600">Dólares:</span>
-            <span className="font-semibold text-green-600 text-sm">
-              ${usdPrice.toFixed(2)}
-            </span>
+            <span className="font-semibold text-green-600 text-sm">${usdPrice.toFixed(2)}</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-gray-600">
-              Bolívares:
-            </span>
+            <span className="text-xs font-medium text-gray-600">Bolívares:</span>
             <span className="font-semibold text-blue-600 text-sm">
-              Bs. ${vesPrice.toLocaleString()} -
-              {convertedUsdPrice.toLocaleString()}-
+              Bs. ${vesPrice.toLocaleString()} -{convertedUsdPrice.toLocaleString()}-
             </span>
           </div>
         </div>

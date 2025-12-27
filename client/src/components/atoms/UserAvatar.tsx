@@ -30,7 +30,7 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
   size = 'md',
   className,
   showBorder = false,
-  status
+  status,
 }) => {
   // Generar iniciales del nombre
   const getInitials = (): string => {
@@ -49,7 +49,7 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
       sm: 'h-8 w-8 text-sm',
       md: 'h-10 w-10 text-base',
       lg: 'h-12 w-12 text-lg',
-      xl: 'h-16 w-16 text-xl'
+      xl: 'h-16 w-16 text-xl',
     };
     return sizes[sizeType];
   };
@@ -61,7 +61,7 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
     const statusColors = {
       online: 'bg-green-500',
       offline: 'bg-gray-400',
-      away: 'bg-yellow-500'
+      away: 'bg-yellow-500',
     };
 
     return `relative after:absolute after:bottom-0 after:right-0 after:h-3 after:w-3 after:rounded-full after:border-2 after:border-white dark:after:border-gray-800 after:${statusColors[status]}`;
@@ -81,11 +81,7 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
         )}
       >
         {imageUrl && (
-          <AvatarImage
-            src={imageUrl}
-            alt={`${name} ${lastname}`}
-            className="object-cover"
-          />
+          <AvatarImage src={imageUrl} alt={`${name} ${lastname}`} className="object-cover" />
         )}
         <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold">
           {initials}

@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAppState } from '@/contexts/AppStateContext';
@@ -18,7 +17,24 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Users, Package, Calendar, TrendingUp, MapPin, Clock, CheckCircle, AlertCircle, Menu, Home, ShoppingCart, DollarSign, Search, Filter, X, Shuffle } from 'lucide-react';
+import {
+  Users,
+  Package,
+  Calendar,
+  TrendingUp,
+  MapPin,
+  Clock,
+  CheckCircle,
+  AlertCircle,
+  Menu,
+  Home,
+  ShoppingCart,
+  DollarSign,
+  Search,
+  Filter,
+  X,
+  Shuffle,
+} from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useGroupRealtime, DrawMessage } from '@/hooks/useGroupRealtime';
 import { motion } from 'framer-motion';
@@ -45,10 +61,9 @@ const GroupRealtimeHandler = ({
   return null; // Headless component
 };
 
-
 const UserDashboard = () => {
   // Animation component for the draw
-  const DrawAnimation = ({ data, onComplete }: { data: DrawMessage, onComplete?: () => void }) => {
+  const DrawAnimation = ({ data, onComplete }: { data: DrawMessage; onComplete?: () => void }) => {
     const [revealedPositions, setRevealedPositions] = React.useState<number[]>([]);
     const [animationCompleted, setAnimationCompleted] = React.useState(false);
     const [showConfetti, setShowConfetti] = React.useState(false);
@@ -99,12 +114,8 @@ const UserDashboard = () => {
     return (
       <div className="space-y-4">
         <div className="text-center">
-          <h3 className="text-xl font-bold text-gray-900 mb-1">
-            ¡Sorteo de Posiciones Iniciado!
-          </h3>
-          <p className="text-sm text-gray-600">
-            Las posiciones se están asignando en tiempo real
-          </p>
+          <h3 className="text-xl font-bold text-gray-900 mb-1">¡Sorteo de Posiciones Iniciado!</h3>
+          <p className="text-sm text-gray-600">Las posiciones se están asignando en tiempo real</p>
         </div>
 
         <div className="grid gap-2 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -114,7 +125,7 @@ const UserDashboard = () => {
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{
                 opacity: revealedPositions.includes(index + 1) ? 1 : 0.3,
-                scale: revealedPositions.includes(index + 1) ? 1 : 0.8
+                scale: revealedPositions.includes(index + 1) ? 1 : 0.8,
               }}
               transition={{ duration: 0.3 }}
               className={`p-2 rounded-md border ${
@@ -132,14 +143,18 @@ const UserDashboard = () => {
                     width: '32px',
                     height: '32px',
                     minWidth: '32px',
-                    minHeight: '32px'
+                    minHeight: '32px',
                   }}
                 >
                   {pos.position}
                 </div>
-                <span className={`text-sm truncate ${
-                  revealedPositions.includes(index + 1) ? 'text-gray-900 font-medium' : 'text-gray-500'
-                }`}>
+                <span
+                  className={`text-sm truncate ${
+                    revealedPositions.includes(index + 1)
+                      ? 'text-gray-900 font-medium'
+                      : 'text-gray-500'
+                  }`}
+                >
                   {revealedPositions.includes(index + 1) ? pos.name : '???'}
                 </span>
               </div>
@@ -152,7 +167,8 @@ const UserDashboard = () => {
     );
   };
   const { user } = useAuth();
-  const { grupos, productos, userGroups, contributions, deliveries, addUserGroup, refreshData } = useAppState();
+  const { grupos, productos, userGroups, contributions, deliveries, addUserGroup, refreshData } =
+    useAppState();
 
   // State declarations first
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
@@ -175,7 +191,9 @@ const UserDashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDuration, setSelectedDuration] = useState<number | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState<'popular' | 'price-low' | 'price-high' | 'newest'>('popular');
+  const [sortBy, setSortBy] = useState<'popular' | 'price-low' | 'price-high' | 'newest'>(
+    'popular'
+  );
 
   // Real-time draw state
   const [showDrawDialog, setShowDrawDialog] = useState(false);
@@ -210,7 +228,9 @@ const UserDashboard = () => {
     ? myGroups.find(g => g.id === selectedGroupId) || myGroups[0]
     : myGroups[0];
   const myPosition = myUserGroups.find(ug => ug.groupId === currentGroup?.id)?.posicion;
-  const groupProgress = currentGroup ? (currentGroup.turnoActual / currentGroup.duracionMeses) * 100 : 0;
+  const groupProgress = currentGroup
+    ? (currentGroup.turnoActual / currentGroup.duracionMeses) * 100
+    : 0;
 
   // Filter contributions and deliveries for current group
   const currentGroupContributions = contributions.filter(c => c.groupId === currentGroup?.id);
@@ -218,9 +238,13 @@ const UserDashboard = () => {
 
   // Calculate when user will receive product
   const monthsUntilDelivery = myPosition ? myPosition - (currentGroup?.turnoActual || 0) : 0;
-  const estimatedDeliveryDate = monthsUntilDelivery > 0 && currentGroup?.fechaInicio
-    ? new Date(new Date(currentGroup.fechaInicio).getTime() + monthsUntilDelivery * 30 * 24 * 60 * 60 * 1000)
-    : null;
+  const estimatedDeliveryDate =
+    monthsUntilDelivery > 0 && currentGroup?.fechaInicio
+      ? new Date(
+          new Date(currentGroup.fechaInicio).getTime() +
+            monthsUntilDelivery * 30 * 24 * 60 * 60 * 1000
+        )
+      : null;
 
   const hasGroups = myUserGroups.length > 0;
   const hasAvailableGroups = grupos.length > 0; // Grupos disponibles para unirse
@@ -228,40 +252,50 @@ const UserDashboard = () => {
   const isGroupInStandby = currentGroup?.estado === 'SIN_COMPLETAR';
 
   // Filter and sort products for mobile-first UX
-  const filteredProducts = productos.filter(product => {
-    if (!product.activo) return false;
+  const filteredProducts = productos
+    .filter(product => {
+      if (!product.activo) return false;
 
-    // Search filter
-    const matchesSearch = searchTerm === '' ||
-      product.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.descripcion.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (product.tags && product.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())));
+      // Search filter
+      const matchesSearch =
+        searchTerm === '' ||
+        product.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.descripcion.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (product.tags &&
+          product.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())));
 
-    // Duration filter
-    const matchesDuration = selectedDuration === null || product.tiempoDuracion === selectedDuration;
+      // Duration filter
+      const matchesDuration =
+        selectedDuration === null || product.tiempoDuracion === selectedDuration;
 
-    // Tags filter
-    const matchesTags = selectedTags.length === 0 ||
-      (product.tags && selectedTags.every(selectedTag => product.tags?.includes(selectedTag)));
+      // Tags filter
+      const matchesTags =
+        selectedTags.length === 0 ||
+        (product.tags && selectedTags.every(selectedTag => product.tags?.includes(selectedTag)));
 
-    return matchesSearch && matchesDuration && matchesTags;
-  }).sort((a, b) => {
-    switch (sortBy) {
-      case 'price-low':
-        return a.precioUsd - b.precioUsd;
-      case 'price-high':
-        return b.precioUsd - a.precioUsd;
-      case 'newest':
-        return b.id - a.id; // Assuming higher ID means newer
-      case 'popular':
-      default:
-        return 0; // Keep original order for popular
-    }
-  });
+      return matchesSearch && matchesDuration && matchesTags;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'price-low':
+          return a.precioUsd - b.precioUsd;
+        case 'price-high':
+          return b.precioUsd - a.precioUsd;
+        case 'newest':
+          return b.id - a.id; // Assuming higher ID means newer
+        case 'popular':
+        default:
+          return 0; // Keep original order for popular
+      }
+    });
 
   // Get unique durations and tags for filters
-  const availableDurations = [...new Set(productos.filter(p => p.activo).map(p => p.tiempoDuracion))].sort((a, b) => a - b);
-  const availableTags = [...new Set(productos.filter(p => p.activo && p.tags).flatMap(p => p.tags || []))].sort();
+  const availableDurations = [
+    ...new Set(productos.filter(p => p.activo).map(p => p.tiempoDuracion)),
+  ].sort((a, b) => a - b);
+  const availableTags = [
+    ...new Set(productos.filter(p => p.activo && p.tags).flatMap(p => p.tags || [])),
+  ].sort();
 
   const clearFilters = () => {
     setSearchTerm('');
@@ -271,11 +305,7 @@ const UserDashboard = () => {
   };
 
   const toggleTag = (tag: string) => {
-    setSelectedTags(prev =>
-      prev.includes(tag)
-        ? prev.filter(t => t !== tag)
-        : [...prev, tag]
-    );
+    setSelectedTags(prev => (prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]));
   };
 
   const handleProductSelect = (producto: Producto) => {
@@ -285,8 +315,6 @@ const UserDashboard = () => {
 
   const handleCurrencySelect = async (currency: 'VES' | 'USD') => {
     if (!selectedProduct || !user) return;
-
-
 
     try {
       const response = await apiClient.joinGroup(selectedProduct.id, currency);
@@ -300,7 +328,7 @@ const UserDashboard = () => {
           posicion: response.data.position,
           productoSeleccionado: selectedProduct.nombre,
           monedaPago: currency,
-          fechaUnion: new Date()
+          fechaUnion: new Date(),
         };
         addUserGroup(newUserGroup);
 
@@ -335,7 +363,8 @@ const UserDashboard = () => {
         return;
       }
 
-      const monthlyAmount = myUserGroup.monedaPago === 'USD' ? selectedProduct.precioUsd : selectedProduct.precioVes;
+      const monthlyAmount =
+        myUserGroup.monedaPago === 'USD' ? selectedProduct.precioUsd : selectedProduct.precioVes;
 
       // Prepare payment data
       const paymentData = {
@@ -345,13 +374,15 @@ const UserDashboard = () => {
         moneda: myUserGroup.monedaPago as 'VES' | 'USD',
         metodoPago: paymentMethod || 'Efectivo',
         referenciaPago: paymentReference || undefined,
-        comprobantePago: undefined // For now, we'll implement file upload later
+        comprobantePago: undefined, // For now, we'll implement file upload later
       };
 
       const response = await apiClient.createPaymentRequest(paymentData);
 
       if (response.success) {
-        setSuccessMessage('¡Solicitud de pago enviada exitosamente! El administrador la revisará pronto.');
+        setSuccessMessage(
+          '¡Solicitud de pago enviada exitosamente! El administrador la revisará pronto.'
+        );
         setShowSuccessDialog(true);
         setShowPaymentModal(false);
 
@@ -378,20 +409,12 @@ const UserDashboard = () => {
     <div className="flex min-h-screen">
       {/* Websocket handlers - these don't render anything */}
       {myGroups.map(group => (
-        <GroupRealtimeHandler
-          key={group.id}
-          groupId={group.id}
-          onDrawStarted={handleDrawStarted}
-        />
+        <GroupRealtimeHandler key={group.id} groupId={group.id} onDrawStarted={handleDrawStarted} />
       ))}
       {/* Sidebar */}
       <Sheet>
         <SheetTrigger asChild>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="fixed top-4 left-4 z-40 md:hidden"
-          >
+          <Button variant="ghost" size="sm" className="fixed top-4 left-4 z-40 md:hidden">
             <Menu className="h-6 w-6" />
           </Button>
         </SheetTrigger>
@@ -455,14 +478,11 @@ const UserDashboard = () => {
         <div className="container mx-auto px-4 py-8">
           {/* Header */}
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900">
-              ¡Bienvenido, {user?.nombre}!
-            </h1>
+            <h1 className="text-3xl font-bold text-gray-900">¡Bienvenido, {user?.nombre}!</h1>
             <p className="text-gray-600 mt-1">
               {currentView === 'products'
                 ? 'Elige un producto para comenzar tu ahorro colaborativo'
-                : 'Tu progreso en círculos de ahorro colaborativo'
-              }
+                : 'Tu progreso en círculos de ahorro colaborativo'}
             </p>
           </div>
 
@@ -492,16 +512,23 @@ const UserDashboard = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
-                      ${(() => {
-                        const myUserGroup = myUserGroups.find(ug => ug.groupId === currentGroup?.id);
-                        const selectedProduct = productos.find(p => p.nombre === myUserGroup?.productoSeleccionado);
-                        const price = selectedProduct ? (myUserGroup?.monedaPago === 'USD' ? selectedProduct.precioUsd : selectedProduct.precioVes) : 0;
+                      $
+                      {(() => {
+                        const myUserGroup = myUserGroups.find(
+                          ug => ug.groupId === currentGroup?.id
+                        );
+                        const selectedProduct = productos.find(
+                          p => p.nombre === myUserGroup?.productoSeleccionado
+                        );
+                        const price = selectedProduct
+                          ? myUserGroup?.monedaPago === 'USD'
+                            ? selectedProduct.precioUsd
+                            : selectedProduct.precioVes
+                          : 0;
                         return price.toLocaleString();
                       })()}
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      Pago mensual
-                    </p>
+                    <p className="text-xs text-muted-foreground">Pago mensual</p>
                   </CardContent>
                 </Card>
 
@@ -513,13 +540,13 @@ const UserDashboard = () => {
                   <CardContent>
                     <div className="text-2xl font-bold">
                       {(() => {
-                        const myUserGroup = myUserGroups.find(ug => ug.groupId === currentGroup?.id);
+                        const myUserGroup = myUserGroups.find(
+                          ug => ug.groupId === currentGroup?.id
+                        );
                         return myUserGroup?.monedaPago === 'USD' ? 'Dólares' : 'Bolívares';
                       })()}
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      Opción seleccionada
-                    </p>
+                    <p className="text-xs text-muted-foreground">Opción seleccionada</p>
                   </CardContent>
                 </Card>
 
@@ -530,17 +557,18 @@ const UserDashboard = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
-                      <Badge variant={
-                        currentGroup?.estado === 'EN_MARCHA'
-                          ? 'default'
-                          : currentGroup?.estado === 'SIN_COMPLETAR'
-                            ? 'outline'
-                            : 'secondary'
-                      }>
+                      <Badge
+                        variant={
+                          currentGroup?.estado === 'EN_MARCHA'
+                            ? 'default'
+                            : currentGroup?.estado === 'SIN_COMPLETAR'
+                              ? 'outline'
+                              : 'secondary'
+                        }
+                      >
                         {currentGroup?.estado === 'SIN_COMPLETAR'
                           ? 'En Espera'
-                          : currentGroup?.estado?.replace('_', ' ') || 'SIN GRUPO'
-                        }
+                          : currentGroup?.estado?.replace('_', ' ') || 'SIN GRUPO'}
                       </Badge>
                     </div>
                     <p className="text-xs text-muted-foreground">
@@ -564,21 +592,32 @@ const UserDashboard = () => {
                       {/* Información del pago */}
                       <div className="bg-gray-50 p-4 rounded-lg">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div className="text-center">
-                                <div className="text-lg font-bold text-green-600">
-                                  ${(() => {
-                                    const myUserGroup = myUserGroups.find(ug => ug.groupId === currentGroup?.id);
-                                    const selectedProduct = productos.find(p => p.nombre === myUserGroup?.productoSeleccionado);
-                                    const monthlyPrice = selectedProduct ? (myUserGroup?.monedaPago === 'USD' ? selectedProduct.precioUsd : selectedProduct.precioVes) : 0;
-                                    return monthlyPrice.toFixed(0);
-                                  })()}
-                                </div>
-                                <div className="text-sm text-gray-600">Pago mensual</div>
-                              </div>
+                          <div className="text-center">
+                            <div className="text-lg font-bold text-green-600">
+                              $
+                              {(() => {
+                                const myUserGroup = myUserGroups.find(
+                                  ug => ug.groupId === currentGroup?.id
+                                );
+                                const selectedProduct = productos.find(
+                                  p => p.nombre === myUserGroup?.productoSeleccionado
+                                );
+                                const monthlyPrice = selectedProduct
+                                  ? myUserGroup?.monedaPago === 'USD'
+                                    ? selectedProduct.precioUsd
+                                    : selectedProduct.precioVes
+                                  : 0;
+                                return monthlyPrice.toFixed(0);
+                              })()}
+                            </div>
+                            <div className="text-sm text-gray-600">Pago mensual</div>
+                          </div>
                           <div className="text-center">
                             <div className="text-lg font-bold text-purple-600">
                               {(() => {
-                                const myUserGroup = myUserGroups.find(ug => ug.groupId === currentGroup?.id);
+                                const myUserGroup = myUserGroups.find(
+                                  ug => ug.groupId === currentGroup?.id
+                                );
                                 return myUserGroup?.monedaPago === 'USD' ? 'USD' : 'VES';
                               })()}
                             </div>
@@ -592,24 +631,49 @@ const UserDashboard = () => {
                         <h4 className="font-medium">Estado del mes actual</h4>
                         <div className="flex items-center justify-between p-3 bg-white border rounded-lg">
                           <div className="flex items-center gap-3">
-                            <div className={`w-3 h-3 rounded-full ${
-                              currentGroupContributions.some(c => c.estado === 'CONFIRMADO' && c.periodo === `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`)
-                                ? 'bg-green-500'
-                                : currentGroupContributions.some(c => c.estado === 'PENDIENTE' && c.periodo === `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`)
-                                  ? 'bg-yellow-500'
-                                  : 'bg-gray-300'
-                            }`}></div>
+                            <div
+                              className={`w-3 h-3 rounded-full ${
+                                currentGroupContributions.some(
+                                  c =>
+                                    c.estado === 'CONFIRMADO' &&
+                                    c.periodo ===
+                                      `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`
+                                )
+                                  ? 'bg-green-500'
+                                  : currentGroupContributions.some(
+                                        c =>
+                                          c.estado === 'PENDIENTE' &&
+                                          c.periodo ===
+                                            `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`
+                                      )
+                                    ? 'bg-yellow-500'
+                                    : 'bg-gray-300'
+                              }`}
+                            ></div>
                             <div>
                               <p className="font-medium">
-                                Mes {currentGroup?.turnoActual || 0} - {new Date().toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
+                                Mes {currentGroup?.turnoActual || 0} -{' '}
+                                {new Date().toLocaleDateString('es-ES', {
+                                  month: 'long',
+                                  year: 'numeric',
+                                })}
                               </p>
                               <p className="text-sm text-gray-600">
-                                {currentGroupContributions.some(c => c.estado === 'CONFIRMADO' && c.periodo === `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`)
+                                {currentGroupContributions.some(
+                                  c =>
+                                    c.estado === 'CONFIRMADO' &&
+                                    c.periodo ===
+                                      `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`
+                                )
                                   ? 'Pago realizado'
-                                  : currentGroupContributions.some(c => c.estado === 'PENDIENTE' && c.periodo === `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`)
+                                  : currentGroupContributions.some(
+                                        c =>
+                                          c.estado === 'PENDIENTE' &&
+                                          c.periodo ===
+                                            `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`
+                                      )
                                     ? 'Pago pendiente de confirmación'
-                                    : 'Pago requerido'
-                                }
+                                    : 'Pago requerido'}
                               </p>
                             </div>
                           </div>
@@ -621,16 +685,22 @@ const UserDashboard = () => {
                               setSelectedPaymentPeriod(currentPeriod);
                               setShowPaymentModal(true);
                             }}
-                            disabled={currentGroupContributions.some(c =>
-                              (c.estado === 'CONFIRMADO' || c.estado === 'PENDIENTE') &&
-                              c.periodo === `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`
+                            disabled={currentGroupContributions.some(
+                              c =>
+                                (c.estado === 'CONFIRMADO' || c.estado === 'PENDIENTE') &&
+                                c.periodo ===
+                                  `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`
                             )}
                           >
                             <DollarSign className="h-4 w-4 mr-2" />
-                            {currentGroupContributions.some(c => c.estado === 'CONFIRMADO' && c.periodo === `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`)
+                            {currentGroupContributions.some(
+                              c =>
+                                c.estado === 'CONFIRMADO' &&
+                                c.periodo ===
+                                  `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`
+                            )
                               ? 'Pagado'
-                              : 'Realizar Pago'
-                            }
+                              : 'Realizar Pago'}
                           </Button>
                         </div>
                       </div>
@@ -659,11 +729,15 @@ const UserDashboard = () => {
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                       <div>
-                        <div className="text-2xl font-bold text-blue-600">{currentGroup.turnoActual}</div>
+                        <div className="text-2xl font-bold text-blue-600">
+                          {currentGroup.turnoActual}
+                        </div>
                         <div className="text-sm text-gray-600">Meses completados</div>
                       </div>
                       <div>
-                        <div className="text-2xl font-bold text-green-600">{myDeliveries.length}</div>
+                        <div className="text-2xl font-bold text-green-600">
+                          {myDeliveries.length}
+                        </div>
                         <div className="text-sm text-gray-600">Entregas realizadas</div>
                       </div>
                       <div>
@@ -687,9 +761,7 @@ const UserDashboard = () => {
               <Card className="mb-6">
                 <CardHeader>
                   <CardTitle>Historial de Contribuciones</CardTitle>
-                  <CardDescription>
-                    Tus pagos mensuales al grupo
-                  </CardDescription>
+                  <CardDescription>Tus pagos mensuales al grupo</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {currentGroupContributions.length === 0 ? (
@@ -699,25 +771,41 @@ const UserDashboard = () => {
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      {currentGroupContributions.slice().reverse().map((contribution) => (
-                        <div key={contribution.id} className="flex items-center justify-between p-3 border rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <CheckCircle className={`h-5 w-5 ${contribution.estado === 'CONFIRMADO' ? 'text-green-500' : 'text-yellow-500'}`} />
-                            <div>
-                              <p className="font-medium">{contribution.periodo}</p>
-                              <p className="text-sm text-gray-600">
-                                {contribution.fechaPago ? new Date(contribution.fechaPago).toLocaleDateString('es-ES') : 'Pendiente'}
+                      {currentGroupContributions
+                        .slice()
+                        .reverse()
+                        .map(contribution => (
+                          <div
+                            key={contribution.id}
+                            className="flex items-center justify-between p-3 border rounded-lg"
+                          >
+                            <div className="flex items-center gap-3">
+                              <CheckCircle
+                                className={`h-5 w-5 ${contribution.estado === 'CONFIRMADO' ? 'text-green-500' : 'text-yellow-500'}`}
+                              />
+                              <div>
+                                <p className="font-medium">{contribution.periodo}</p>
+                                <p className="text-sm text-gray-600">
+                                  {contribution.fechaPago
+                                    ? new Date(contribution.fechaPago).toLocaleDateString('es-ES')
+                                    : 'Pendiente'}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-bold">
+                                ${contribution.monto} {contribution.moneda}
                               </p>
+                              <Badge
+                                variant={
+                                  contribution.estado === 'CONFIRMADO' ? 'default' : 'secondary'
+                                }
+                              >
+                                {contribution.estado}
+                              </Badge>
                             </div>
                           </div>
-                          <div className="text-right">
-                            <p className="font-bold">${contribution.monto} {contribution.moneda}</p>
-                            <Badge variant={contribution.estado === 'CONFIRMADO' ? 'default' : 'secondary'}>
-                              {contribution.estado}
-                            </Badge>
-                          </div>
-                        </div>
-                      ))}
+                        ))}
                     </div>
                   )}
                 </CardContent>
@@ -727,9 +815,7 @@ const UserDashboard = () => {
               <Card>
                 <CardHeader>
                   <CardTitle>Próximas Acciones</CardTitle>
-                  <CardDescription>
-                    Mantente al día con tus responsabilidades
-                  </CardDescription>
+                  <CardDescription>Mantente al día con tus responsabilidades</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
@@ -750,7 +836,9 @@ const UserDashboard = () => {
                         <AlertCircle className="h-5 w-5 text-yellow-600" />
                         <div>
                           <p className="font-medium text-yellow-800">Pago pendiente</p>
-                          <p className="text-sm text-yellow-700">Tienes contribuciones por confirmar</p>
+                          <p className="text-sm text-yellow-700">
+                            Tienes contribuciones por confirmar
+                          </p>
                         </div>
                       </div>
                     )}
@@ -761,7 +849,8 @@ const UserDashboard = () => {
                         <div>
                           <p className="font-medium text-blue-800">¡Tu turno se acerca!</p>
                           <p className="text-sm text-blue-700">
-                            Recibirás tu producto en {monthsUntilDelivery} mes{monthsUntilDelivery > 1 ? 'es' : ''}
+                            Recibirás tu producto en {monthsUntilDelivery} mes
+                            {monthsUntilDelivery > 1 ? 'es' : ''}
                           </p>
                         </div>
                       </div>
@@ -789,56 +878,67 @@ const UserDashboard = () => {
                 <Card>
                   <CardHeader>
                     <CardTitle>Mis Grupos</CardTitle>
-                    <CardDescription>
-                      Grupos a los que ya te has unido
-                    </CardDescription>
+                    <CardDescription>Grupos a los que ya te has unido</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {myGroups.map((grupo) => {
+                      {myGroups.map(grupo => {
                         const myUserGroup = myUserGroups.find(ug => ug.groupId === grupo.id);
-                        const currentMembers = userGroups.filter(ug => ug.groupId === grupo.id).length;
+                        const currentMembers = userGroups.filter(
+                          ug => ug.groupId === grupo.id
+                        ).length;
 
                         return (
-                          <div key={grupo.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                          <div
+                            key={grupo.id}
+                            className="border rounded-lg p-4 hover:shadow-md transition-shadow"
+                          >
                             <div className="flex justify-between items-start mb-2">
                               <h3 className="font-semibold text-lg">{grupo.nombre}</h3>
-                              <Badge variant={
-                                grupo.estado === 'EN_MARCHA'
-                                  ? 'default'
-                                  : grupo.estado === 'SIN_COMPLETAR'
-                                    ? 'outline'
-                                    : 'secondary'
-                              }>
+                              <Badge
+                                variant={
+                                  grupo.estado === 'EN_MARCHA'
+                                    ? 'default'
+                                    : grupo.estado === 'SIN_COMPLETAR'
+                                      ? 'outline'
+                                      : 'secondary'
+                                }
+                              >
                                 {grupo.estado === 'SIN_COMPLETAR'
                                   ? 'En Espera'
-                                  : grupo.estado?.replace('_', ' ') || 'Activo'
-                                }
+                                  : grupo.estado?.replace('_', ' ') || 'Activo'}
                               </Badge>
                             </div>
 
                             <div className="space-y-2 mb-4">
                               <div className="flex justify-between items-center">
                                 <span className="text-sm font-medium text-gray-700">Producto:</span>
-                                <span className="font-semibold text-green-600">{myUserGroup?.productoSeleccionado}</span>
+                                <span className="font-semibold text-green-600">
+                                  {myUserGroup?.productoSeleccionado}
+                                </span>
                               </div>
                               <div className="flex justify-between items-center">
-                                <span className="text-sm font-medium text-gray-700">Tu posición:</span>
+                                <span className="text-sm font-medium text-gray-700">
+                                  Tu posición:
+                                </span>
                                 <span className="font-semibold text-blue-600">
-                                  {grupo.estado === 'SIN_COMPLETAR' ? 'Sin definir' : `#${myUserGroup?.posicion}`}
+                                  {grupo.estado === 'SIN_COMPLETAR'
+                                    ? 'Sin definir'
+                                    : `#${myUserGroup?.posicion}`}
                                 </span>
                               </div>
                               <div className="flex justify-between items-center">
                                 <span className="text-sm font-medium text-gray-700">Duración:</span>
-                                <span className="font-semibold text-purple-600">{grupo.duracionMeses} meses</span>
+                                <span className="font-semibold text-purple-600">
+                                  {grupo.duracionMeses} meses
+                                </span>
                               </div>
                               <div className="flex justify-between items-center">
                                 <span className="text-sm font-medium text-gray-700">Estado:</span>
                                 <span className="font-semibold">
                                   {grupo.estado === 'SIN_COMPLETAR'
                                     ? 'Esperando inicio'
-                                    : `Mes ${grupo.turnoActual} de ${grupo.duracionMeses}`
-                                  }
+                                    : `Mes ${grupo.turnoActual} de ${grupo.duracionMeses}`}
                                 </span>
                               </div>
                             </div>
@@ -860,8 +960,6 @@ const UserDashboard = () => {
                   </CardContent>
                 </Card>
               )}
-
-
             </div>
           ) : (
             /* Productos Disponibles - Mobile-First Design */
@@ -876,7 +974,7 @@ const UserDashboard = () => {
                       <Input
                         placeholder="Buscar productos..."
                         value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onChange={e => setSearchTerm(e.target.value)}
                         className="pl-10 pr-4"
                       />
                     </div>
@@ -893,10 +991,12 @@ const UserDashboard = () => {
                         </SheetHeader>
                         <div className="py-6 space-y-4">
                           <div>
-                            <label className="text-sm font-medium mb-2 block">Duración del plan</label>
+                            <label className="text-sm font-medium mb-2 block">
+                              Duración del plan
+                            </label>
                             <div className="grid grid-cols-3 gap-2">
                               <Button
-                                variant={selectedDuration === null ? "default" : "outline"}
+                                variant={selectedDuration === null ? 'default' : 'outline'}
                                 size="sm"
                                 onClick={() => setSelectedDuration(null)}
                               >
@@ -905,7 +1005,7 @@ const UserDashboard = () => {
                               {availableDurations.map(duration => (
                                 <Button
                                   key={duration}
-                                  variant={selectedDuration === duration ? "default" : "outline"}
+                                  variant={selectedDuration === duration ? 'default' : 'outline'}
                                   size="sm"
                                   onClick={() => setSelectedDuration(duration)}
                                 >
@@ -918,13 +1018,13 @@ const UserDashboard = () => {
                           <div>
                             <label className="text-sm font-medium mb-2 block">Categorías</label>
                             <div className="grid grid-cols-2 gap-2">
-                              {availableTags.map((tag) => (
+                              {availableTags.map(tag => (
                                 <Button
                                   key={tag}
-                                  variant={selectedTags.includes(tag) ? "default" : "outline"}
+                                  variant={selectedTags.includes(tag) ? 'default' : 'outline'}
                                   size="sm"
                                   onClick={() => toggleTag(tag)}
-                                  className={`text-xs h-8 ${selectedTags.includes(tag) ? "" : getTagColor(tag)}`}
+                                  className={`text-xs h-8 ${selectedTags.includes(tag) ? '' : getTagColor(tag)}`}
                                 >
                                   {tag}
                                 </Button>
@@ -936,28 +1036,28 @@ const UserDashboard = () => {
                             <label className="text-sm font-medium mb-2 block">Ordenar por</label>
                             <div className="grid grid-cols-2 gap-2">
                               <Button
-                                variant={sortBy === 'popular' ? "default" : "outline"}
+                                variant={sortBy === 'popular' ? 'default' : 'outline'}
                                 size="sm"
                                 onClick={() => setSortBy('popular')}
                               >
                                 Popular
                               </Button>
                               <Button
-                                variant={sortBy === 'price-low' ? "default" : "outline"}
+                                variant={sortBy === 'price-low' ? 'default' : 'outline'}
                                 size="sm"
                                 onClick={() => setSortBy('price-low')}
                               >
                                 Precio Menor
                               </Button>
                               <Button
-                                variant={sortBy === 'price-high' ? "default" : "outline"}
+                                variant={sortBy === 'price-high' ? 'default' : 'outline'}
                                 size="sm"
                                 onClick={() => setSortBy('price-high')}
                               >
                                 Precio Mayor
                               </Button>
                               <Button
-                                variant={sortBy === 'newest' ? "default" : "outline"}
+                                variant={sortBy === 'newest' ? 'default' : 'outline'}
                                 size="sm"
                                 onClick={() => setSortBy('newest')}
                               >
@@ -966,11 +1066,7 @@ const UserDashboard = () => {
                             </div>
                           </div>
 
-                          <Button
-                            variant="outline"
-                            onClick={clearFilters}
-                            className="w-full"
-                          >
+                          <Button variant="outline" onClick={clearFilters} className="w-full">
                             <X className="h-4 w-4 mr-2" />
                             Limpiar Filtros
                           </Button>
@@ -1035,10 +1131,10 @@ const UserDashboard = () => {
                   <Card>
                     <CardContent className="p-8 text-center">
                       <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">No se encontraron productos</h3>
-                      <p className="text-gray-600 mb-4">
-                        Intenta ajustar tus filtros de búsqueda
-                      </p>
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">
+                        No se encontraron productos
+                      </h3>
+                      <p className="text-gray-600 mb-4">Intenta ajustar tus filtros de búsqueda</p>
                       <Button variant="outline" onClick={clearFilters}>
                         Limpiar filtros
                       </Button>
@@ -1048,13 +1144,19 @@ const UserDashboard = () => {
                   <>
                     {/* Results count */}
                     <div className="flex items-center justify-between text-sm text-gray-600 px-1">
-                      <span>{filteredProducts.length} producto{filteredProducts.length !== 1 ? 's' : ''} encontrado{filteredProducts.length !== 1 ? 's' : ''}</span>
+                      <span>
+                        {filteredProducts.length} producto{filteredProducts.length !== 1 ? 's' : ''}{' '}
+                        encontrado{filteredProducts.length !== 1 ? 's' : ''}
+                      </span>
                     </div>
 
                     {/* Products */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {filteredProducts.map((producto) => (
-                        <Card key={producto.id} className="overflow-hidden hover:shadow-lg transition-all duration-200 border-l-4 border-l-green-500">
+                      {filteredProducts.map(producto => (
+                        <Card
+                          key={producto.id}
+                          className="overflow-hidden hover:shadow-lg transition-all duration-200 border-l-4 border-l-green-500"
+                        >
                           <CardContent className="p-4">
                             {/* Mobile-first layout */}
                             <div className="space-y-3">
@@ -1092,7 +1194,10 @@ const UserDashboard = () => {
                                 />
                                 <div className="flex items-center justify-between text-sm">
                                   <span className="font-medium text-gray-700">Plan:</span>
-                                  <Badge variant="secondary" className="bg-purple-100 text-purple-800 border-purple-200">
+                                  <Badge
+                                    variant="secondary"
+                                    className="bg-purple-100 text-purple-800 border-purple-200"
+                                  >
                                     {producto.tiempoDuracion} meses
                                   </Badge>
                                 </div>
@@ -1167,7 +1272,8 @@ const UserDashboard = () => {
           <DialogHeader>
             <DialogTitle>Realizar Pago Mensual</DialogTitle>
             <DialogDescription>
-              Selecciona la moneda en la que deseas realizar tu pago mensual para el período {selectedPaymentPeriod}
+              Selecciona la moneda en la que deseas realizar tu pago mensual para el período{' '}
+              {selectedPaymentPeriod}
             </DialogDescription>
           </DialogHeader>
 
@@ -1185,12 +1291,20 @@ const UserDashboard = () => {
               <div className="flex justify-between">
                 <span className="text-sm font-medium">Monto mensual:</span>
                 <span className="text-sm font-bold">
-                  ${(() => {
+                  $
+                  {(() => {
                     const myUserGroup = myUserGroups.find(ug => ug.groupId === currentGroup?.id);
-                    const selectedProduct = productos.find(p => p.nombre === myUserGroup?.productoSeleccionado);
-                    const monthlyPrice = selectedProduct ? (myUserGroup?.monedaPago === 'USD' ? selectedProduct.precioUsd : selectedProduct.precioVes) : 0;
+                    const selectedProduct = productos.find(
+                      p => p.nombre === myUserGroup?.productoSeleccionado
+                    );
+                    const monthlyPrice = selectedProduct
+                      ? myUserGroup?.monedaPago === 'USD'
+                        ? selectedProduct.precioUsd
+                        : selectedProduct.precioVes
+                      : 0;
                     return monthlyPrice.toFixed(0);
-                  })()} {(() => {
+                  })()}{' '}
+                  {(() => {
                     const myUserGroup = myUserGroups.find(ug => ug.groupId === currentGroup?.id);
                     return myUserGroup?.monedaPago === 'USD' ? 'USD' : 'VES';
                   })()}
@@ -1242,9 +1356,7 @@ const UserDashboard = () => {
               <CheckCircle className="h-6 w-6 text-green-600" />
               ¡Éxito!
             </DialogTitle>
-            <DialogDescription className="text-center">
-              {successMessage}
-            </DialogDescription>
+            <DialogDescription className="text-center">{successMessage}</DialogDescription>
           </DialogHeader>
           <div className="flex justify-center">
             <Button

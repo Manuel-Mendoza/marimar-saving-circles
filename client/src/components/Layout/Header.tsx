@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -18,7 +17,7 @@ const Header = () => {
             </span>
           )}
         </div>
-        
+
         {user && (
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">

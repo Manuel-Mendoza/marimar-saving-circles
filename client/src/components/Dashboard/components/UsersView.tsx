@@ -1,40 +1,47 @@
-import React, { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+import React, { useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { useUsers } from "@/hooks/useUsers";
-import { User } from "../../../../../shared/types";
+} from '@/components/ui/dialog';
+import { useUsers } from '@/hooks/useUsers';
+import { User } from '../../../../../shared/types';
 
 const UsersView: React.FC = () => {
-  const { allUsers, usersLoading, processingUser, handleSuspendUser, handleReactivateUser, handleDeleteUser } = useUsers();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const {
+    allUsers,
+    usersLoading,
+    processingUser,
+    handleSuspendUser,
+    handleReactivateUser,
+    handleDeleteUser,
+  } = useUsers();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
-  const [reason, setReason] = useState("");
+  const [reason, setReason] = useState('');
 
-  const filteredUsers = allUsers.filter((user) => {
+  const filteredUsers = allUsers.filter(user => {
     const matchesSearch =
       user.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.apellido.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.correoElectronico.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.cedula.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesStatus = statusFilter === "all" || user.estado === statusFilter;
+    const matchesStatus = statusFilter === 'all' || user.estado === statusFilter;
 
     return matchesSearch && matchesStatus;
   });
@@ -52,17 +59,17 @@ const UsersView: React.FC = () => {
 
     await handleDeleteUser(userToDelete.id, reason.trim());
     setUserToDelete(null);
-    setReason("");
+    setReason('');
   };
 
   const openDeleteDialog = (user: User) => {
     setUserToDelete(user);
-    setReason("");
+    setReason('');
   };
 
   const closeDeleteDialog = () => {
     setUserToDelete(null);
-    setReason("");
+    setReason('');
   };
 
   return (
@@ -70,7 +77,9 @@ const UsersView: React.FC = () => {
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Gestión de Usuarios</h1>
-          <p className="text-gray-600 mt-1">Administra todos los usuarios registrados en el sistema</p>
+          <p className="text-gray-600 mt-1">
+            Administra todos los usuarios registrados en el sistema
+          </p>
         </div>
 
         {/* Filters */}
@@ -80,7 +89,7 @@ const UsersView: React.FC = () => {
               <Input
                 placeholder="Buscar por nombre, email o cédula..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={e => setSearchTerm(e.target.value)}
                 className="max-w-sm"
               />
               <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -111,28 +120,33 @@ const UsersView: React.FC = () => {
           <Card>
             <CardContent className="p-8 text-center">
               <p className="text-gray-500">
-                {searchTerm || statusFilter !== "all"
-                  ? "No se encontraron usuarios con los filtros aplicados"
-                  : "No hay usuarios registrados"}
+                {searchTerm || statusFilter !== 'all'
+                  ? 'No se encontraron usuarios con los filtros aplicados'
+                  : 'No hay usuarios registrados'}
               </p>
             </CardContent>
           </Card>
         ) : (
           <div className="grid gap-4">
-            {filteredUsers.map((user) => (
+            {filteredUsers.map(user => (
               <Card key={user.id}>
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
                         <span className="text-lg font-semibold text-gray-600">
-                          {user.nombre.charAt(0)}{user.apellido.charAt(0)}
+                          {user.nombre.charAt(0)}
+                          {user.apellido.charAt(0)}
                         </span>
                       </div>
                       <div>
-                        <h3 className="text-lg font-semibold">{user.nombre} {user.apellido}</h3>
+                        <h3 className="text-lg font-semibold">
+                          {user.nombre} {user.apellido}
+                        </h3>
                         <p className="text-gray-600">{user.correoElectronico}</p>
-                        <p className="text-sm text-gray-500">{user.cedula} • {user.telefono}</p>
+                        <p className="text-sm text-gray-500">
+                          {user.cedula} • {user.telefono}
+                        </p>
                         <p className="text-xs text-gray-400">
                           Registrado: {user.fechaRegistro.toLocaleDateString()}
                         </p>
@@ -141,17 +155,21 @@ const UsersView: React.FC = () => {
                     <div className="flex items-center gap-4">
                       <Badge
                         variant={
-                          user.estado === "APROBADO" ? "default" :
-                          user.estado === "PENDIENTE" ? "secondary" :
-                          user.estado === "RECHAZADO" ? "destructive" :
-                          user.estado === "SUSPENDIDO" ? "outline" :
-                          "default"
+                          user.estado === 'APROBADO'
+                            ? 'default'
+                            : user.estado === 'PENDIENTE'
+                              ? 'secondary'
+                              : user.estado === 'RECHAZADO'
+                                ? 'destructive'
+                                : user.estado === 'SUSPENDIDO'
+                                  ? 'outline'
+                                  : 'default'
                         }
                       >
                         {user.estado}
                       </Badge>
                       <div className="flex gap-2">
-                        {user.estado === "APROBADO" && (
+                        {user.estado === 'APROBADO' && (
                           <Button
                             variant="outline"
                             size="sm"
@@ -162,7 +180,7 @@ const UsersView: React.FC = () => {
                             Suspender
                           </Button>
                         )}
-                        {user.estado === "SUSPENDIDO" && (
+                        {user.estado === 'SUSPENDIDO' && (
                           <Button
                             variant="outline"
                             size="sm"
@@ -173,7 +191,7 @@ const UsersView: React.FC = () => {
                             Reactivar
                           </Button>
                         )}
-                        {(user.estado === "SUSPENDIDO" || user.estado === "RECHAZADO") && (
+                        {(user.estado === 'SUSPENDIDO' || user.estado === 'RECHAZADO') && (
                           <Button
                             variant="destructive"
                             size="sm"
@@ -194,7 +212,7 @@ const UsersView: React.FC = () => {
       </div>
 
       {/* Delete User Dialog */}
-      <Dialog open={!!userToDelete} onOpenChange={(open) => !open && closeDeleteDialog()}>
+      <Dialog open={!!userToDelete} onOpenChange={open => !open && closeDeleteDialog()}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-red-600">
@@ -208,7 +226,9 @@ const UsersView: React.FC = () => {
             <div className="py-4">
               <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg mb-4">
                 <div className="flex-1">
-                  <h4 className="font-semibold">{userToDelete.nombre} {userToDelete.apellido}</h4>
+                  <h4 className="font-semibold">
+                    {userToDelete.nombre} {userToDelete.apellido}
+                  </h4>
                   <p className="text-sm text-gray-600">{userToDelete.correoElectronico}</p>
                 </div>
                 <Badge variant="outline" className="border-orange-500 text-orange-700 bg-orange-50">
@@ -222,7 +242,7 @@ const UsersView: React.FC = () => {
                 <textarea
                   id="delete-reason"
                   value={reason}
-                  onChange={(e) => setReason(e.target.value)}
+                  onChange={e => setReason(e.target.value)}
                   placeholder="Describe las razones para eliminar permanentemente a este usuario..."
                   className="w-full min-h-[100px] p-3 border rounded-md resize-none"
                   required

@@ -49,7 +49,7 @@ const IconButton: React.FC<IconButtonProps> = ({
       xs: 'h-3 w-3',
       sm: 'h-4 w-4',
       md: 'h-5 w-5',
-      lg: 'h-6 w-6'
+      lg: 'h-6 w-6',
     };
     return sizes[sizeType];
   };
@@ -60,7 +60,7 @@ const IconButton: React.FC<IconButtonProps> = ({
       xs: 'h-6 w-6 p-1',
       sm: 'h-8 w-8 p-1.5',
       md: 'h-10 w-10 p-2',
-      lg: 'h-12 w-12 p-3'
+      lg: 'h-12 w-12 p-3',
     };
     return sizes[sizeType];
   };
@@ -86,7 +86,12 @@ const IconButton: React.FC<IconButtonProps> = ({
       {...props}
     >
       {loading ? (
-        <div className={cn('animate-spin rounded-full border-2 border-current border-t-transparent', iconClasses)} />
+        <div
+          className={cn(
+            'animate-spin rounded-full border-2 border-current border-t-transparent',
+            iconClasses
+          )}
+        />
       ) : (
         <Icon className={iconClasses} />
       )}

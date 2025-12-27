@@ -18,7 +18,7 @@ import {
   ShoppingCart,
   Plus,
   Eye,
-  User
+  User,
 } from 'lucide-react';
 
 interface UserDashboardStats {
@@ -75,7 +75,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
   onNavigate,
   onLogout,
   onJoinGroup,
-  isLoading = false
+  isLoading = false,
 }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
@@ -88,7 +88,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
     completedGroups: 0,
     pendingPayments: 0,
     totalInvested: 0,
-    recentActivity: []
+    recentActivity: [],
   };
 
   const currentStats = stats || defaultStats;
@@ -107,9 +107,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
               <TrendingUp className="h-8 w-8 text-gray-400" />
             </div>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              Aún no tienes actividad
-            </p>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">Aún no tienes actividad</p>
             <Button onClick={onJoinGroup} size="sm">
               <Plus className="h-4 w-4 mr-2" />
               Unirte a un grupo
@@ -117,13 +115,17 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
           </div>
         ) : (
           <div className="space-y-3">
-            {activities.slice(0, 5).map((activity) => (
+            {activities.slice(0, 5).map(activity => (
               <div key={activity.id} className="flex items-start space-x-3">
-                <div className={`p-2 rounded-full ${
-                  activity.type === 'payment_made' ? 'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300' :
-                  activity.type === 'group_joined' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300' :
-                  'bg-purple-100 text-purple-600 dark:bg-purple-900 dark:text-purple-300'
-                }`}>
+                <div
+                  className={`p-2 rounded-full ${
+                    activity.type === 'payment_made'
+                      ? 'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300'
+                      : activity.type === 'group_joined'
+                        ? 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300'
+                        : 'bg-purple-100 text-purple-600 dark:bg-purple-900 dark:text-purple-300'
+                  }`}
+                >
                   {activity.type === 'payment_made' && <CheckCircle className="h-4 w-4" />}
                   {activity.type === 'group_joined' && <Users className="h-4 w-4" />}
                   {activity.type === 'product_selected' && <Package className="h-4 w-4" />}
@@ -185,12 +187,8 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
         <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                Mi Dashboard
-              </h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Bienvenido, {user.nombre}
-              </p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Mi Dashboard</h1>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Bienvenido, {user.nombre}</p>
             </div>
             <div className="flex items-center space-x-4">
               <StatusBadge status={user.estado} />
@@ -210,14 +208,11 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-xl font-bold mb-2">
-                      ¡Hola {user.nombre}! 👋
-                    </h2>
+                    <h2 className="text-xl font-bold mb-2">¡Hola {user.nombre}! 👋</h2>
                     <p className="text-blue-100">
                       {currentStats.activeGroups === 0
                         ? '¿Listo para empezar a ahorrar? Únete a tu primer grupo.'
-                        : `Tienes ${currentStats.activeGroups} grupo${currentStats.activeGroups !== 1 ? 's' : ''} activo${currentStats.activeGroups !== 1 ? 's' : ''}.`
-                      }
+                        : `Tienes ${currentStats.activeGroups} grupo${currentStats.activeGroups !== 1 ? 's' : ''} activo${currentStats.activeGroups !== 1 ? 's' : ''}.`}
                     </p>
                   </div>
                   {currentStats.activeGroups === 0 && (
@@ -239,8 +234,12 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Grupos Activos</p>
-                      <p className="text-2xl font-bold text-gray-900 dark:text-white">{currentStats.activeGroups}</p>
+                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                        Grupos Activos
+                      </p>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                        {currentStats.activeGroups}
+                      </p>
                     </div>
                     <div className="p-3 bg-blue-100 text-blue-600 rounded-full">
                       <BarChart3 className="h-6 w-6" />
@@ -253,8 +252,12 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Grupos Completados</p>
-                      <p className="text-2xl font-bold text-gray-900 dark:text-white">{currentStats.completedGroups}</p>
+                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                        Grupos Completados
+                      </p>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                        {currentStats.completedGroups}
+                      </p>
                     </div>
                     <div className="p-3 bg-green-100 text-green-600 rounded-full">
                       <CheckCircle className="h-6 w-6" />
@@ -267,12 +270,20 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Pagos Pendientes</p>
-                      <p className="text-2xl font-bold text-gray-900 dark:text-white">{currentStats.pendingPayments}</p>
+                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                        Pagos Pendientes
+                      </p>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                        {currentStats.pendingPayments}
+                      </p>
                     </div>
-                    <div className={`p-3 rounded-full ${
-                      currentStats.pendingPayments > 0 ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'
-                    }`}>
+                    <div
+                      className={`p-3 rounded-full ${
+                        currentStats.pendingPayments > 0
+                          ? 'bg-red-100 text-red-600'
+                          : 'bg-green-100 text-green-600'
+                      }`}
+                    >
                       <Clock className="h-6 w-6" />
                     </div>
                   </div>
@@ -283,7 +294,9 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Invertido</p>
+                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                        Total Invertido
+                      </p>
                       <CurrencyDisplay
                         amount={currentStats.totalInvested}
                         currency="USD"
@@ -313,7 +326,8 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
                           Próximo pago pendiente
                         </h3>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {currentStats.nextPayment.groupName} - Vence el {currentStats.nextPayment.dueDate.toLocaleDateString('es-ES')}
+                          {currentStats.nextPayment.groupName} - Vence el{' '}
+                          {currentStats.nextPayment.dueDate.toLocaleDateString('es-ES')}
                         </p>
                       </div>
                     </div>
@@ -323,10 +337,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
                         currency={currentStats.nextPayment.currency}
                         size="md"
                       />
-                      <Button
-                        onClick={() => onNavigate?.('payments')}
-                        size="sm"
-                      >
+                      <Button onClick={() => onNavigate?.('payments')} size="sm">
                         Pagar ahora
                       </Button>
                     </div>
@@ -384,11 +395,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <UserCard
-                      {...user}
-                      variant="compact"
-                      showActions={false}
-                    />
+                    <UserCard {...user} variant="compact" showActions={false} />
                     <Button
                       onClick={() => onNavigate?.('profile')}
                       className="w-full mt-3"

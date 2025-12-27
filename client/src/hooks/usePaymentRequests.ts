@@ -11,7 +11,9 @@ export const usePaymentRequests = () => {
       setLoading(true);
       const response = await api.getAllPaymentRequests();
       if (response.success) {
-        const pendingRequests = response.data.requests.filter((r: PaymentRequest) => r.estado === 'PENDIENTE');
+        const pendingRequests = response.data.requests.filter(
+          (r: PaymentRequest) => r.estado === 'PENDIENTE'
+        );
         setPendingCount(pendingRequests.length);
       }
     } catch (error) {
@@ -39,6 +41,6 @@ export const usePaymentRequests = () => {
   return {
     pendingCount,
     loading,
-    refetch: refresh
+    refetch: refresh,
   };
 };

@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { apiClient } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
@@ -35,7 +34,7 @@ interface User {
   direccion: string;
   correoElectronico: string;
   tipo: 'USUARIO' | 'ADMINISTRADOR';
-  estado: 'PENDIENTE' | 'APROBADO' | 'RECHAZADO';
+  estado?: 'PENDIENTE' | 'APROBADO' | 'RECHAZADO' | 'SUSPENDIDO' | 'REACTIVADO';
   imagenCedula?: string;
   fechaRegistro: Date;
   ultimoAcceso?: Date;
@@ -96,7 +95,8 @@ interface AppStateContextType {
 
 const AppStateContext = createContext<AppStateContextType | undefined>(undefined);
 
-export const useAppState = () => { // eslint-disable-line react-refresh/only-export-components
+export const useAppState = () => {
+  // eslint-disable-line react-refresh/only-export-components
   const context = useContext(AppStateContext);
   if (context === undefined) {
     throw new Error('useAppState must be used within an AppStateProvider');
@@ -160,7 +160,11 @@ export const AppStateProvider = ({ children }: AppStateProviderProps) => {
 
         // Fetch contributions
         const contributionsResponse = await apiClient.getMyContributions();
-        if (isMounted && contributionsResponse.success && contributionsResponse.data?.contributions) {
+        if (
+          isMounted &&
+          contributionsResponse.success &&
+          contributionsResponse.data?.contributions
+        ) {
           setContributions(contributionsResponse.data.contributions);
         }
 
@@ -172,7 +176,6 @@ export const AppStateProvider = ({ children }: AppStateProviderProps) => {
         if (isMounted && deliveriesResponse.success && deliveriesResponse.data?.deliveries) {
           setDeliveries(deliveriesResponse.data.deliveries);
         }
-
       } catch (error) {
         console.error('Error fetching initial data:', error);
         // Keep empty arrays - the app should still work
@@ -189,7 +192,7 @@ export const AppStateProvider = ({ children }: AppStateProviderProps) => {
   const [selectedGroup, setSelectedGroup] = useState<Grupo | null>(null);
 
   const updateGrupo = (grupo: Grupo) => {
-    setGrupos(prev => prev.map(g => g.id === grupo.id ? grupo : g));
+    setGrupos(prev => prev.map(g => (g.id === grupo.id ? grupo : g)));
   };
 
   const addGrupo = (grupo: Grupo) => {
@@ -244,26 +247,28 @@ export const AppStateProvider = ({ children }: AppStateProviderProps) => {
         setDeliveries(deliveriesResponse.data.deliveries);
       }
 
-        // Data refreshed successfully
+      // Data refreshed successfully
     } catch (error) {
       console.error('Error refreshing data:', error);
     }
   };
 
   return (
-    <AppStateContext.Provider value={{
-      grupos,
-      productos,
-      userGroups,
-      contributions,
-      deliveries,
-      selectedGroup,
-      setSelectedGroup,
-      updateGrupo,
-      addGrupo,
-      addUserGroup,
-      refreshData
-    }}>
+    <AppStateContext.Provider
+      value={{
+        grupos,
+        productos,
+        userGroups,
+        contributions,
+        deliveries,
+        selectedGroup,
+        setSelectedGroup,
+        updateGrupo,
+        addGrupo,
+        addUserGroup,
+        refreshData,
+      }}
+    >
       {children}
     </AppStateContext.Provider>
   );

@@ -29,7 +29,7 @@ const CurrencyDisplay: React.FC<CurrencyDisplayProps> = ({
   className,
   compact = false,
   colorize = false,
-  size = 'md'
+  size = 'md',
 }) => {
   // Formatear el monto
   const formatAmount = (value: number): string => {
@@ -45,7 +45,7 @@ const CurrencyDisplay: React.FC<CurrencyDisplayProps> = ({
     // Formato normal con separadores
     return new Intl.NumberFormat('es-VE', {
       minimumFractionDigits: 2,
-      maximumFractionDigits: 2
+      maximumFractionDigits: 2,
     }).format(value);
   };
 
@@ -59,7 +59,7 @@ const CurrencyDisplay: React.FC<CurrencyDisplayProps> = ({
     const sizes = {
       sm: 'text-sm',
       md: 'text-base',
-      lg: 'text-lg font-semibold'
+      lg: 'text-lg font-semibold',
     };
     return sizes[sizeType];
   };
@@ -90,13 +90,9 @@ const CurrencyDisplay: React.FC<CurrencyDisplayProps> = ({
       )}
     >
       {isNegative && <span className="mr-1">-</span>}
-      {showSymbol && currency === 'USD' && (
-        <span className="mr-1 font-normal">{symbol}</span>
-      )}
+      {showSymbol && currency === 'USD' && <span className="mr-1 font-normal">{symbol}</span>}
       <span>{formattedAmount}</span>
-      {showSymbol && currency === 'VES' && (
-        <span className="ml-1 font-normal">{symbol}</span>
-      )}
+      {showSymbol && currency === 'VES' && <span className="ml-1 font-normal">{symbol}</span>}
     </span>
   );
 };
