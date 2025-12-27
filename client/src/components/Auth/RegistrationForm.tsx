@@ -79,7 +79,8 @@ const RegistrationForm = ({ onBack }: RegistrationFormProps) => {
       } else {
         setError(data.message || 'Error al registrar usuario');
       }
-    } catch (error: any) {
+    } catch (error) {
+      console.error('Registration error:', error);
       setError('Error de conexión. Verifique que el servidor esté ejecutándose.');
     } finally {
       setIsLoading(false);

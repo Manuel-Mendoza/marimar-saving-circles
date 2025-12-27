@@ -8,12 +8,32 @@ import { userGroups } from '../db/tables/user-groups.js';
 import { db } from '../config/database.js';
 import { authenticate } from '../middleware/auth.js';
 
+// JWT payload type
+interface JWTPayload {
+  id: number;
+  nombre?: string;
+  apellido?: string;
+  correoElectronico?: string;
+  tipo?: string;
+  iat?: number;
+  exp?: number;
+}
+
+// Group result type
+interface GroupResult {
+  id?: number;
+  nombre: string;
+  duracionMeses: number;
+  estado: string;
+  userCount?: number;
+}
+
 const productSelectionsRoute = new Hono();
 
 // Get all product selections with product and user info - Admin only
 productSelectionsRoute.get('/', authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as any;
+    const userPayload = c.get('user') as JWTPayload;
 
     if (userPayload.tipo !== 'ADMINISTRADOR') {
       return c.json({
@@ -103,7 +123,7 @@ productSelectionsRoute.get('/product/:productId', authenticate, async (c) => {
 // Select a product - Authenticated users only
 productSelectionsRoute.post('/select/:productId', authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as any;
+    const userPayload = c.get('user') as JWTPayload;
     const productId = parseInt(c.req.param('productId'));
 
     if (!userPayload?.id) {
@@ -194,7 +214,7 @@ productSelectionsRoute.post('/select/:productId', authenticate, async (c) => {
 // Get user's current selection
 productSelectionsRoute.get('/my-selection', authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as any;
+    const userPayload = c.get('user') as JWTPayload;
 
     const [selection] = await db
       .select({
@@ -239,7 +259,7 @@ productSelectionsRoute.get('/my-selection', authenticate, async (c) => {
 // Cancel selection
 productSelectionsRoute.delete('/cancel/:selectionId', authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as any;
+    const userPayload = c.get('user') as JWTPayload;
     const selectionId = parseInt(c.req.param('selectionId'));
 
     const deleted = await db
@@ -303,13 +323,13 @@ async function checkAndCreateGroup(productId: number) {
       .having(sql`count(${userGroups.id}) < ${groups.duracionMeses}`)
       .limit(1);
 
-    const existingGroup = existingGroupResult[0];
-    let targetGroup: any = existingGroup;
+    const existingGroup = existingGroupResult[0] as GroupResult | undefined;
+    let targetGroup: GroupResult;
 
-    if (!targetGroup) {
+    if (!existingGroup) {
       // Create new group for this duration
       const groupName = `Grupo de ${product.tiempoDuracion} meses`;
-      const [newGroup] = await db
+      const newGroups = await db
         .insert(groups)
         .values({
           nombre: groupName,
@@ -320,8 +340,15 @@ async function checkAndCreateGroup(productId: number) {
         })
         .returning();
 
-      targetGroup = { ...newGroup, userCount: 0 };
+      if (newGroups.length === 0) return;
+      const newGroup = newGroups[0];
 
+      if (!newGroup) return;
+
+      targetGroup = { id: newGroup.id, nombre: newGroup.nombre, duracionMeses: newGroup.duracionMeses, estado: newGroup.estado, userCount: 0 };
+
+    } else {
+      targetGroup = existingGroup;
     }
 
     // Get the current user selection
@@ -334,7 +361,7 @@ async function checkAndCreateGroup(productId: number) {
       ))
       .limit(1);
 
-    if (!selection || !targetGroup) return;
+    if (!selection || !targetGroup.id) return;
 
     // Get current position in group
     const [positionResult] = await db
@@ -575,7 +602,7 @@ productSelectionsRoute.post('/simulate-test', async (c) => {
 // Admin endpoint to run simulation - only for testing
 productSelectionsRoute.post('/simulate', authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as any;
+    const userPayload = c.get('user') as JWTPayload;
 
     if (userPayload.tipo !== 'ADMINISTRADOR') {
       return c.json({

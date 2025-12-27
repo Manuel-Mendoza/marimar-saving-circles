@@ -6,6 +6,17 @@ import { db } from '../config/database.js';
 import { hashPassword, verifyPassword, generateToken } from '../utils/auth.js';
 import { authenticate } from '../middleware/auth.js';
 
+// JWT payload type
+interface JWTPayload {
+  id: number;
+  nombre?: string;
+  apellido?: string;
+  correoElectronico?: string;
+  tipo?: string;
+  iat?: number;
+  exp?: number;
+}
+
 const auth = new Hono();
 
 // Validation schemas
@@ -328,7 +339,7 @@ auth.post('/logout', authenticate, async (c) => {
 // Get current user endpoint
 auth.get('/me', authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as any;
+    const userPayload = c.get('user') as JWTPayload;
 
     // Obtener información actualizada del usuario desde la base de datos
     const [user] = await db

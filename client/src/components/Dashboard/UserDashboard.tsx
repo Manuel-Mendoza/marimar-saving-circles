@@ -23,6 +23,7 @@ import { Input } from '@/components/ui/input';
 import { useGroupRealtime, DrawMessage } from '@/hooks/useGroupRealtime';
 import { motion } from 'framer-motion';
 import { Confetti } from '@/components/ui/confetti';
+import { Producto } from '../../../../shared/types';
 
 // This component handles the real-time connection for a single group and
 // surfaces events. It does not render any UI itself.
@@ -155,7 +156,7 @@ const UserDashboard = () => {
 
   // State declarations first
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [selectedProduct, setSelectedProduct] = useState<Producto | null>(null);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   // Users can switch between products and their groups
@@ -277,7 +278,7 @@ const UserDashboard = () => {
     );
   };
 
-  const handleProductSelect = (producto: any) => {
+  const handleProductSelect = (producto: Producto) => {
     setSelectedProduct(producto);
     setShowCurrencyModal(true);
   };

@@ -4,6 +4,17 @@ import { products } from '../db/tables/products.js';
 import { db } from '../config/database.js';
 import { authenticate } from '../middleware/auth.js';
 
+// JWT payload type
+interface JWTPayload {
+  id: number;
+  nombre?: string;
+  apellido?: string;
+  correoElectronico?: string;
+  tipo?: string;
+  iat?: number;
+  exp?: number;
+}
+
 const productsRoute = new Hono();
 
 // Get all active products - Public for users to choose
@@ -88,7 +99,7 @@ productsRoute.get('/:id', async (c) => {
 // Create product - Admin only
 productsRoute.post('/', authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as any;
+    const userPayload = c.get('user') as JWTPayload;
 
     if (userPayload.tipo !== 'ADMINISTRADOR') {
       return c.json({
@@ -141,7 +152,7 @@ productsRoute.post('/', authenticate, async (c) => {
 // Update product - Admin only
 productsRoute.put('/:id', authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as any;
+    const userPayload = c.get('user') as JWTPayload;
     const productId = parseInt(c.req.param('id'));
 
     if (userPayload.tipo !== 'ADMINISTRADOR') {
@@ -154,7 +165,7 @@ productsRoute.put('/:id', authenticate, async (c) => {
     const body = await c.req.json();
     const { nombre, precioUsd, precioVes, tiempoDuracion, imagen, descripcion, tags, activo } = body;
 
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     if (nombre !== undefined) updateData.nombre = nombre;
     if (precioUsd !== undefined) updateData.precioUsd = parseFloat(precioUsd);
     if (precioVes !== undefined) updateData.precioVes = parseFloat(precioVes);
@@ -197,7 +208,7 @@ productsRoute.put('/:id', authenticate, async (c) => {
 // Delete product (soft delete by setting activo to false) - Admin only
 productsRoute.delete('/:id', authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as any;
+    const userPayload = c.get('user') as JWTPayload;
     const productId = parseInt(c.req.param('id'));
 
     if (userPayload.tipo !== 'ADMINISTRADOR') {

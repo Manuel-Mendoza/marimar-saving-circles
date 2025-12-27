@@ -9,6 +9,17 @@ import { db } from '../config/database.js';
 import { broadcastToGroup } from '../server.js';
 import { authenticate } from '../middleware/auth.js';
 
+// JWT payload type
+interface JWTPayload {
+  id: number;
+  nombre?: string;
+  apellido?: string;
+  correoElectronico?: string;
+  tipo?: string;
+  iat?: number;
+  exp?: number;
+}
+
 const groupsRoute = new Hono();
 
 // Get all groups
@@ -102,7 +113,7 @@ groupsRoute.get('/:id', async (c) => {
 // Get detailed group info for admin
 groupsRoute.get('/:id/admin', authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as any;
+    const userPayload = c.get('user') as JWTPayload;
 
     if (userPayload.tipo !== 'ADMINISTRADOR') {
       return c.json({
@@ -230,7 +241,7 @@ groupsRoute.get('/:id/admin', authenticate, async (c) => {
 // Create group - Admin only
 groupsRoute.post('/', authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as any;
+    const userPayload = c.get('user') as JWTPayload;
 
     if (userPayload.tipo !== 'ADMINISTRADOR') {
       return c.json({
@@ -279,7 +290,7 @@ groupsRoute.post('/', authenticate, async (c) => {
 // Update group - Admin only
 groupsRoute.put('/:id', authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as any;
+    const userPayload = c.get('user') as JWTPayload;
 
     if (userPayload.tipo !== 'ADMINISTRADOR') {
       return c.json({
@@ -328,7 +339,7 @@ groupsRoute.put('/:id', authenticate, async (c) => {
 // Join existing group
 groupsRoute.post('/:id/join', async (c) => {
   try {
-    const userPayload = c.get('user') as any;
+    const userPayload = c.get('user') as JWTPayload;
     const groupId = parseInt(c.req.param('id'));
 
     if (!userPayload?.id) {
@@ -406,7 +417,7 @@ groupsRoute.post('/:id/join', async (c) => {
 // Start group draw - Admin only
 groupsRoute.post('/:id/start-draw', authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as any;
+    const userPayload = c.get('user') as JWTPayload;
 
     if (userPayload.tipo !== 'ADMINISTRADOR') {
       return c.json({
@@ -528,7 +539,7 @@ groupsRoute.post('/:id/start-draw', authenticate, async (c) => {
 // Delete group - Admin only
 groupsRoute.delete('/:id', authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as any;
+    const userPayload = c.get('user') as JWTPayload;
 
     if (userPayload.tipo !== 'ADMINISTRADOR') {
       return c.json({

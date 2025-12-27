@@ -1,12 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { apiClient } from "@/lib/api";
+import type { Grupo } from "../../../shared/types";
 
 export const useGroups = () => {
-  const [allGroups, setAllGroups] = useState<any[]>([]);
+  const [allGroups, setAllGroups] = useState<Grupo[]>([]);
   const [groupsLoading, setGroupsLoading] = useState(false);
   const [hasAttemptedFetch, setHasAttemptedFetch] = useState(false);
 
-  const fetchAllGroups = async (force = false) => {
+  const fetchAllGroups = useCallback(async (force = false) => {
     // Prevent multiple automatic fetches
     if (hasAttemptedFetch && !force) {
       return;
@@ -28,11 +29,11 @@ export const useGroups = () => {
     } finally {
       setGroupsLoading(false);
     }
-  };
+  }, [hasAttemptedFetch]);
 
   useEffect(() => {
     fetchAllGroups();
-  }, []);
+  }, [fetchAllGroups]);
 
   const refetch = () => fetchAllGroups(true);
 

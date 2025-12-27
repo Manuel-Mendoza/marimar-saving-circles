@@ -1,18 +1,7 @@
 import { useState, useEffect } from "react";
 import { apiClient } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
-
-interface Producto {
-  id: number;
-  nombre: string;
-  precioUsd: number;
-  precioVes: number;
-  tiempoDuracion: number;
-  imagen?: string;
-  descripcion: string;
-  tags?: string[];
-  activo: boolean;
-}
+import type { Producto } from "../../../shared/types";
 
 export const useProducts = () => {
   const { toast } = useToast();
@@ -36,7 +25,7 @@ export const useProducts = () => {
     }
   };
 
-  const handleCreateProduct = async (productData: any) => {
+  const handleCreateProduct = async (productData: Partial<Producto>) => {
     if (!productData.nombre || !productData.precioUsd || !productData.precioVes ||
         !productData.tiempoDuracion || !productData.descripcion) {
       toast({
@@ -65,18 +54,18 @@ export const useProducts = () => {
         });
         return false;
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("useProducts - Error creando producto:", error);
       toast({
         title: "Error al crear producto",
-        description: error.message || "No se pudo crear el producto.",
+        description: (error as Error).message || "No se pudo crear el producto.",
         variant: "destructive",
       });
       return false;
     }
   };
 
-  const handleUpdateProduct = async (productId: number, productData: any) => {
+  const handleUpdateProduct = async (productId: number, productData: Partial<Producto>) => {
     if (!productData.nombre || !productData.precioUsd || !productData.precioVes ||
         !productData.tiempoDuracion || !productData.descripcion) {
       toast({
@@ -105,7 +94,7 @@ export const useProducts = () => {
         });
         return false;
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("useProducts - Error actualizando producto:", error);
       toast({
         title: "Error al actualizar producto",
@@ -135,7 +124,7 @@ export const useProducts = () => {
         });
         return false;
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("useProducts - Error eliminando producto:", error);
       toast({
         title: "Error al eliminar producto",

@@ -2,6 +2,7 @@
   "name": "marimar-saving-circles-monolith",
   "private": true,
   "version": "1.0.0",
+  "type": "module",
   "workspaces": [
     "client",
     "backend"
@@ -20,7 +21,16 @@
     "test:backend": "bun run test --cwd backend",
     "test:client": "bun run test --cwd client",
     "db:seed": "bun run --cwd backend temporal/seed.ts",
-    "db:simulate": "bun run --cwd backend temporal/simulate-selections.ts"
+    "db:simulate": "bun run --cwd backend temporal/simulate-selections.ts",
+    "lint": "cd client && bun run lint && cd ../backend && bun run lint",
+    "lint:client": "cd client && bun run lint",
+    "lint:backend": "cd backend && bun run lint",
+    "format": "cd client && bun run format && cd ../backend && bun run format",
+    "format:client": "cd client && bun run format",
+    "format:backend": "cd backend && bun run format",
+    "type-check": "cd client && bun run type-check && cd ../backend && bun run type-check",
+    "type-check:client": "cd client && bun run type-check",
+    "type-check:backend": "cd backend && bun run type-check"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -101,6 +111,7 @@
     "jsdom": "^27.3.0",
     "lovable-tagger": "^1.1.7",
     "postcss": "^8.4.47",
+    "prettier": "^3.7.4",
     "tailwindcss": "^3.4.11",
     "ts-jest": "^29.4.6",
     "typescript": "^5.5.3",

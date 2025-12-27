@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,30 +23,7 @@ import {
 import api from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
 import { usePaymentRequests } from "@/hooks/usePaymentRequests";
-
-interface PaymentRequest {
-  id: number;
-  periodo: string;
-  monto: number;
-  moneda: 'VES' | 'USD';
-  metodoPago: string;
-  referenciaPago: string | null;
-  comprobantePago: string | null;
-  estado: 'PENDIENTE' | 'CONFIRMADO' | 'RECHAZADO';
-  fechaSolicitud: string;
-  fechaAprobacion: string | null;
-  notasAdmin: string | null;
-  user: {
-    id: number;
-    nombre: string;
-    apellido: string;
-    correoElectronico: string;
-  };
-  group: {
-    id: number;
-    nombre: string;
-  };
-}
+import { PaymentRequest } from "../../../../../shared/types";
 
 const PaymentRequestsView: React.FC = () => {
   const [requests, setRequests] = useState<PaymentRequest[]>([]);
@@ -60,11 +37,7 @@ const PaymentRequestsView: React.FC = () => {
   // Hook para actualizar el contador del sidebar automáticamente
   const { refetch: refetchSidebarCount } = usePaymentRequests();
 
-  useEffect(() => {
-    loadPaymentRequests();
-  }, []);
-
-  const loadPaymentRequests = async () => {
+  const loadPaymentRequests = useCallback(async () => {
     try {
       setLoading(true);
       const response = await api.getAllPaymentRequests();
@@ -90,7 +63,11 @@ const PaymentRequestsView: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [refetchSidebarCount]);
+
+  useEffect(() => {
+    loadPaymentRequests();
+  }, [loadPaymentRequests]);
 
   const handleApprove = async (requestId: number) => {
     setIsProcessing(true);

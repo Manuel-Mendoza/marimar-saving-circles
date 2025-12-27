@@ -8,6 +8,10 @@
     "build": "bunx vite build",
     "build:dev": "bunx vite build --mode development",
     "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "type-check": "tsc --noEmit",
     "preview": "bunx vite preview",
     "test": "vitest",
     "test:ui": "vitest --ui"

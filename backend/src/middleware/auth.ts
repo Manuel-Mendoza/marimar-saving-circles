@@ -1,10 +1,21 @@
 import { MiddlewareHandler, HonoRequest } from 'hono';
 import { verifyToken } from '../utils/auth.js';
 
+// JWT payload type
+interface JWTPayload {
+  id: number;
+  nombre?: string;
+  apellido?: string;
+  correoElectronico?: string;
+  tipo?: string;
+  iat?: number;
+  exp?: number;
+}
+
 // Extend context to include user
 declare module 'hono' {
   interface ContextVariableMap {
-    user: any;
+    user: JWTPayload;
   }
 }
 
@@ -30,7 +41,7 @@ export const authenticate: MiddlewareHandler = async (c, next) => {
     }
 
     // Verify token
-    const payload = await verifyToken(token, process.env.PASETO_SECRET!) as any;
+    const payload = await verifyToken(token, process.env.PASETO_SECRET!) as JWTPayload | null;
 
     if (!payload || !payload.id) {
       return c.json({

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '@/lib/api';
+import type { PaymentRequest } from '../../../shared/types';
 
 export const usePaymentRequests = () => {
   const [pendingCount, setPendingCount] = useState(0);
@@ -10,7 +11,7 @@ export const usePaymentRequests = () => {
       setLoading(true);
       const response = await api.getAllPaymentRequests();
       if (response.success) {
-        const pendingRequests = response.data.requests.filter((r: any) => r.estado === 'PENDIENTE');
+        const pendingRequests = response.data.requests.filter((r: PaymentRequest) => r.estado === 'PENDIENTE');
         setPendingCount(pendingRequests.length);
       }
     } catch (error) {

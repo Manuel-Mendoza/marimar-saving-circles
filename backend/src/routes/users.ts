@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { eq, and, or } from 'drizzle-orm';
+import { eq, and, or, SQL } from 'drizzle-orm';
 import { users } from '../db/tables/users.js';
 import { groups } from '../db/tables/groups.js';
 import { products } from '../db/tables/products.js';
@@ -9,12 +9,23 @@ import { deliveries } from '../db/tables/deliveries.js';
 import { db } from '../config/database.js';
 import { authenticate } from '../middleware/auth.js';
 
+// JWT payload type
+interface JWTPayload {
+  id: number;
+  nombre?: string;
+  apellido?: string;
+  correoElectronico?: string;
+  tipo?: string;
+  iat?: number;
+  exp?: number;
+}
+
 const usersRoute = new Hono();
 
 // Get all users - Admin only
 usersRoute.get('/', authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as any;
+    const userPayload = c.get('user') as JWTPayload;
 
     // Verificar que sea administrador
     if (userPayload.tipo !== 'ADMINISTRADOR') {
@@ -61,7 +72,7 @@ usersRoute.get('/', authenticate, async (c) => {
 // Get pending users - Admin only
 usersRoute.get('/pending', authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as any;
+    const userPayload = c.get('user') as JWTPayload;
 
     if (userPayload.tipo !== 'ADMINISTRADOR') {
       return c.json({
@@ -106,7 +117,7 @@ usersRoute.get('/pending', authenticate, async (c) => {
 // Approve, reject, suspend or reactivate user - Admin only
 usersRoute.put('/:id/status', authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as any;
+    const userPayload = c.get('user') as JWTPayload;
     const userId = parseInt(c.req.param('id'));
 
     if (userPayload.tipo !== 'ADMINISTRADOR') {
@@ -127,7 +138,7 @@ usersRoute.put('/:id/status', authenticate, async (c) => {
     }
 
     let status: string;
-    let whereCondition: any;
+    let whereCondition!: SQL;
 
     switch (action) {
       case 'approve':
@@ -156,7 +167,7 @@ usersRoute.put('/:id/status', authenticate, async (c) => {
         }, 400);
     }
 
-    let updateData: any = {
+    const updateData: Record<string, unknown> = {
       estado: status,
       aprobadoPor: userPayload.id,
       fechaAprobacion: new Date()
@@ -204,7 +215,7 @@ usersRoute.put('/:id/status', authenticate, async (c) => {
 // Get user by ID
 usersRoute.get('/:id', authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as any;
+    const userPayload = c.get('user') as JWTPayload;
     const userId = parseInt(c.req.param('id'));
 
     // Solo admin puede ver otros usuarios, usuarios normales solo su propio perfil
@@ -261,7 +272,7 @@ usersRoute.get('/:id', authenticate, async (c) => {
 // Delete user - Admin only
 usersRoute.delete('/:id', authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as any;
+    const userPayload = c.get('user') as JWTPayload;
     const userId = parseInt(c.req.param('id'));
 
     if (userPayload.tipo !== 'ADMINISTRADOR') {
@@ -327,7 +338,7 @@ usersRoute.delete('/:id', authenticate, async (c) => {
 // Join a group with selected product and currency
 usersRoute.post('/join', authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as any;
+    const userPayload = c.get('user') as JWTPayload;
     const body = await c.req.json();
     const { productId, currency } = body;
 
@@ -488,7 +499,7 @@ usersRoute.post('/join', authenticate, async (c) => {
 // Get current user's groups
 usersRoute.get('/me/groups', authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as any;
+    const userPayload = c.get('user') as JWTPayload;
 
     const userGroupsData = await db
       .select({
@@ -533,7 +544,7 @@ usersRoute.get('/me/groups', authenticate, async (c) => {
 // Get current user's contributions
 usersRoute.get('/me/contributions', authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as any;
+    const userPayload = c.get('user') as JWTPayload;
 
     const contributionsData = await db
       .select({
@@ -571,7 +582,7 @@ usersRoute.get('/me/contributions', authenticate, async (c) => {
 // Get current user's deliveries
 usersRoute.get('/me/deliveries', authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as any;
+    const userPayload = c.get('user') as JWTPayload;
 
     const deliveriesData = await db
       .select({

@@ -1,10 +1,21 @@
+import type {
+  User,
+  Grupo,
+  UserGroup,
+  Producto,
+  Contribution,
+  Delivery,
+  PaymentRequest,
+  ProductSelection,
+} from '../../../shared/types';
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-interface ApiResponse<T = any> {
+interface ApiResponse<T = unknown> {
   success: boolean;
   message: string;
   data?: T;
-  errors?: any[];
+  errors?: unknown[];
 }
 
 class ApiClient {
@@ -70,7 +81,7 @@ class ApiClient {
   // Auth endpoints
   async login(credentials: { correoElectronico: string; password: string }) {
     const response = await this.request<{
-      user: any;
+      user: User;
       token: string;
     }>('/auth/login', {
       method: 'POST',
@@ -88,7 +99,7 @@ class ApiClient {
 
   async register(formData: FormData) {
     const response = await this.request<{
-      user: any;
+      user: User;
       token: string;
     }>('/auth/register', {
       method: 'POST',
@@ -120,41 +131,41 @@ class ApiClient {
   }
 
   async getCurrentUser() {
-    return this.request<{ user: any }>('/auth/me');
+    return this.request<{ user: User }>('/auth/me');
   }
 
   // User management endpoints (Admin only)
   async getAllUsers() {
-    return this.request<{ users: any[] }>('/users');
+    return this.request<{ users: User[] }>('/users');
   }
 
   async getPendingUsers() {
-    return this.request<{ users: any[] }>('/users/pending');
+    return this.request<{ users: User[] }>('/users/pending');
   }
 
   async approveUser(userId: number) {
-    return this.request<{ user: any }>(`/users/${userId}/status`, {
+    return this.request<{ user: User }>(`/users/${userId}/status`, {
       method: 'PUT',
       body: JSON.stringify({ action: 'approve' }),
     });
   }
 
   async rejectUser(userId: number, reason?: string) {
-    return this.request<{ user: any }>(`/users/${userId}/status`, {
+    return this.request<{ user: User }>(`/users/${userId}/status`, {
       method: 'PUT',
       body: JSON.stringify({ action: 'reject', reason }),
     });
   }
 
   async suspendUser(userId: number) {
-    return this.request<{ user: any }>(`/users/${userId}/status`, {
+    return this.request<{ user: User }>(`/users/${userId}/status`, {
       method: 'PUT',
       body: JSON.stringify({ action: 'suspend' }),
     });
   }
 
   async reactivateUser(userId: number) {
-    return this.request<{ user: any }>(`/users/${userId}/status`, {
+    return this.request<{ user: User }>(`/users/${userId}/status`, {
       method: 'PUT',
       body: JSON.stringify({ action: 'reactivate' }),
     });
@@ -181,34 +192,34 @@ class ApiClient {
 
   // User data endpoints
   async getMyGroups() {
-    return this.request<{ userGroups: any[] }>('/users/me/groups');
+    return this.request<{ userGroups: UserGroup[] }>('/users/me/groups');
   }
 
   async getMyContributions() {
-    return this.request<{ contributions: any[] }>('/users/me/contributions');
+    return this.request<{ contributions: Contribution[] }>('/users/me/contributions');
   }
 
   async getMyDeliveries() {
-    return this.request<{ deliveries: any[] }>('/users/me/deliveries');
+    return this.request<{ deliveries: Delivery[] }>('/users/me/deliveries');
   }
 
   // Products endpoints
   async getProducts() {
-    return this.request<{ products: any[] }>('/products');
+    return this.request<{ products: Producto[] }>('/products');
   }
 
   async getProduct(productId: number) {
-    return this.request<{ product: any }>(`/products/${productId}`);
+    return this.request<{ product: Producto }>(`/products/${productId}`);
   }
 
-  async createProduct(productData: any) {
+  async createProduct(productData: Partial<Producto>) {
     return this.request('/products', {
       method: 'POST',
       body: JSON.stringify(productData),
     });
   }
 
-  async updateProduct(productId: number, productData: any) {
+  async updateProduct(productId: number, productData: Partial<Producto>) {
     return this.request(`/products/${productId}`, {
       method: 'PUT',
       body: JSON.stringify(productData),
@@ -237,11 +248,11 @@ class ApiClient {
 
   // Groups endpoints
   async getGroups() {
-    return this.request<{ groups: any[] }>('/groups');
+    return this.request<{ groups: Grupo[] }>('/groups');
   }
 
   async getGroup(groupId: number) {
-    return this.request<{ group: any }>(`/groups/${groupId}`);
+    return this.request<{ group: Grupo }>(`/groups/${groupId}`);
   }
 
   async joinGroupById(groupId: number) {
@@ -256,8 +267,8 @@ class ApiClient {
   async startDraw(groupId: number) {
     return this.request<{
       groupId: number;
-      finalPositions: any[];
-      animationSequence: any[];
+      finalPositions: { userId: number; position: number }[];
+      animationSequence: number[];
     }>(`/groups/${groupId}/start-draw`, {
       method: 'POST',
     });
@@ -265,10 +276,10 @@ class ApiClient {
 
   async getGroupAdminDetails(groupId: number) {
     return this.request<{
-      group: any;
-      members: any[];
-      contributions: any[];
-      deliveries: any[];
+      group: Grupo;
+      members: UserGroup[];
+      contributions: Contribution[];
+      deliveries: Delivery[];
       stats: {
         totalMembers: number;
         totalContributions: number;
@@ -291,7 +302,7 @@ class ApiClient {
     comprobantePago?: string;
   }) {
     return this.request<{
-      request: any;
+      request: PaymentRequest;
     }>('/payment-requests', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -300,19 +311,19 @@ class ApiClient {
 
   async getMyPaymentRequests() {
     return this.request<{
-      requests: any[];
+      requests: PaymentRequest[];
     }>('/payment-requests/my-requests');
   }
 
   async getAllPaymentRequests() {
     return this.request<{
-      requests: any[];
+      requests: PaymentRequest[];
     }>('/payment-requests');
   }
 
   async approvePaymentRequest(requestId: number, notasAdmin?: string) {
     return this.request<{
-      request: any;
+      request: PaymentRequest;
     }>(`/payment-requests/${requestId}/approve`, {
       method: 'PUT',
       body: JSON.stringify({ notasAdmin }),
@@ -321,7 +332,7 @@ class ApiClient {
 
   async rejectPaymentRequest(requestId: number, notasAdmin: string) {
     return this.request<{
-      request: any;
+      request: PaymentRequest;
     }>(`/payment-requests/${requestId}/reject`, {
       method: 'PUT',
       body: JSON.stringify({ notasAdmin }),

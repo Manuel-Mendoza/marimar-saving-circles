@@ -1,18 +1,7 @@
 import { useState, useEffect } from "react";
 import { apiClient } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
-
-interface User {
-  id: number;
-  nombre: string;
-  apellido: string;
-  cedula: string;
-  telefono: string;
-  correoElectronico: string;
-  tipo: "USUARIO" | "ADMINISTRADOR";
-  estado: "PENDIENTE" | "APROBADO" | "RECHAZADO" | "SUSPENDIDO" | "REACTIVADO";
-  fechaRegistro: Date;
-}
+import type { User } from "../../../shared/types";
 
 export const useUsers = () => {
   const { toast } = useToast();
@@ -25,7 +14,7 @@ export const useUsers = () => {
     try {
       const response = await apiClient.getAllUsers();
       if (response.success && response.data) {
-        const usersWithDates = response.data.users.map((user: any) => ({
+        const usersWithDates = response.data.users.map((user: User) => ({
           ...user,
           fechaRegistro: new Date(user.fechaRegistro),
           ultimoAcceso: user.ultimoAcceso ? new Date(user.ultimoAcceso) : null,
@@ -79,11 +68,11 @@ export const useUsers = () => {
           description: "El usuario ha sido suspendido y no podrá acceder al sistema.",
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("useUsers - Error suspendiendo usuario:", error);
-      const errorMessage = error.message?.includes("ya procesado") || error.message?.includes("no encontrado")
+      const errorMessage = (error as Error).message?.includes("ya procesado") || (error as Error).message?.includes("no encontrado")
         ? "Este usuario ya no existe en el sistema. Los datos se actualizarán automáticamente."
-        : error.message || "No se pudo suspender al usuario. Inténtalo de nuevo.";
+        : (error as Error).message || "No se pudo suspender al usuario. Inténtalo de nuevo.";
 
       console.warn("🔄 useUsers - Desincronización detectada - forzando recarga completa de datos");
       fetchAllUsers();
@@ -127,11 +116,11 @@ export const useUsers = () => {
           description: "El usuario ha sido reactivado y ahora puede acceder al sistema.",
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("useUsers - Error reactivando usuario:", error);
-      const errorMessage = error.message?.includes("ya procesado") || error.message?.includes("no encontrado")
+      const errorMessage = (error as Error).message?.includes("ya procesado") || (error as Error).message?.includes("no encontrado")
         ? "Este usuario ya ha sido procesado anteriormente o no existe."
-        : error.message || "No se pudo reactivar al usuario. Inténtalo de nuevo.";
+        : (error as Error).message || "No se pudo reactivar al usuario. Inténtalo de nuevo.";
 
       fetchAllUsers();
 
@@ -168,11 +157,11 @@ export const useUsers = () => {
           description: "El usuario ha sido eliminado permanentemente del sistema.",
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("useUsers - Error eliminando usuario:", error);
-      const errorMessage = error.message?.includes("no encontrado")
+      const errorMessage = (error as Error).message?.includes("no encontrado")
         ? "Este usuario ya no existe."
-        : error.message || "No se pudo eliminar al usuario. Inténtalo de nuevo.";
+        : (error as Error).message || "No se pudo eliminar al usuario. Inténtalo de nuevo.";
 
       fetchAllUsers();
 

@@ -99,7 +99,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const StatCard: React.FC<{
     title: string;
     value: string | number | React.ReactNode;
-    icon: React.ComponentType<any>;
+    icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
     trend?: { value: number; label: string };
     variant?: 'default' | 'success' | 'warning' | 'danger';
   }> = ({ title, value, icon: Icon, trend, variant = 'default' }) => {

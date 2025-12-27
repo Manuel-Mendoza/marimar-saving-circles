@@ -95,9 +95,9 @@ export const useGroupRealtime = (groupId: number | null) => {
       setLastMessage(null);
       setConnectionAttempts(0);
     };
-  }, [groupId, maxConnectionAttempts]);
+  }, [groupId, maxConnectionAttempts, connectionAttempts]);
 
-  const sendMessage = useCallback((message: any) => {
+  const sendMessage = useCallback((message: WebSocketMessage) => {
     if (socket && socket.readyState === WebSocket.OPEN) {
       socket.send(JSON.stringify(message));
     } else {

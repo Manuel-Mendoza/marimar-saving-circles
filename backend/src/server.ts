@@ -67,11 +67,17 @@ app.route("/api/products", productRoutes);
 app.route("/api/product-selections", productSelectionsRoutes);
 app.route("/api/payment-requests", paymentRequestsRoutes);
 
+// WebSocket message type
+interface WebSocketMessage {
+  type: string;
+  [key: string]: unknown;
+}
+
 // WebSocket connections storage
 const groupConnections = new Map<number, WebSocket[]>();
 
 // Function to broadcast messages to all connections in a group
-export const broadcastToGroup = (groupId: number, message: any) => {
+export const broadcastToGroup = (groupId: number, message: WebSocketMessage) => {
   const connections = groupConnections.get(groupId) || [];
   const messageString = JSON.stringify(message);
 

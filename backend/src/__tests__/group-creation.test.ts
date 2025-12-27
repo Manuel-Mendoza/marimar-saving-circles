@@ -336,7 +336,7 @@ describe('Group Creation Logic', () => {
       }
 
       // Create products with different durations
-      const productsData: any[] = [];
+      const productsData: unknown[] = [];
       const durations = [6, 8, 10, 12];
       for (let i = 0; i < durations.length; i++) {
         const [product] = await db
@@ -355,7 +355,7 @@ describe('Group Creation Logic', () => {
 
       // Simulate multiple users joining different groups
       const joinPromises = usersData.map(async (user, index) => {
-        const product = productsData[index % productsData.length];
+        const product = productsData[index % productsData.length] as { id: number; nombre: string; tiempoDuracion: number };
 
         // Mock authentication for each user
         const testApp = new Hono();
@@ -414,7 +414,7 @@ describe('Group Creation Logic', () => {
 
     it('should create a new group when the current group reaches maximum capacity', async () => {
       // Create users
-      const users: any[] = [];
+      const users: { id: number; nombre: string; apellido: string; cedula: string; telefono: string; direccion: string; correoElectronico: string; password: string; tipo: string; estado: string; imagenCedula: string | null; fechaRegistro: Date; ultimoAcceso: Date | null; aprobadoPor: number | null; fechaAprobacion: Date | null; motivo: string | null }[] = [];
       for (let i = 1; i <= 5; i++) {
         const [user] = await db
           .insert(usersTable)

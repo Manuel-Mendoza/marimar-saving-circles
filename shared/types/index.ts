@@ -9,9 +9,11 @@ export interface User {
   direccion: string;
   correoElectronico: string;
   tipo: 'USUARIO' | 'ADMINISTRADOR';
+  estado?: 'PENDIENTE' | 'APROBADO' | 'RECHAZADO' | 'SUSPENDIDO' | 'REACTIVADO';
   imagenCedula?: string;
   fechaRegistro: Date;
   ultimoAcceso?: Date;
+  fechaAprobacion?: Date;
 }
 
 export interface Grupo {
@@ -22,6 +24,8 @@ export interface Grupo {
   fechaInicio?: Date;
   fechaFinal?: Date;
   turnoActual: number;
+  participantes?: number;
+  productoNombre?: string;
 }
 
 export interface UserGroup {
@@ -43,6 +47,7 @@ export interface Producto {
   imagen?: string;
   descripcion: string;
   activo: boolean;
+  tags?: string[];
 }
 
 export interface Contribution {
@@ -86,4 +91,31 @@ export interface Notification {
   tipo: string;
   leida: boolean;
   fechaCreacion: Date;
+}
+
+export interface PaymentRequest {
+  id: number;
+  userId: number;
+  groupId: number;
+  periodo: string;
+  monto: number;
+  moneda: 'USD' | 'VES';
+  metodoPago: string;
+  referenciaPago?: string;
+  comprobantePago?: string;
+  estado: 'PENDIENTE' | 'CONFIRMADO' | 'RECHAZADO';
+  notasAdmin?: string;
+  fechaCreacion: Date;
+  user?: User;
+  group?: Grupo;
+  fechaSolicitud?: string;
+  fechaAprobacion?: string | null;
+}
+
+export interface ProductSelection {
+  id: number;
+  userId: number;
+  productId: number;
+  fechaSeleccion: Date;
+  product?: Producto;
 }

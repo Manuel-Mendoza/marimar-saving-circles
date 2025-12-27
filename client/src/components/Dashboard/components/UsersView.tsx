@@ -18,12 +18,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useUsers } from "@/hooks/useUsers";
+import { User } from "../../../../../shared/types";
 
 const UsersView: React.FC = () => {
   const { allUsers, usersLoading, processingUser, handleSuspendUser, handleReactivateUser, handleDeleteUser } = useUsers();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [userToDelete, setUserToDelete] = useState<any>(null);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [reason, setReason] = useState("");
 
   const filteredUsers = allUsers.filter((user) => {
@@ -54,7 +55,7 @@ const UsersView: React.FC = () => {
     setReason("");
   };
 
-  const openDeleteDialog = (user: any) => {
+  const openDeleteDialog = (user: User) => {
     setUserToDelete(user);
     setReason("");
   };

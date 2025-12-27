@@ -7,12 +7,23 @@ import { contributions } from '../db/tables/contributions.js';
 import { db } from '../config/database.js';
 import { authenticate } from '../middleware/auth.js';
 
+// JWT payload type
+interface JWTPayload {
+  id: number;
+  nombre?: string;
+  apellido?: string;
+  correoElectronico?: string;
+  tipo?: string;
+  iat?: number;
+  exp?: number;
+}
+
 const paymentRequestsRoute = new Hono();
 
 // Create payment request - Authenticated users
 paymentRequestsRoute.post('/', authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as any;
+    const userPayload = c.get('user') as JWTPayload;
     const body = await c.req.json();
     const {
       groupId,
@@ -122,7 +133,7 @@ paymentRequestsRoute.post('/', authenticate, async (c) => {
 // Get user's payment requests - Authenticated users
 paymentRequestsRoute.get('/my-requests', authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as any;
+    const userPayload = c.get('user') as JWTPayload;
 
     const requests = await db
       .select({
@@ -167,7 +178,7 @@ paymentRequestsRoute.get('/my-requests', authenticate, async (c) => {
 // Get all payment requests - Admin only
 paymentRequestsRoute.get('/', authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as any;
+    const userPayload = c.get('user') as JWTPayload;
 
     if (userPayload.tipo !== 'ADMINISTRADOR') {
       return c.json({
@@ -224,7 +235,7 @@ paymentRequestsRoute.get('/', authenticate, async (c) => {
 // Approve payment request - Admin only
 paymentRequestsRoute.put('/:id/approve', authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as any;
+    const userPayload = c.get('user') as JWTPayload;
     const requestId = parseInt(c.req.param('id'));
 
     if (userPayload.tipo !== 'ADMINISTRADOR') {
@@ -305,7 +316,7 @@ paymentRequestsRoute.put('/:id/approve', authenticate, async (c) => {
 // Reject payment request - Admin only
 paymentRequestsRoute.put('/:id/reject', authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as any;
+    const userPayload = c.get('user') as JWTPayload;
     const requestId = parseInt(c.req.param('id'));
 
     if (userPayload.tipo !== 'ADMINISTRADOR') {

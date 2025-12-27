@@ -26,6 +26,7 @@ import { useGroupRealtime, DrawMessage } from "@/hooks/useGroupRealtime";
 import api from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
 import GroupDetailsView from "./GroupDetailsView";
+import { Grupo } from "../../../../../shared/types";
 
 // Animation component for the draw
 const DrawAnimation = ({ data, onComplete }: { data: DrawMessage, onComplete?: () => void }) => {
@@ -141,7 +142,7 @@ const GroupsView: React.FC = () => {
 
   // Draw animation state
   const [drawDialogOpen, setDrawDialogOpen] = useState(false);
-  const [selectedGroupForDraw, setSelectedGroupForDraw] = useState<any>(null);
+  const [selectedGroupForDraw, setSelectedGroupForDraw] = useState<Grupo | null>(null);
   const [isDrawStarting, setIsDrawStarting] = useState(false);
   const [drawAnimationData, setDrawAnimationData] = useState<DrawMessage | null>(null);
 
@@ -157,7 +158,7 @@ const GroupsView: React.FC = () => {
   }, [lastMessage]);
 
   // Start draw function
-  const handleStartDraw = async (group: any) => {
+  const handleStartDraw = async (group: Grupo) => {
     setSelectedGroupForDraw(group);
     setDrawAnimationData(null); // Reset previous draw data
     setDrawDialogOpen(true);
@@ -212,7 +213,7 @@ const GroupsView: React.FC = () => {
 
   // Filter groups based on search
   const filteredGroups = useMemo(() => {
-    return allGroups.filter((group: any) =>
+    return allGroups.filter((group: Grupo) =>
       group.nombre.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [allGroups, searchTerm]);
@@ -226,7 +227,7 @@ const GroupsView: React.FC = () => {
       completado: []
     };
 
-    filteredGroups.forEach((group: any) => {
+    filteredGroups.forEach((group: Grupo) => {
       const status = group.estado.toLowerCase().replace(' ', '_');
       if (groups[status]) {
         groups[status].push(group);
@@ -266,7 +267,7 @@ const GroupsView: React.FC = () => {
     );
   };
 
-  const getProgressValue = (group: any) => {
+  const getProgressValue = (group: Grupo) => {
     if (group.estado === 'COMPLETADO') return 100;
     if (group.estado === 'EN_MARCHA') {
       return Math.min((group.turnoActual / group.duracionMeses) * 100, 100);
@@ -274,7 +275,7 @@ const GroupsView: React.FC = () => {
     return 0;
   };
 
-  const GroupCard = ({ group }: { group: any }) => (
+  const GroupCard = ({ group }: { group: Grupo }) => (
     <Card className="hover:shadow-lg transition-shadow">
       <CardContent className="p-6">
         <div className="flex items-start justify-between mb-4">
@@ -493,7 +494,7 @@ const GroupsView: React.FC = () => {
                 </Card>
               ) : (
                 <div className="grid gap-4 md:grid-cols-2">
-                  {filteredGroups.map((group: any) => (
+                  {filteredGroups.map((group: Grupo) => (
                     <GroupCard key={group.id} group={group} />
                   ))}
                 </div>
@@ -513,7 +514,7 @@ const GroupsView: React.FC = () => {
                   </Card>
                 ) : (
                   <div className="grid gap-4 md:grid-cols-2">
-                    {groups.map((group: any) => (
+                    {groups.map((group: Grupo) => (
                       <GroupCard key={group.id} group={group} />
                     ))}
                   </div>

@@ -96,7 +96,7 @@ interface AppStateContextType {
 
 const AppStateContext = createContext<AppStateContextType | undefined>(undefined);
 
-export const useAppState = () => {
+export const useAppState = () => { // eslint-disable-line react-refresh/only-export-components
   const context = useContext(AppStateContext);
   if (context === undefined) {
     throw new Error('useAppState must be used within an AppStateProvider');

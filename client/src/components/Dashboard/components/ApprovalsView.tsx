@@ -10,10 +10,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useApprovals } from "@/hooks/useApprovals";
+import { User } from "../../../../../shared/types";
 
 const ApprovalsView: React.FC = () => {
   const { pendingUsers, loading, processingUser, handleApproveUser, handleRejectUser } = useApprovals();
-  const [userToReject, setUserToReject] = useState<any>(null);
+  const [userToReject, setUserToReject] = useState<User | null>(null);
   const [reason, setReason] = useState("");
 
   const handleApprove = async (userId: number) => {
@@ -28,7 +29,7 @@ const ApprovalsView: React.FC = () => {
     setReason("");
   };
 
-  const openRejectDialog = (user: any) => {
+  const openRejectDialog = (user: User) => {
     setUserToReject(user);
     setReason("");
   };

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Card,
   CardContent,
@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import api from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
+import type { Grupo, UserGroup, Contribution, Delivery } from "../../../../shared/types";
 
 interface GroupDetailsViewProps {
   groupId: number;
@@ -40,60 +41,10 @@ interface GroupDetailsViewProps {
 }
 
 interface GroupData {
-  group: {
-    id: number;
-    nombre: string;
-    duracionMeses: number;
-    estado: string;
-    fechaInicio: string | null;
-    fechaFinal: string | null;
-    turnoActual: number;
-  };
-  members: Array<{
-    id: number;
-    posicion: number;
-    fechaUnion: string;
-    productoSeleccionado: string;
-    monedaPago: string;
-    user: {
-      id: number;
-      nombre: string;
-      apellido: string;
-      cedula: string;
-      telefono: string;
-      correoElectronico: string;
-      estado: string;
-    };
-  }>;
-  contributions: Array<{
-    id: number;
-    userId: number;
-    monto: number;
-    moneda: string;
-    fechaPago: string | null;
-    periodo: string;
-    metodoPago: string | null;
-    estado: string;
-    referenciaPago: string | null;
-    user: {
-      nombre: string;
-      apellido: string;
-    };
-  }>;
-  deliveries: Array<{
-    id: number;
-    userId: number;
-    productName: string;
-    productValue: string;
-    fechaEntrega: string;
-    mesEntrega: string;
-    estado: string;
-    notas: string | null;
-    user: {
-      nombre: string;
-      apellido: string;
-    };
-  }>;
+  group: Grupo;
+  members: UserGroup[];
+  contributions: Contribution[];
+  deliveries: Delivery[];
   stats: {
     totalMembers: number;
     totalContributions: number;
@@ -111,11 +62,7 @@ const GroupDetailsView: React.FC<GroupDetailsViewProps> = ({
   const [data, setData] = useState<GroupData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadGroupDetails();
-  }, [groupId]);
-
-  const loadGroupDetails = async () => {
+  const loadGroupDetails = useCallback(async () => {
     try {
       setLoading(true);
       const response = await api.getGroupAdminDetails(groupId);
@@ -142,7 +89,11 @@ const GroupDetailsView: React.FC<GroupDetailsViewProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [groupId, onBack]);
+
+  useEffect(() => {
+    loadGroupDetails();
+  }, [loadGroupDetails]);
 
   const getStatusBadge = (estado: string) => {
     const statusConfig = {

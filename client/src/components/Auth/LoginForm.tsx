@@ -32,8 +32,8 @@ const LoginForm = ({ onNewUser }: LoginFormProps) => {
 
     try {
       await login(credentials.email, credentials.password);
-    } catch (error: any) {
-      setError(error.message || 'Error al iniciar sesión');
+    } catch (error) {
+      setError((error as Error).message || 'Error al iniciar sesión');
     } finally {
       setIsLoading(false);
     }

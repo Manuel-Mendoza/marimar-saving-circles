@@ -1,23 +1,11 @@
 import { useState, useEffect } from "react";
 import { apiClient } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
-
-interface PendingUser {
-  id: number;
-  nombre: string;
-  apellido: string;
-  cedula: string;
-  telefono: string;
-  correoElectronico: string;
-  tipo: "USUARIO" | "ADMINISTRADOR";
-  estado: "PENDIENTE" | "APROBADO" | "RECHAZADO" | "SUSPENDIDO" | "REACTIVADO";
-  imagenCedula?: string;
-  fechaRegistro: Date;
-}
+import type { User } from "../../../shared/types";
 
 export const useApprovals = () => {
   const { toast } = useToast();
-  const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([]);
+  const [pendingUsers, setPendingUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingUser, setProcessingUser] = useState<number | null>(null);
 
@@ -25,7 +13,7 @@ export const useApprovals = () => {
     try {
       const response = await apiClient.getPendingUsers();
       if (response.success && response.data) {
-        const usersWithDates = response.data.users.map((user: any) => ({
+        const usersWithDates = response.data.users.map((user: User) => ({
           ...user,
           fechaRegistro: new Date(user.fechaRegistro),
         }));
@@ -61,11 +49,11 @@ export const useApprovals = () => {
           description: "El usuario ha sido aprobado exitosamente y ahora puede acceder al sistema.",
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error aprobando usuario:", error);
-      const errorMessage = error.message?.includes("ya procesado") || error.message?.includes("no encontrado")
+      const errorMessage = (error as Error).message?.includes("ya procesado") || (error as Error).message?.includes("no encontrado")
         ? "Este usuario ya ha sido procesado anteriormente o no existe."
-        : error.message || "No se pudo aprobar al usuario. Inténtalo de nuevo.";
+        : (error as Error).message || "No se pudo aprobar al usuario. Inténtalo de nuevo.";
 
       fetchPendingUsers();
 
@@ -101,11 +89,11 @@ export const useApprovals = () => {
           description: "El usuario ha sido rechazado y no podrá acceder al sistema.",
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error rechazando usuario:", error);
-      const errorMessage = error.message?.includes("ya procesado") || error.message?.includes("no encontrado")
+      const errorMessage = (error as Error).message?.includes("ya procesado") || (error as Error).message?.includes("no encontrado")
         ? "Este usuario ya ha sido procesado anteriormente o no existe."
-        : error.message || "No se pudo rechazar al usuario. Inténtalo de nuevo.";
+        : (error as Error).message || "No se pudo rechazar al usuario. Inténtalo de nuevo.";
 
       fetchPendingUsers();
 
