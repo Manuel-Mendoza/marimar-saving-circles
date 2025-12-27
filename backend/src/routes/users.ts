@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { eq, and, or, SQL } from "drizzle-orm";
+import { eq, and, or, ne, not, SQL } from "drizzle-orm";
 import { users } from "../db/tables/users.js";
 import { groups } from "../db/tables/groups.js";
 import { products } from "../db/tables/products.js";
@@ -246,7 +246,7 @@ usersRoute.put("/:id/status", authenticate, async (c) => {
   }
 });
 
-// Update user profile (including profile picture)
+// Update user profile
 usersRoute.put("/:id/profile", authenticate, async (c) => {
   try {
     const userPayload = c.get("user") as JWTPayload;
@@ -264,11 +264,111 @@ usersRoute.put("/:id/profile", authenticate, async (c) => {
     }
 
     const body = await c.req.json();
-    const { imagenPerfil } = body;
+    const { nombre, apellido, telefono, direccion, correoElectronico, imagenPerfil } = body;
+
+    // Validate required fields if provided
+    if (nombre && nombre.trim().length === 0) {
+      return c.json(
+        {
+          success: false,
+          message: "El nombre no puede estar vacío",
+        },
+        400,
+      );
+    }
+
+    if (apellido && apellido.trim().length === 0) {
+      return c.json(
+        {
+          success: false,
+          message: "El apellido no puede estar vacío",
+        },
+        400,
+      );
+    }
+
+    if (telefono && telefono.trim().length === 0) {
+      return c.json(
+        {
+          success: false,
+          message: "El teléfono no puede estar vacío",
+        },
+        400,
+      );
+    }
+
+    if (direccion && direccion.trim().length === 0) {
+      return c.json(
+        {
+          success: false,
+          message: "La dirección no puede estar vacía",
+        },
+        400,
+      );
+    }
+
+    // Validate email format if provided
+    if (correoElectronico) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(correoElectronico)) {
+        return c.json(
+          {
+            success: false,
+            message: "Formato de correo electrónico inválido",
+          },
+          400,
+        );
+      }
+
+      // Check if email is already taken by another user
+      const [existingUser] = await db
+        .select()
+        .from(users)
+        .where(and(eq(users.correoElectronico, correoElectronico), not(eq(users.id, userId))))
+        .limit(1);
+
+      if (existingUser) {
+        return c.json(
+          {
+            success: false,
+            message: "Este correo electrónico ya está en uso",
+          },
+          400,
+        );
+      }
+    }
 
     const updateData: Record<string, unknown> = {};
+
+    // Only add fields that are provided and not empty
+    if (nombre !== undefined && nombre !== null) {
+      updateData.nombre = nombre.trim();
+    }
+    if (apellido !== undefined && apellido !== null) {
+      updateData.apellido = apellido.trim();
+    }
+    if (telefono !== undefined && telefono !== null) {
+      updateData.telefono = telefono.trim();
+    }
+    if (direccion !== undefined && direccion !== null) {
+      updateData.direccion = direccion.trim();
+    }
+    if (correoElectronico !== undefined && correoElectronico !== null) {
+      updateData.correoElectronico = correoElectronico.trim().toLowerCase();
+    }
     if (imagenPerfil !== undefined) {
       updateData.imagenPerfil = imagenPerfil;
+    }
+
+    // Check if there's anything to update
+    if (Object.keys(updateData).length === 0) {
+      return c.json(
+        {
+          success: false,
+          message: "No hay datos para actualizar",
+        },
+        400,
+      );
     }
 
     const updatedUsers = await db
@@ -287,11 +387,27 @@ usersRoute.put("/:id/profile", authenticate, async (c) => {
       );
     }
 
+    const updatedUser = updatedUsers[0]!;
+
     return c.json({
       success: true,
       message: "Perfil actualizado exitosamente",
       data: {
-        user: updatedUsers[0],
+        user: {
+          id: updatedUser.id,
+          nombre: updatedUser.nombre,
+          apellido: updatedUser.apellido,
+          cedula: updatedUser.cedula,
+          telefono: updatedUser.telefono,
+          direccion: updatedUser.direccion,
+          correoElectronico: updatedUser.correoElectronico,
+          tipo: updatedUser.tipo,
+          estado: updatedUser.estado,
+          imagenCedula: updatedUser.imagenCedula,
+          imagenPerfil: updatedUser.imagenPerfil,
+          fechaRegistro: updatedUser.fechaRegistro,
+          ultimoAcceso: updatedUser.ultimoAcceso,
+        },
       },
     });
   } catch (error) {

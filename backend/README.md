@@ -172,7 +172,13 @@ DELETE /api/groups/:id
 ```
 GET    /api/users
 GET    /api/users/:id
-PUT    /api/users/:id
+PUT    /api/users/:id/profile
+PUT    /api/users/:id/status
+DELETE /api/users/:id
+POST   /api/users/join
+GET    /api/users/me/groups
+GET    /api/users/me/contributions
+GET    /api/users/me/deliveries
 ```
 
 ### Productos

@@ -52,8 +52,15 @@ const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
   const { refreshUser } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({
+    nombre: user.nombre,
+    apellido: user.apellido,
+    telefono: user.telefono,
+    correoElectronico: user.correoElectronico,
+  });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Validar archivo
@@ -156,6 +163,66 @@ const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
       hour: '2-digit',
       minute: '2-digit',
     });
+  };
+
+  // Manejar cambios en el formulario de edición
+  const handleFormChange = (field: string, value: string) => {
+    setEditForm(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  // Iniciar edición
+  const handleStartEdit = () => {
+    setEditForm({
+      nombre: user.nombre,
+      apellido: user.apellido,
+      telefono: user.telefono,
+      correoElectronico: user.correoElectronico,
+    });
+    setIsEditing(true);
+  };
+
+  // Cancelar edición
+  const handleCancelEdit = () => {
+    setEditForm({
+      nombre: user.nombre,
+      apellido: user.apellido,
+      telefono: user.telefono,
+      correoElectronico: user.correoElectronico,
+    });
+    setIsEditing(false);
+  };
+
+  // Guardar cambios del perfil
+  const handleSaveProfile = async () => {
+    setIsLoading(true);
+    try {
+      const response = await apiClient.updateProfile(user.id, editForm);
+
+      if (response.success) {
+        toast({
+          title: 'Perfil actualizado',
+          description: 'Tu información personal ha sido actualizada exitosamente.',
+        });
+
+        // Recargar datos del usuario
+        await refreshUser();
+        setIsEditing(false);
+      } else {
+        throw new Error(response.message || 'Error al actualizar el perfil');
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast({
+        title: 'Error',
+        description: 'No se pudo actualizar la información. Inténtalo de nuevo.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -288,43 +355,112 @@ const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <User className="h-5 w-5 text-blue-600" />
-              <span>Información Personal</span>
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <User className="h-5 w-5 text-blue-600" />
+                <span>Información Personal</span>
+              </div>
+              {!isEditing && (
+                <Button onClick={handleStartEdit} size="sm" variant="outline">
+                  Editar
+                </Button>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  Nombre completo
-                </span>
-                <span className="font-semibold text-gray-900 dark:text-white">
-                  {user.nombre} {user.apellido}
-                </span>
-              </div>
+            {isEditing ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="edit-nombre">Nombre</Label>
+                    <Input
+                      id="edit-nombre"
+                      value={editForm.nombre}
+                      onChange={(e) => handleFormChange('nombre', e.target.value)}
+                      placeholder="Tu nombre"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-apellido">Apellido</Label>
+                    <Input
+                      id="edit-apellido"
+                      value={editForm.apellido}
+                      onChange={(e) => handleFormChange('apellido', e.target.value)}
+                      placeholder="Tu apellido"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-telefono">Teléfono</Label>
+                    <Input
+                      id="edit-telefono"
+                      value={editForm.telefono}
+                      onChange={(e) => handleFormChange('telefono', e.target.value)}
+                      placeholder="Tu teléfono"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-correo">Correo electrónico</Label>
+                    <Input
+                      id="edit-correo"
+                      type="email"
+                      value={editForm.correoElectronico}
+                      onChange={(e) => handleFormChange('correoElectronico', e.target.value)}
+                      placeholder="tu@email.com"
+                    />
+                  </div>
+                </div>
 
-              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Cédula</span>
-                <span className="font-semibold text-gray-900 dark:text-white">{user.cedula}</span>
+                <div className="flex space-x-3 pt-4">
+                  <Button
+                    onClick={handleSaveProfile}
+                    disabled={isLoading}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    {isLoading && <LoadingSpinner size="sm" className="mr-2" />}
+                    Guardar cambios
+                  </Button>
+                  <Button
+                    onClick={handleCancelEdit}
+                    disabled={isLoading}
+                    variant="outline"
+                  >
+                    Cancelar
+                  </Button>
+                </div>
               </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Nombre completo
+                  </span>
+                  <span className="font-semibold text-gray-900 dark:text-white">
+                    {user.nombre} {user.apellido}
+                  </span>
+                </div>
 
-              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  Teléfono
-                </span>
-                <span className="font-semibold text-gray-900 dark:text-white">{user.telefono}</span>
-              </div>
+                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Cédula</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">{user.cedula}</span>
+                </div>
 
-              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  Correo electrónico
-                </span>
-                <span className="font-semibold text-gray-900 dark:text-white text-right max-w-xs truncate">
-                  {user.correoElectronico}
-                </span>
+                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Teléfono
+                  </span>
+                  <span className="font-semibold text-gray-900 dark:text-white">{user.telefono}</span>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Correo electrónico
+                  </span>
+                  <span className="font-semibold text-gray-900 dark:text-white text-right max-w-xs truncate">
+                    {user.correoElectronico}
+                  </span>
+                </div>
               </div>
-            </div>
+            )}
           </CardContent>
         </Card>
 

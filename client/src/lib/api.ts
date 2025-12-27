@@ -181,7 +181,14 @@ class ApiClient {
     });
   }
 
-  async updateProfile(userId: number, profileData: { imagenPerfil?: string }) {
+  async updateProfile(userId: number, profileData: {
+    nombre?: string;
+    apellido?: string;
+    telefono?: string;
+    direccion?: string;
+    correoElectronico?: string;
+    imagenPerfil?: string;
+  }) {
     return this.request<{ user: User }>(`/users/${userId}/profile`, {
       method: 'PUT',
       body: JSON.stringify(profileData),
