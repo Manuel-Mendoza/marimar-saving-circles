@@ -1,9 +1,9 @@
-import { relations } from 'drizzle-orm';
-import { users } from './tables/users';
-import { groups } from './tables/groups';
-import { userGroups } from './tables/user-groups';
-import { contributions } from './tables/contributions';
-import { deliveries } from './tables/deliveries';
+import { relations } from "drizzle-orm";
+import { users } from "./tables/users";
+import { groups } from "./tables/groups";
+import { userGroups } from "./tables/user-groups";
+import { contributions } from "./tables/contributions";
+import { deliveries } from "./tables/deliveries";
 
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({

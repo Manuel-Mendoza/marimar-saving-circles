@@ -119,31 +119,37 @@ backend/
 ## Modelos de Base de Datos
 
 ### User (Usuario)
+
 - Información personal completa
 - Autenticación con contraseña hasheada
 - Rol: USUARIO o ADMINISTRADOR
 
 ### Group (Grupo)
+
 - Grupos de ahorro colaborativo
 - Estados: SIN_COMPLETAR, LLENO, EN_MARCHA, COMPLETADO
 - Gestión de turnos y sorteos
 
 ### Product (Producto)
+
 - Planes de ahorro disponibles
 - Valores mensuales y quincenales
 - Duración del plan
 
 ### LotteryResult (Resultado de Sorteo)
+
 - Registro de sorteos realizados
 - Ganadores por posición
 
 ### PaymentOption (Opción de Pago)
+
 - Configuración de métodos de pago
 - Soporte para móvil y Binance
 
 ## API Endpoints
 
 ### Autenticación
+
 ```
 POST /api/auth/login
 POST /api/auth/register
@@ -152,6 +158,7 @@ GET  /api/auth/me
 ```
 
 ### Grupos
+
 ```
 GET    /api/groups
 POST   /api/groups
@@ -161,6 +168,7 @@ DELETE /api/groups/:id
 ```
 
 ### Usuarios
+
 ```
 GET    /api/users
 GET    /api/users/:id
@@ -168,6 +176,7 @@ PUT    /api/users/:id
 ```
 
 ### Productos
+
 ```
 GET    /api/products
 POST   /api/products
@@ -256,6 +265,7 @@ npm run dev
 ### Problemas de CORS
 
 Si hay errores de CORS en desarrollo:
+
 - Verifica `FRONTEND_URL` en `.env`
 - Asegúrate de que incluya el protocolo (http/https)
 
@@ -270,5 +280,6 @@ Si hay errores de CORS en desarrollo:
 ## Soporte
 
 Para soporte técnico o preguntas:
+
 - Revisa los issues del repositorio
 - Consulta la documentación de [Hono](https://hono.dev) y [Drizzle](https://orm.drizzle.team)

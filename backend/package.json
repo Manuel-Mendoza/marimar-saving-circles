@@ -9,6 +9,7 @@
     "build": "bun build src/server.ts --outdir dist --target bun",
     "start": "bun run dist/server.js",
     "lint": "eslint src/**/*.ts",
+    "format": "prettier --write .",
     "test": "jest",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
@@ -25,7 +26,12 @@
     "postgres": "^3.4.3",
     "zod": "^3.22.4"
   },
-  "keywords": ["saving-circles", "api", "hono", "typescript"],
+  "keywords": [
+    "saving-circles",
+    "api",
+    "hono",
+    "typescript"
+  ],
   "author": "Marimar Team",
   "license": "MIT"
 }

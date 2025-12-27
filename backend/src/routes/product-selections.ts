@@ -1,12 +1,12 @@
-import { Hono } from 'hono';
-import { eq, and, count, sql } from 'drizzle-orm';
-import { productSelections } from '../db/tables/product-selections.js';
-import { products } from '../db/tables/products.js';
-import { users } from '../db/tables/users.js';
-import { groups } from '../db/tables/groups.js';
-import { userGroups } from '../db/tables/user-groups.js';
-import { db } from '../config/database.js';
-import { authenticate } from '../middleware/auth.js';
+import { Hono } from "hono";
+import { eq, and, count, sql } from "drizzle-orm";
+import { productSelections } from "../db/tables/product-selections.js";
+import { products } from "../db/tables/products.js";
+import { users } from "../db/tables/users.js";
+import { groups } from "../db/tables/groups.js";
+import { userGroups } from "../db/tables/user-groups.js";
+import { db } from "../config/database.js";
+import { authenticate } from "../middleware/auth.js";
 
 // JWT payload type
 interface JWTPayload {
@@ -31,15 +31,18 @@ interface GroupResult {
 const productSelectionsRoute = new Hono();
 
 // Get all product selections with product and user info - Admin only
-productSelectionsRoute.get('/', authenticate, async (c) => {
+productSelectionsRoute.get("/", authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as JWTPayload;
+    const userPayload = c.get("user") as JWTPayload;
 
-    if (userPayload.tipo !== 'ADMINISTRADOR') {
-      return c.json({
-        success: false,
-        message: 'Acceso denegado'
-      }, 403);
+    if (userPayload.tipo !== "ADMINISTRADOR") {
+      return c.json(
+        {
+          success: false,
+          message: "Acceso denegado",
+        },
+        403,
+      );
     }
 
     const selections = await db
@@ -60,7 +63,7 @@ productSelectionsRoute.get('/', authenticate, async (c) => {
           precioVes: products.precioVes,
           tiempoDuracion: products.tiempoDuracion,
           tags: products.tags,
-        }
+        },
       })
       .from(productSelections)
       .innerJoin(users, eq(productSelections.userId, users.id))
@@ -70,23 +73,25 @@ productSelectionsRoute.get('/', authenticate, async (c) => {
     return c.json({
       success: true,
       data: {
-        selections
-      }
+        selections,
+      },
     });
-
   } catch (error) {
-    console.error('Error obteniendo selecciones:', error);
-    return c.json({
-      success: false,
-      message: 'Error interno del servidor'
-    }, 500);
+    console.error("Error obteniendo selecciones:", error);
+    return c.json(
+      {
+        success: false,
+        message: "Error interno del servidor",
+      },
+      500,
+    );
   }
 });
 
 // Get selections for a specific product
-productSelectionsRoute.get('/product/:productId', authenticate, async (c) => {
+productSelectionsRoute.get("/product/:productId", authenticate, async (c) => {
   try {
-    const productId = parseInt(c.req.param('productId'));
+    const productId = parseInt(c.req.param("productId"));
 
     const selections = await db
       .select({
@@ -97,7 +102,7 @@ productSelectionsRoute.get('/product/:productId', authenticate, async (c) => {
           id: users.id,
           nombre: users.nombre,
           apellido: users.apellido,
-        }
+        },
       })
       .from(productSelections)
       .innerJoin(users, eq(productSelections.userId, users.id))
@@ -107,30 +112,35 @@ productSelectionsRoute.get('/product/:productId', authenticate, async (c) => {
     return c.json({
       success: true,
       data: {
-        selections
-      }
+        selections,
+      },
     });
-
   } catch (error) {
-    console.error('Error obteniendo selecciones del producto:', error);
-    return c.json({
-      success: false,
-      message: 'Error interno del servidor'
-    }, 500);
+    console.error("Error obteniendo selecciones del producto:", error);
+    return c.json(
+      {
+        success: false,
+        message: "Error interno del servidor",
+      },
+      500,
+    );
   }
 });
 
 // Select a product - Authenticated users only
-productSelectionsRoute.post('/select/:productId', authenticate, async (c) => {
+productSelectionsRoute.post("/select/:productId", authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as JWTPayload;
-    const productId = parseInt(c.req.param('productId'));
+    const userPayload = c.get("user") as JWTPayload;
+    const productId = parseInt(c.req.param("productId"));
 
     if (!userPayload?.id) {
-      return c.json({
-        success: false,
-        message: 'Usuario no autenticado'
-      }, 401);
+      return c.json(
+        {
+          success: false,
+          message: "Usuario no autenticado",
+        },
+        401,
+      );
     }
 
     // Check if user is approved
@@ -140,45 +150,53 @@ productSelectionsRoute.post('/select/:productId', authenticate, async (c) => {
       .where(eq(users.id, userPayload.id))
       .limit(1);
 
-    if (!user || user.estado !== 'APROBADO') {
-      return c.json({
-        success: false,
-        message: 'Usuario no aprobado'
-      }, 403);
+    if (!user || user.estado !== "APROBADO") {
+      return c.json(
+        {
+          success: false,
+          message: "Usuario no aprobado",
+        },
+        403,
+      );
     }
 
     // Check if user already has a pending selection
     const existingSelection = await db
       .select()
       .from(productSelections)
-      .where(and(
-        eq(productSelections.userId, userPayload.id),
-        eq(productSelections.estado, 'PENDIENTE')
-      ))
+      .where(
+        and(
+          eq(productSelections.userId, userPayload.id),
+          eq(productSelections.estado, "PENDIENTE"),
+        ),
+      )
       .limit(1);
 
     if (existingSelection.length > 0) {
-      return c.json({
-        success: false,
-        message: 'Ya tienes una selección pendiente'
-      }, 400);
+      return c.json(
+        {
+          success: false,
+          message: "Ya tienes una selección pendiente",
+        },
+        400,
+      );
     }
 
     // Check if product exists and is active
     const [product] = await db
       .select()
       .from(products)
-      .where(and(
-        eq(products.id, productId),
-        eq(products.activo, true)
-      ))
+      .where(and(eq(products.id, productId), eq(products.activo, true)))
       .limit(1);
 
     if (!product) {
-      return c.json({
-        success: false,
-        message: 'Producto no encontrado o no disponible'
-      }, 404);
+      return c.json(
+        {
+          success: false,
+          message: "Producto no encontrado o no disponible",
+        },
+        404,
+      );
     }
 
     // Create selection
@@ -187,7 +205,7 @@ productSelectionsRoute.post('/select/:productId', authenticate, async (c) => {
       .values({
         userId: userPayload.id,
         productId: productId,
-        estado: 'PENDIENTE'
+        estado: "PENDIENTE",
       })
       .returning();
 
@@ -196,25 +214,27 @@ productSelectionsRoute.post('/select/:productId', authenticate, async (c) => {
 
     return c.json({
       success: true,
-      message: 'Producto seleccionado exitosamente',
+      message: "Producto seleccionado exitosamente",
       data: {
-        selection: selection[0]
-      }
+        selection: selection[0],
+      },
     });
-
   } catch (error) {
-    console.error('Error seleccionando producto:', error);
-    return c.json({
-      success: false,
-      message: 'Error interno del servidor'
-    }, 500);
+    console.error("Error seleccionando producto:", error);
+    return c.json(
+      {
+        success: false,
+        message: "Error interno del servidor",
+      },
+      500,
+    );
   }
 });
 
 // Get user's current selection
-productSelectionsRoute.get('/my-selection', authenticate, async (c) => {
+productSelectionsRoute.get("/my-selection", authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as JWTPayload;
+    const userPayload = c.get("user") as JWTPayload;
 
     const [selection] = await db
       .select({
@@ -230,67 +250,82 @@ productSelectionsRoute.get('/my-selection', authenticate, async (c) => {
           imagen: products.imagen,
           descripcion: products.descripcion,
           tags: products.tags,
-        }
+        },
       })
       .from(productSelections)
       .innerJoin(products, eq(productSelections.productId, products.id))
-      .where(and(
-        eq(productSelections.userId, userPayload.id),
-        eq(productSelections.estado, 'PENDIENTE')
-      ))
+      .where(
+        and(
+          eq(productSelections.userId, userPayload.id),
+          eq(productSelections.estado, "PENDIENTE"),
+        ),
+      )
       .limit(1);
 
     return c.json({
       success: true,
       data: {
-        selection: selection || null
-      }
+        selection: selection || null,
+      },
     });
-
   } catch (error) {
-    console.error('Error obteniendo selección del usuario:', error);
-    return c.json({
-      success: false,
-      message: 'Error interno del servidor'
-    }, 500);
+    console.error("Error obteniendo selección del usuario:", error);
+    return c.json(
+      {
+        success: false,
+        message: "Error interno del servidor",
+      },
+      500,
+    );
   }
 });
 
 // Cancel selection
-productSelectionsRoute.delete('/cancel/:selectionId', authenticate, async (c) => {
-  try {
-    const userPayload = c.get('user') as JWTPayload;
-    const selectionId = parseInt(c.req.param('selectionId'));
+productSelectionsRoute.delete(
+  "/cancel/:selectionId",
+  authenticate,
+  async (c) => {
+    try {
+      const userPayload = c.get("user") as JWTPayload;
+      const selectionId = parseInt(c.req.param("selectionId"));
 
-    const deleted = await db
-      .delete(productSelections)
-      .where(and(
-        eq(productSelections.id, selectionId),
-        eq(productSelections.userId, userPayload.id),
-        eq(productSelections.estado, 'PENDIENTE')
-      ))
-      .returning();
+      const deleted = await db
+        .delete(productSelections)
+        .where(
+          and(
+            eq(productSelections.id, selectionId),
+            eq(productSelections.userId, userPayload.id),
+            eq(productSelections.estado, "PENDIENTE"),
+          ),
+        )
+        .returning();
 
-    if (deleted.length === 0) {
+      if (deleted.length === 0) {
+        return c.json(
+          {
+            success: false,
+            message: "Selección no encontrada o no puede ser cancelada",
+          },
+          404,
+        );
+      }
+
       return c.json({
-        success: false,
-        message: 'Selección no encontrada o no puede ser cancelada'
-      }, 404);
+        success: true,
+        message: "Selección cancelada exitosamente",
+      });
+    } catch (error) {
+      console.error("Error cancelando selección:", error);
+      return c.json(
+        {
+          success: false,
+          message: "Error interno del servidor",
+        },
+        500,
+      );
     }
-
-    return c.json({
-      success: true,
-      message: 'Selección cancelada exitosamente'
-    });
-
-  } catch (error) {
-    console.error('Error cancelando selección:', error);
-    return c.json({
-      success: false,
-      message: 'Error interno del servidor'
-    }, 500);
-  }
-});
+  },
+);
 
 // Helper function to check and create groups automatically
 async function checkAndCreateGroup(productId: number) {
@@ -311,14 +346,16 @@ async function checkAndCreateGroup(productId: number) {
         nombre: groups.nombre,
         duracionMeses: groups.duracionMeses,
         estado: groups.estado,
-        userCount: sql<number>`count(${userGroups.id})`
+        userCount: sql<number>`count(${userGroups.id})`,
       })
       .from(groups)
       .leftJoin(userGroups, eq(groups.id, userGroups.groupId))
-      .where(and(
-        eq(groups.duracionMeses, product.tiempoDuracion),
-        eq(groups.estado, 'SIN_COMPLETAR')
-      ))
+      .where(
+        and(
+          eq(groups.duracionMeses, product.tiempoDuracion),
+          eq(groups.estado, "SIN_COMPLETAR"),
+        ),
+      )
       .groupBy(groups.id)
       .having(sql`count(${userGroups.id}) < ${groups.duracionMeses}`)
       .limit(1);
@@ -334,9 +371,9 @@ async function checkAndCreateGroup(productId: number) {
         .values({
           nombre: groupName,
           duracionMeses: product.tiempoDuracion,
-          estado: 'SIN_COMPLETAR',
+          estado: "SIN_COMPLETAR",
           fechaInicio: null,
-          turnoActual: 0
+          turnoActual: 0,
         })
         .returning();
 
@@ -345,8 +382,13 @@ async function checkAndCreateGroup(productId: number) {
 
       if (!newGroup) return;
 
-      targetGroup = { id: newGroup.id, nombre: newGroup.nombre, duracionMeses: newGroup.duracionMeses, estado: newGroup.estado, userCount: 0 };
-
+      targetGroup = {
+        id: newGroup.id,
+        nombre: newGroup.nombre,
+        duracionMeses: newGroup.duracionMeses,
+        estado: newGroup.estado,
+        userCount: 0,
+      };
     } else {
       targetGroup = existingGroup;
     }
@@ -355,10 +397,12 @@ async function checkAndCreateGroup(productId: number) {
     const [selection] = await db
       .select()
       .from(productSelections)
-      .where(and(
-        eq(productSelections.productId, productId),
-        eq(productSelections.estado, 'PENDIENTE')
-      ))
+      .where(
+        and(
+          eq(productSelections.productId, productId),
+          eq(productSelections.estado, "PENDIENTE"),
+        ),
+      )
       .limit(1);
 
     if (!selection || !targetGroup.id) return;
@@ -377,13 +421,13 @@ async function checkAndCreateGroup(productId: number) {
       groupId: targetGroup.id,
       posicion: position,
       productoSeleccionado: product.nombre,
-      monedaPago: 'USD'
+      monedaPago: "USD",
     });
 
     // Update selection status
     await db
       .update(productSelections)
-      .set({ estado: 'EN_GRUPO' })
+      .set({ estado: "EN_GRUPO" })
       .where(eq(productSelections.id, selection.id));
 
     // Check if group is now full
@@ -398,37 +442,38 @@ async function checkAndCreateGroup(productId: number) {
       await db
         .update(groups)
         .set({
-          estado: 'LLENO'
+          estado: "LLENO",
         })
         .where(eq(groups.id, targetGroup.id));
     }
-
   } catch (error) {
-    console.error('Error procesando selección de producto:', error);
+    console.error("Error procesando selección de producto:", error);
   }
 }
 
 // TEMPORAL: Endpoint sin auth para testing - REMOVER DESPUÉS
-productSelectionsRoute.post('/simulate-test', async (c) => {
+productSelectionsRoute.post("/simulate-test", async (c) => {
   try {
     // Get all approved users
     const approvedUsers = await db
       .select({ id: users.id, nombre: users.nombre, apellido: users.apellido })
       .from(users)
-      .where(eq(users.estado, 'APROBADO'));
+      .where(eq(users.estado, "APROBADO"));
 
     // Get all active products
     const activeProducts = await db
       .select({
         id: products.id,
         nombre: products.nombre,
-        tiempoDuracion: products.tiempoDuracion
+        tiempoDuracion: products.tiempoDuracion,
       })
       .from(products)
       .where(eq(products.activo, true));
 
     // Sort products by duration (smaller groups first)
-    const sortedProducts = activeProducts.sort((a, b) => a.tiempoDuracion - b.tiempoDuracion);
+    const sortedProducts = activeProducts.sort(
+      (a, b) => a.tiempoDuracion - b.tiempoDuracion,
+    );
 
     let selectionsCreated = 0;
     let groupsFormed = 0;
@@ -437,20 +482,24 @@ productSelectionsRoute.post('/simulate-test', async (c) => {
     // Strategy: Fill products with smaller group sizes first, then larger ones
     for (const product of sortedProducts) {
       // Find users not yet assigned to any group
-      const availableUsers = approvedUsers.filter(user => !assignedUsers.has(user.id));
+      const availableUsers = approvedUsers.filter(
+        (user) => !assignedUsers.has(user.id),
+      );
 
       if (availableUsers.length < product.tiempoDuracion) {
         continue;
       }
 
       // Calculate how many full groups we can form
-      const maxGroups = Math.floor(availableUsers.length / product.tiempoDuracion);
+      const maxGroups = Math.floor(
+        availableUsers.length / product.tiempoDuracion,
+      );
 
       for (let groupIndex = 0; groupIndex < maxGroups; groupIndex++) {
         // Select users for this group
         const groupUsers = availableUsers.slice(
           groupIndex * product.tiempoDuracion,
-          (groupIndex + 1) * product.tiempoDuracion
+          (groupIndex + 1) * product.tiempoDuracion,
         );
 
         try {
@@ -459,7 +508,7 @@ productSelectionsRoute.post('/simulate-test', async (c) => {
             await db.insert(productSelections).values({
               userId: user.id,
               productId: product.id,
-              estado: 'PENDIENTE'
+              estado: "PENDIENTE",
             });
 
             selectionsCreated++;
@@ -473,9 +522,9 @@ productSelectionsRoute.post('/simulate-test', async (c) => {
             .values({
               nombre: groupName,
               duracionMeses: product.tiempoDuracion,
-              estado: 'SIN_COMPLETAR',
+              estado: "SIN_COMPLETAR",
               fechaInicio: null,
-              turnoActual: 0
+              turnoActual: 0,
             })
             .returning();
 
@@ -490,32 +539,40 @@ productSelectionsRoute.post('/simulate-test', async (c) => {
               groupId: newGroup.id,
               posicion: i + 1,
               productoSeleccionado: product.nombre,
-              monedaPago: 'USD'
+              monedaPago: "USD",
             });
 
             // Update selection status
             await db
               .update(productSelections)
-              .set({ estado: 'EN_GRUPO' })
-              .where(and(
-                eq(productSelections.userId, user.id),
-                eq(productSelections.productId, product.id)
-              ));
+              .set({ estado: "EN_GRUPO" })
+              .where(
+                and(
+                  eq(productSelections.userId, user.id),
+                  eq(productSelections.productId, product.id),
+                ),
+              );
           }
 
           groupsFormed++;
-
         } catch (error) {
-          console.error(`❌ Error creando grupo para ${product.nombre}:`, error);
+          console.error(
+            `❌ Error creando grupo para ${product.nombre}:`,
+            error,
+          );
         }
       }
     }
 
     // Check for remaining users
-    const remainingUsers = approvedUsers.filter(user => !assignedUsers.has(user.id));
+    const remainingUsers = approvedUsers.filter(
+      (user) => !assignedUsers.has(user.id),
+    );
     if (remainingUsers.length > 0) {
       // For remaining users, create additional groups with larger products
-      const largeProducts = activeProducts.filter(p => p.tiempoDuracion >= 12);
+      const largeProducts = activeProducts.filter(
+        (p) => p.tiempoDuracion >= 12,
+      );
 
       for (const product of largeProducts) {
         const needed = product.tiempoDuracion - remainingUsers.length;
@@ -529,7 +586,7 @@ productSelectionsRoute.post('/simulate-test', async (c) => {
               await db.insert(productSelections).values({
                 userId: user.id,
                 productId: product.id,
-                estado: 'PENDIENTE'
+                estado: "PENDIENTE",
               });
               selectionsCreated++;
             }
@@ -541,9 +598,9 @@ productSelectionsRoute.post('/simulate-test', async (c) => {
               .values({
                 nombre: groupName,
                 duracionMeses: product.tiempoDuracion,
-                estado: 'SIN_COMPLETAR',
+                estado: "SIN_COMPLETAR",
                 fechaInicio: null,
-                turnoActual: 0
+                turnoActual: 0,
               })
               .returning();
 
@@ -557,20 +614,21 @@ productSelectionsRoute.post('/simulate-test', async (c) => {
                 groupId: newGroup.id,
                 posicion: i + 1,
                 productoSeleccionado: product.nombre,
-                monedaPago: 'USD'
+                monedaPago: "USD",
               });
 
               await db
                 .update(productSelections)
-                .set({ estado: 'EN_GRUPO' })
-                .where(and(
-                  eq(productSelections.userId, user.id),
-                  eq(productSelections.productId, product.id)
-                ));
+                .set({ estado: "EN_GRUPO" })
+                .where(
+                  and(
+                    eq(productSelections.userId, user.id),
+                    eq(productSelections.productId, product.id),
+                  ),
+                );
             }
 
             groupsFormed++;
-
           } catch (error) {
             console.error(`❌ Error creando grupo adicional:`, error);
           }
@@ -580,55 +638,62 @@ productSelectionsRoute.post('/simulate-test', async (c) => {
 
     return c.json({
       success: true,
-      message: 'Simulación completada exitosamente',
+      message: "Simulación completada exitosamente",
       data: {
         selectionsCreated,
         groupsFormed,
         usersAssigned: assignedUsers.size,
-        totalUsers: approvedUsers.length
-      }
+        totalUsers: approvedUsers.length,
+      },
     });
-
   } catch (error) {
-    console.error('❌ Error en simulación:', error);
-    return c.json({
-      success: false,
-      message: 'Error interno del servidor durante simulación',
-      error: error instanceof Error ? error.message : 'Error desconocido'
-    }, 500);
+    console.error("❌ Error en simulación:", error);
+    return c.json(
+      {
+        success: false,
+        message: "Error interno del servidor durante simulación",
+        error: error instanceof Error ? error.message : "Error desconocido",
+      },
+      500,
+    );
   }
 });
 
 // Admin endpoint to run simulation - only for testing
-productSelectionsRoute.post('/simulate', authenticate, async (c) => {
+productSelectionsRoute.post("/simulate", authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as JWTPayload;
+    const userPayload = c.get("user") as JWTPayload;
 
-    if (userPayload.tipo !== 'ADMINISTRADOR') {
-      return c.json({
-        success: false,
-        message: 'Acceso denegado - solo administradores'
-      }, 403);
+    if (userPayload.tipo !== "ADMINISTRADOR") {
+      return c.json(
+        {
+          success: false,
+          message: "Acceso denegado - solo administradores",
+        },
+        403,
+      );
     }
 
     // Get all approved users
     const approvedUsers = await db
       .select({ id: users.id, nombre: users.nombre, apellido: users.apellido })
       .from(users)
-      .where(eq(users.estado, 'APROBADO'));
+      .where(eq(users.estado, "APROBADO"));
 
     // Get all active products
     const activeProducts = await db
       .select({
         id: products.id,
         nombre: products.nombre,
-        tiempoDuracion: products.tiempoDuracion
+        tiempoDuracion: products.tiempoDuracion,
       })
       .from(products)
       .where(eq(products.activo, true));
 
     // Sort products by duration (smaller groups first)
-    const sortedProducts = activeProducts.sort((a, b) => a.tiempoDuracion - b.tiempoDuracion);
+    const sortedProducts = activeProducts.sort(
+      (a, b) => a.tiempoDuracion - b.tiempoDuracion,
+    );
 
     let selectionsCreated = 0;
     let groupsFormed = 0;
@@ -637,20 +702,24 @@ productSelectionsRoute.post('/simulate', authenticate, async (c) => {
     // Strategy: Fill products with smaller group sizes first, then larger ones
     for (const product of sortedProducts) {
       // Find users not yet assigned to any group
-      const availableUsers = approvedUsers.filter(user => !assignedUsers.has(user.id));
+      const availableUsers = approvedUsers.filter(
+        (user) => !assignedUsers.has(user.id),
+      );
 
       if (availableUsers.length < product.tiempoDuracion) {
         continue;
       }
 
       // Calculate how many full groups we can form
-      const maxGroups = Math.floor(availableUsers.length / product.tiempoDuracion);
+      const maxGroups = Math.floor(
+        availableUsers.length / product.tiempoDuracion,
+      );
 
       for (let groupIndex = 0; groupIndex < maxGroups; groupIndex++) {
         // Select users for this group
         const groupUsers = availableUsers.slice(
           groupIndex * product.tiempoDuracion,
-          (groupIndex + 1) * product.tiempoDuracion
+          (groupIndex + 1) * product.tiempoDuracion,
         );
 
         try {
@@ -659,7 +728,7 @@ productSelectionsRoute.post('/simulate', authenticate, async (c) => {
             await db.insert(productSelections).values({
               userId: user.id,
               productId: product.id,
-              estado: 'PENDIENTE'
+              estado: "PENDIENTE",
             });
 
             selectionsCreated++;
@@ -673,9 +742,9 @@ productSelectionsRoute.post('/simulate', authenticate, async (c) => {
             .values({
               nombre: groupName,
               duracionMeses: product.tiempoDuracion,
-              estado: 'ACTIVO',
+              estado: "ACTIVO",
               fechaInicio: new Date(),
-              turnoActual: 1
+              turnoActual: 1,
             })
             .returning();
 
@@ -690,32 +759,40 @@ productSelectionsRoute.post('/simulate', authenticate, async (c) => {
               groupId: newGroup.id,
               posicion: i + 1,
               productoSeleccionado: product.nombre,
-              monedaPago: 'USD'
+              monedaPago: "USD",
             });
 
             // Update selection status
             await db
               .update(productSelections)
-              .set({ estado: 'EN_GRUPO' })
-              .where(and(
-                eq(productSelections.userId, user.id),
-                eq(productSelections.productId, product.id)
-              ));
+              .set({ estado: "EN_GRUPO" })
+              .where(
+                and(
+                  eq(productSelections.userId, user.id),
+                  eq(productSelections.productId, product.id),
+                ),
+              );
           }
 
           groupsFormed++;
-
         } catch (error) {
-          console.error(`❌ Error creando grupo para ${product.nombre}:`, error);
+          console.error(
+            `❌ Error creando grupo para ${product.nombre}:`,
+            error,
+          );
         }
       }
     }
 
     // Check for remaining users
-    const remainingUsers = approvedUsers.filter(user => !assignedUsers.has(user.id));
+    const remainingUsers = approvedUsers.filter(
+      (user) => !assignedUsers.has(user.id),
+    );
     if (remainingUsers.length > 0) {
       // For remaining users, create additional groups with larger products
-      const largeProducts = activeProducts.filter(p => p.tiempoDuracion >= 12);
+      const largeProducts = activeProducts.filter(
+        (p) => p.tiempoDuracion >= 12,
+      );
 
       for (const product of largeProducts) {
         const needed = product.tiempoDuracion - remainingUsers.length;
@@ -729,21 +806,21 @@ productSelectionsRoute.post('/simulate', authenticate, async (c) => {
               await db.insert(productSelections).values({
                 userId: user.id,
                 productId: product.id,
-                estado: 'PENDIENTE'
+                estado: "PENDIENTE",
               });
               selectionsCreated++;
             }
 
             // Create group
-            const groupName = `Grupo de ${product.tiempoDuracion} meses - ${product.nombre} - ${new Date().toLocaleDateString('es-VE')} EXTRA`;
+            const groupName = `Grupo de ${product.tiempoDuracion} meses - ${product.nombre} - ${new Date().toLocaleDateString("es-VE")} EXTRA`;
             const [newGroup] = await db
               .insert(groups)
               .values({
                 nombre: groupName,
                 duracionMeses: product.tiempoDuracion,
-                estado: 'ACTIVO',
+                estado: "ACTIVO",
                 fechaInicio: new Date(),
-                turnoActual: 1
+                turnoActual: 1,
               })
               .returning();
 
@@ -757,20 +834,21 @@ productSelectionsRoute.post('/simulate', authenticate, async (c) => {
                 groupId: newGroup.id,
                 posicion: i + 1,
                 productoSeleccionado: product.nombre,
-                monedaPago: 'USD'
+                monedaPago: "USD",
               });
 
               await db
                 .update(productSelections)
-                .set({ estado: 'EN_GRUPO' })
-                .where(and(
-                  eq(productSelections.userId, user.id),
-                  eq(productSelections.productId, product.id)
-                ));
+                .set({ estado: "EN_GRUPO" })
+                .where(
+                  and(
+                    eq(productSelections.userId, user.id),
+                    eq(productSelections.productId, product.id),
+                  ),
+                );
             }
 
             groupsFormed++;
-
           } catch (error) {
             console.error(`❌ Error creando grupo adicional:`, error);
           }
@@ -780,22 +858,24 @@ productSelectionsRoute.post('/simulate', authenticate, async (c) => {
 
     return c.json({
       success: true,
-      message: 'Simulación completada exitosamente',
+      message: "Simulación completada exitosamente",
       data: {
         selectionsCreated,
         groupsFormed,
         usersAssigned: assignedUsers.size,
-        totalUsers: approvedUsers.length
-      }
+        totalUsers: approvedUsers.length,
+      },
     });
-
   } catch (error) {
-    console.error('❌ Error en simulación:', error);
-    return c.json({
-      success: false,
-      message: 'Error interno del servidor durante simulación',
-      error: error instanceof Error ? error.message : 'Error desconocido'
-    }, 500);
+    console.error("❌ Error en simulación:", error);
+    return c.json(
+      {
+        success: false,
+        message: "Error interno del servidor durante simulación",
+        error: error instanceof Error ? error.message : "Error desconocido",
+      },
+      500,
+    );
   }
 });
 

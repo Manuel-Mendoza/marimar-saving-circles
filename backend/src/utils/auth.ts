@@ -1,7 +1,7 @@
 // Authentication utilities using Bun's native crypto APIs and PASETO
 
-import { V4 as paseto } from 'paseto';
-import { generateKeyPairSync, createPrivateKey } from 'crypto';
+import { V4 as paseto } from "paseto";
+import { generateKeyPairSync, createPrivateKey } from "crypto";
 
 export async function hashPassword(password: string): Promise<string> {
   const encoder = new TextEncoder();
@@ -12,22 +12,22 @@ export async function hashPassword(password: string): Promise<string> {
 
   // Hash password with salt using PBKDF2
   const key = await crypto.subtle.importKey(
-    'raw',
+    "raw",
     data,
-    { name: 'PBKDF2' },
+    { name: "PBKDF2" },
     false,
-    ['deriveBits']
+    ["deriveBits"],
   );
 
   const hash = await crypto.subtle.deriveBits(
     {
-      name: 'PBKDF2',
+      name: "PBKDF2",
       salt: salt,
       iterations: 100000,
-      hash: 'SHA-256'
+      hash: "SHA-256",
     },
     key,
-    256
+    256,
   );
 
   // Combine salt and hash
@@ -40,10 +40,13 @@ export async function hashPassword(password: string): Promise<string> {
   return btoa(String.fromCharCode(...combined));
 }
 
-export async function verifyPassword(password: string, storedHash: string): Promise<boolean> {
+export async function verifyPassword(
+  password: string,
+  storedHash: string,
+): Promise<boolean> {
   try {
     // Decode stored hash
-    const combined = Uint8Array.from(atob(storedHash), c => c.charCodeAt(0));
+    const combined = Uint8Array.from(atob(storedHash), (c) => c.charCodeAt(0));
 
     // Extract salt and hash
     const salt = combined.slice(0, 16);
@@ -54,22 +57,22 @@ export async function verifyPassword(password: string, storedHash: string): Prom
     const data = encoder.encode(password);
 
     const key = await crypto.subtle.importKey(
-      'raw',
+      "raw",
       data,
-      { name: 'PBKDF2' },
+      { name: "PBKDF2" },
       false,
-      ['deriveBits']
+      ["deriveBits"],
     );
 
     const hash = await crypto.subtle.deriveBits(
       {
-        name: 'PBKDF2',
+        name: "PBKDF2",
         salt: salt,
         iterations: 100000,
-        hash: 'SHA-256'
+        hash: "SHA-256",
       },
       key,
-      256
+      256,
     );
 
     const hashArray = new Uint8Array(hash);
@@ -81,22 +84,25 @@ export async function verifyPassword(password: string, storedHash: string): Prom
 
     return hashArray.every((byte, index) => byte === originalHash[index]);
   } catch (error) {
-    console.error('Error verifying password:', error);
+    console.error("Error verifying password:", error);
     return false;
   }
 }
 
 // Generate an Ed25519 private key for PASETO v4
 export function generatePasetoKey(): string {
-  const { privateKey } = generateKeyPairSync('ed25519', {
-    privateKeyEncoding: { format: 'pem', type: 'pkcs8' },
-    publicKeyEncoding: { format: 'pem', type: 'spki' }
+  const { privateKey } = generateKeyPairSync("ed25519", {
+    privateKeyEncoding: { format: "pem", type: "pkcs8" },
+    publicKeyEncoding: { format: "pem", type: "spki" },
   });
   return privateKey;
 }
 
 // Generate PASETO token
-export async function generateToken(payload: object, secretKey: string): Promise<string> {
+export async function generateToken(
+  payload: object,
+  secretKey: string,
+): Promise<string> {
   try {
     // Create Ed25519 private key from PEM
     const privateKey = createPrivateKey(secretKey);
@@ -106,20 +112,23 @@ export async function generateToken(payload: object, secretKey: string): Promise
       {
         ...payload,
         iat: new Date(),
-        exp: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
+        exp: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
       },
-      privateKey
+      privateKey,
     );
 
     return token;
   } catch (error) {
-    console.error('Error generating PASETO token:', error);
-    throw new Error('Failed to generate authentication token');
+    console.error("Error generating PASETO token:", error);
+    throw new Error("Failed to generate authentication token");
   }
 }
 
 // Verify PASETO token
-export async function verifyToken(token: string, secretKey: string): Promise<object | null> {
+export async function verifyToken(
+  token: string,
+  secretKey: string,
+): Promise<object | null> {
   try {
     // Create Ed25519 private key from PEM
     const privateKey = createPrivateKey(secretKey);
@@ -129,7 +138,7 @@ export async function verifyToken(token: string, secretKey: string): Promise<obj
 
     return payload;
   } catch (error) {
-    console.error('Error verifying PASETO token:', error);
+    console.error("Error verifying PASETO token:", error);
     return null;
   }
 }
@@ -139,8 +148,8 @@ export async function getTokenPayload(token: string): Promise<object | null> {
   try {
     // For PASETO v4, we can decode without verification to get basic info
     // In production middleware, you should verify the token
-    const parts = token.split('.');
-    if (parts.length !== 4 || !token.startsWith('v4.local.')) {
+    const parts = token.split(".");
+    if (parts.length !== 4 || !token.startsWith("v4.local.")) {
       return null;
     }
 
@@ -148,7 +157,7 @@ export async function getTokenPayload(token: string): Promise<object | null> {
     // For middleware purposes, you might want to verify on each request
     return verifyToken(token, process.env.PASETO_SECRET!);
   } catch (error) {
-    console.error('Error decoding token:', error);
+    console.error("Error decoding token:", error);
     return null;
   }
 }

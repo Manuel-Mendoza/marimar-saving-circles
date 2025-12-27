@@ -1,13 +1,13 @@
-import { Hono } from 'hono';
-import { eq, and, count, sql } from 'drizzle-orm';
-import { groups } from '../db/tables/groups.js';
-import { userGroups } from '../db/tables/user-groups.js';
-import { users } from '../db/tables/users.js';
-import { contributions as contributionsTable } from '../db/tables/contributions.js';
-import { deliveries as deliveriesTable } from '../db/tables/deliveries.js';
-import { db } from '../config/database.js';
-import { broadcastToGroup } from '../server.js';
-import { authenticate } from '../middleware/auth.js';
+import { Hono } from "hono";
+import { eq, and, count, sql } from "drizzle-orm";
+import { groups } from "../db/tables/groups.js";
+import { userGroups } from "../db/tables/user-groups.js";
+import { users } from "../db/tables/users.js";
+import { contributions as contributionsTable } from "../db/tables/contributions.js";
+import { deliveries as deliveriesTable } from "../db/tables/deliveries.js";
+import { db } from "../config/database.js";
+import { broadcastToGroup } from "../server.js";
+import { authenticate } from "../middleware/auth.js";
 
 // JWT payload type
 interface JWTPayload {
@@ -23,7 +23,7 @@ interface JWTPayload {
 const groupsRoute = new Hono();
 
 // Get all groups
-groupsRoute.get('/', async (c) => {
+groupsRoute.get("/", async (c) => {
   try {
     // First, update any groups that should be marked as LLENO but aren't
     await db.execute(sql`
@@ -47,7 +47,7 @@ groupsRoute.get('/', async (c) => {
         fechaInicio: groups.fechaInicio,
         fechaFinal: groups.fechaFinal,
         turnoActual: groups.turnoActual,
-        participantes: sql<number>`count(${userGroups.id})`
+        participantes: sql<number>`count(${userGroups.id})`,
       })
       .from(groups)
       .leftJoin(userGroups, eq(groups.id, userGroups.groupId))
@@ -57,22 +57,25 @@ groupsRoute.get('/', async (c) => {
     return c.json({
       success: true,
       data: {
-        groups: allGroups
-      }
+        groups: allGroups,
+      },
     });
   } catch (error) {
-    console.error('Error obteniendo grupos:', error);
-    return c.json({
-      success: false,
-      message: 'Error interno del servidor'
-    }, 500);
+    console.error("Error obteniendo grupos:", error);
+    return c.json(
+      {
+        success: false,
+        message: "Error interno del servidor",
+      },
+      500,
+    );
   }
 });
 
 // Get group by ID
-groupsRoute.get('/:id', async (c) => {
+groupsRoute.get("/:id", async (c) => {
   try {
-    const groupId = parseInt(c.req.param('id'));
+    const groupId = parseInt(c.req.param("id"));
 
     const [group] = await db
       .select({
@@ -82,47 +85,56 @@ groupsRoute.get('/:id', async (c) => {
         estado: groups.estado,
         fechaInicio: groups.fechaInicio,
         fechaFinal: groups.fechaFinal,
-        turnoActual: groups.turnoActual
+        turnoActual: groups.turnoActual,
       })
       .from(groups)
       .where(eq(groups.id, groupId))
       .limit(1);
 
     if (!group) {
-      return c.json({
-        success: false,
-        message: 'Grupo no encontrado'
-      }, 404);
+      return c.json(
+        {
+          success: false,
+          message: "Grupo no encontrado",
+        },
+        404,
+      );
     }
 
     return c.json({
       success: true,
       data: {
-        group
-      }
+        group,
+      },
     });
   } catch (error) {
-    console.error('Error obteniendo grupo:', error);
-    return c.json({
-      success: false,
-      message: 'Error interno del servidor'
-    }, 500);
+    console.error("Error obteniendo grupo:", error);
+    return c.json(
+      {
+        success: false,
+        message: "Error interno del servidor",
+      },
+      500,
+    );
   }
 });
 
 // Get detailed group info for admin
-groupsRoute.get('/:id/admin', authenticate, async (c) => {
+groupsRoute.get("/:id/admin", authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as JWTPayload;
+    const userPayload = c.get("user") as JWTPayload;
 
-    if (userPayload.tipo !== 'ADMINISTRADOR') {
-      return c.json({
-        success: false,
-        message: 'Acceso denegado'
-      }, 403);
+    if (userPayload.tipo !== "ADMINISTRADOR") {
+      return c.json(
+        {
+          success: false,
+          message: "Acceso denegado",
+        },
+        403,
+      );
     }
 
-    const groupId = parseInt(c.req.param('id'));
+    const groupId = parseInt(c.req.param("id"));
 
     // Get basic group info
     const [group] = await db
@@ -133,17 +145,20 @@ groupsRoute.get('/:id/admin', authenticate, async (c) => {
         estado: groups.estado,
         fechaInicio: groups.fechaInicio,
         fechaFinal: groups.fechaFinal,
-        turnoActual: groups.turnoActual
+        turnoActual: groups.turnoActual,
       })
       .from(groups)
       .where(eq(groups.id, groupId))
       .limit(1);
 
     if (!group) {
-      return c.json({
-        success: false,
-        message: 'Grupo no encontrado'
-      }, 404);
+      return c.json(
+        {
+          success: false,
+          message: "Grupo no encontrado",
+        },
+        404,
+      );
     }
 
     // Get group members with user details
@@ -161,8 +176,8 @@ groupsRoute.get('/:id/admin', authenticate, async (c) => {
           cedula: users.cedula,
           telefono: users.telefono,
           correoElectronico: users.correoElectronico,
-          estado: users.estado
-        }
+          estado: users.estado,
+        },
       })
       .from(userGroups)
       .innerJoin(users, eq(userGroups.userId, users.id))
@@ -183,8 +198,8 @@ groupsRoute.get('/:id/admin', authenticate, async (c) => {
         referenciaPago: contributionsTable.referenciaPago,
         user: {
           nombre: users.nombre,
-          apellido: users.apellido
-        }
+          apellido: users.apellido,
+        },
       })
       .from(contributionsTable)
       .innerJoin(users, eq(contributionsTable.userId, users.id))
@@ -204,8 +219,8 @@ groupsRoute.get('/:id/admin', authenticate, async (c) => {
         notas: deliveriesTable.notas,
         user: {
           nombre: users.nombre,
-          apellido: users.apellido
-        }
+          apellido: users.apellido,
+        },
       })
       .from(deliveriesTable)
       .innerJoin(users, eq(deliveriesTable.userId, users.id))
@@ -222,42 +237,57 @@ groupsRoute.get('/:id/admin', authenticate, async (c) => {
         stats: {
           totalMembers: members.length,
           totalContributions: contributions.length,
-          pendingContributions: contributions.filter(c => c.estado === 'PENDIENTE').length,
-          confirmedContributions: contributions.filter(c => c.estado === 'CONFIRMADO').length,
+          pendingContributions: contributions.filter(
+            (c) => c.estado === "PENDIENTE",
+          ).length,
+          confirmedContributions: contributions.filter(
+            (c) => c.estado === "CONFIRMADO",
+          ).length,
           totalDeliveries: deliveries.length,
-          completedDeliveries: deliveries.filter(d => d.estado === 'ENTREGADO').length
-        }
-      }
+          completedDeliveries: deliveries.filter(
+            (d) => d.estado === "ENTREGADO",
+          ).length,
+        },
+      },
     });
   } catch (error) {
-    console.error('Error obteniendo detalles del grupo:', error);
-    return c.json({
-      success: false,
-      message: 'Error interno del servidor'
-    }, 500);
+    console.error("Error obteniendo detalles del grupo:", error);
+    return c.json(
+      {
+        success: false,
+        message: "Error interno del servidor",
+      },
+      500,
+    );
   }
 });
 
 // Create group - Admin only
-groupsRoute.post('/', authenticate, async (c) => {
+groupsRoute.post("/", authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as JWTPayload;
+    const userPayload = c.get("user") as JWTPayload;
 
-    if (userPayload.tipo !== 'ADMINISTRADOR') {
-      return c.json({
-        success: false,
-        message: 'Acceso denegado'
-      }, 403);
+    if (userPayload.tipo !== "ADMINISTRADOR") {
+      return c.json(
+        {
+          success: false,
+          message: "Acceso denegado",
+        },
+        403,
+      );
     }
 
     const body = await c.req.json();
     const { nombre, duracionMeses } = body;
 
     if (!nombre || !duracionMeses || duracionMeses < 1) {
-      return c.json({
-        success: false,
-        message: 'Datos inválidos'
-      }, 400);
+      return c.json(
+        {
+          success: false,
+          message: "Datos inválidos",
+        },
+        400,
+      );
     }
 
     const newGroup = await db
@@ -265,41 +295,47 @@ groupsRoute.post('/', authenticate, async (c) => {
       .values({
         nombre,
         duracionMeses,
-        estado: 'SIN_COMPLETAR',
+        estado: "SIN_COMPLETAR",
         turnoActual: 0,
-        fechaInicio: null
+        fechaInicio: null,
       })
       .returning();
 
     return c.json({
       success: true,
-      message: 'Grupo creado exitosamente',
+      message: "Grupo creado exitosamente",
       data: {
-        group: newGroup[0]
-      }
+        group: newGroup[0],
+      },
     });
   } catch (error) {
-    console.error('Error creando grupo:', error);
-    return c.json({
-      success: false,
-      message: 'Error interno del servidor'
-    }, 500);
+    console.error("Error creando grupo:", error);
+    return c.json(
+      {
+        success: false,
+        message: "Error interno del servidor",
+      },
+      500,
+    );
   }
 });
 
 // Update group - Admin only
-groupsRoute.put('/:id', authenticate, async (c) => {
+groupsRoute.put("/:id", authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as JWTPayload;
+    const userPayload = c.get("user") as JWTPayload;
 
-    if (userPayload.tipo !== 'ADMINISTRADOR') {
-      return c.json({
-        success: false,
-        message: 'Acceso denegado'
-      }, 403);
+    if (userPayload.tipo !== "ADMINISTRADOR") {
+      return c.json(
+        {
+          success: false,
+          message: "Acceso denegado",
+        },
+        403,
+      );
     }
 
-    const groupId = parseInt(c.req.param('id'));
+    const groupId = parseInt(c.req.param("id"));
     const body = await c.req.json();
     const { nombre, duracionMeses, estado } = body;
 
@@ -308,45 +344,54 @@ groupsRoute.put('/:id', authenticate, async (c) => {
       .set({
         nombre,
         duracionMeses,
-        estado
+        estado,
       })
       .where(eq(groups.id, groupId))
       .returning();
 
     if (updatedGroup.length === 0) {
-      return c.json({
-        success: false,
-        message: 'Grupo no encontrado'
-      }, 404);
+      return c.json(
+        {
+          success: false,
+          message: "Grupo no encontrado",
+        },
+        404,
+      );
     }
 
     return c.json({
       success: true,
-      message: 'Grupo actualizado exitosamente',
+      message: "Grupo actualizado exitosamente",
       data: {
-        group: updatedGroup[0]
-      }
+        group: updatedGroup[0],
+      },
     });
   } catch (error) {
-    console.error('Error actualizando grupo:', error);
-    return c.json({
-      success: false,
-      message: 'Error interno del servidor'
-    }, 500);
+    console.error("Error actualizando grupo:", error);
+    return c.json(
+      {
+        success: false,
+        message: "Error interno del servidor",
+      },
+      500,
+    );
   }
 });
 
 // Join existing group
-groupsRoute.post('/:id/join', async (c) => {
+groupsRoute.post("/:id/join", async (c) => {
   try {
-    const userPayload = c.get('user') as JWTPayload;
-    const groupId = parseInt(c.req.param('id'));
+    const userPayload = c.get("user") as JWTPayload;
+    const groupId = parseInt(c.req.param("id"));
 
     if (!userPayload?.id) {
-      return c.json({
-        success: false,
-        message: 'Usuario no autenticado'
-      }, 401);
+      return c.json(
+        {
+          success: false,
+          message: "Usuario no autenticado",
+        },
+        401,
+      );
     }
 
     // Check if user is already in a group
@@ -357,10 +402,13 @@ groupsRoute.post('/:id/join', async (c) => {
       .limit(1);
 
     if (existingUserGroup.length > 0) {
-      return c.json({
-        success: false,
-        message: 'Ya estás en un grupo'
-      }, 400);
+      return c.json(
+        {
+          success: false,
+          message: "Ya estás en un grupo",
+        },
+        400,
+      );
     }
 
     // Check if group exists
@@ -371,10 +419,13 @@ groupsRoute.post('/:id/join', async (c) => {
       .limit(1);
 
     if (!group) {
-      return c.json({
-        success: false,
-        message: 'Grupo no encontrado'
-      }, 404);
+      return c.json(
+        {
+          success: false,
+          message: "Grupo no encontrado",
+        },
+        404,
+      );
     }
 
     // Get current members count
@@ -393,40 +444,46 @@ groupsRoute.post('/:id/join', async (c) => {
         groupId: groupId,
         posicion: position,
         productoSeleccionado: `Miembro del grupo ${group.nombre}`,
-        monedaPago: 'USD'
+        monedaPago: "USD",
       })
       .returning();
 
     return c.json({
       success: true,
-      message: 'Te has unido exitosamente al grupo',
+      message: "Te has unido exitosamente al grupo",
       data: {
         groupId: groupId,
-        position: position
-      }
+        position: position,
+      },
     });
   } catch (error) {
-    console.error('Error uniendo al grupo:', error);
-    return c.json({
-      success: false,
-      message: 'Error interno del servidor'
-    }, 500);
+    console.error("Error uniendo al grupo:", error);
+    return c.json(
+      {
+        success: false,
+        message: "Error interno del servidor",
+      },
+      500,
+    );
   }
 });
 
 // Start group draw - Admin only
-groupsRoute.post('/:id/start-draw', authenticate, async (c) => {
+groupsRoute.post("/:id/start-draw", authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as JWTPayload;
+    const userPayload = c.get("user") as JWTPayload;
 
-    if (userPayload.tipo !== 'ADMINISTRADOR') {
-      return c.json({
-        success: false,
-        message: 'Acceso denegado'
-      }, 403);
+    if (userPayload.tipo !== "ADMINISTRADOR") {
+      return c.json(
+        {
+          success: false,
+          message: "Acceso denegado",
+        },
+        403,
+      );
     }
 
-    const groupId = parseInt(c.req.param('id'));
+    const groupId = parseInt(c.req.param("id"));
 
     // Check if group exists and is in correct state
     const [group] = await db
@@ -436,17 +493,23 @@ groupsRoute.post('/:id/start-draw', authenticate, async (c) => {
       .limit(1);
 
     if (!group) {
-      return c.json({
-        success: false,
-        message: 'Grupo no encontrado'
-      }, 404);
+      return c.json(
+        {
+          success: false,
+          message: "Grupo no encontrado",
+        },
+        404,
+      );
     }
 
-    if (group.estado !== 'LLENO') {
-      return c.json({
-        success: false,
-        message: 'El grupo debe estar completo para iniciar el sorteo'
-      }, 400);
+    if (group.estado !== "LLENO") {
+      return c.json(
+        {
+          success: false,
+          message: "El grupo debe estar completo para iniciar el sorteo",
+        },
+        400,
+      );
     }
 
     // Get all group members
@@ -455,7 +518,7 @@ groupsRoute.post('/:id/start-draw', authenticate, async (c) => {
         userId: userGroups.userId,
         posicion: userGroups.posicion,
         nombre: users.nombre,
-        apellido: users.apellido
+        apellido: users.apellido,
       })
       .from(userGroups)
       .innerJoin(users, eq(userGroups.userId, users.id))
@@ -463,10 +526,13 @@ groupsRoute.post('/:id/start-draw', authenticate, async (c) => {
       .orderBy(userGroups.posicion);
 
     if (groupMembers.length === 0) {
-      return c.json({
-        success: false,
-        message: 'No hay miembros en el grupo'
-      }, 400);
+      return c.json(
+        {
+          success: false,
+          message: "No hay miembros en el grupo",
+        },
+        400,
+      );
     }
 
     // Shuffle positions for the draw
@@ -479,7 +545,12 @@ groupsRoute.post('/:id/start-draw', authenticate, async (c) => {
         await db
           .update(userGroups)
           .set({ posicion: i + 1 })
-          .where(and(eq(userGroups.userId, member.userId), eq(userGroups.groupId, groupId)));
+          .where(
+            and(
+              eq(userGroups.userId, member.userId),
+              eq(userGroups.groupId, groupId),
+            ),
+          );
       }
     }
 
@@ -487,9 +558,9 @@ groupsRoute.post('/:id/start-draw', authenticate, async (c) => {
     await db
       .update(groups)
       .set({
-        estado: 'EN_MARCHA',
+        estado: "EN_MARCHA",
         fechaInicio: new Date(),
-        turnoActual: 1
+        turnoActual: 1,
       })
       .where(eq(groups.id, groupId));
 
@@ -498,72 +569,79 @@ groupsRoute.post('/:id/start-draw', authenticate, async (c) => {
       position: index + 1,
       userId: member.userId,
       name: `${member.nombre} ${member.apellido}`,
-      delay: index * 1000 // 1 second delay between each position reveal
+      delay: index * 1000, // 1 second delay between each position reveal
     }));
 
     // Broadcast to all connected clients
     broadcastToGroup(groupId, {
-      type: 'DRAW_STARTED',
+      type: "DRAW_STARTED",
       groupId,
       animationSequence,
       startTime: Date.now(),
       finalPositions: shuffledMembers.map((member, index) => ({
         position: index + 1,
         userId: member.userId,
-        name: `${member.nombre} ${member.apellido}`
-      }))
+        name: `${member.nombre} ${member.apellido}`,
+      })),
     });
 
     return c.json({
       success: true,
-      message: 'Sorteo iniciado exitosamente',
+      message: "Sorteo iniciado exitosamente",
       data: {
         groupId,
         finalPositions: shuffledMembers.map((member, index) => ({
           position: index + 1,
           userId: member.userId,
-          name: `${member.nombre} ${member.apellido}`
+          name: `${member.nombre} ${member.apellido}`,
         })),
-        animationSequence
-      }
+        animationSequence,
+      },
     });
   } catch (error) {
-    console.error('Error iniciando sorteo:', error);
-    return c.json({
-      success: false,
-      message: 'Error interno del servidor'
-    }, 500);
+    console.error("Error iniciando sorteo:", error);
+    return c.json(
+      {
+        success: false,
+        message: "Error interno del servidor",
+      },
+      500,
+    );
   }
 });
 
 // Delete group - Admin only
-groupsRoute.delete('/:id', authenticate, async (c) => {
+groupsRoute.delete("/:id", authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as JWTPayload;
+    const userPayload = c.get("user") as JWTPayload;
 
-    if (userPayload.tipo !== 'ADMINISTRADOR') {
-      return c.json({
-        success: false,
-        message: 'Acceso denegado'
-      }, 403);
+    if (userPayload.tipo !== "ADMINISTRADOR") {
+      return c.json(
+        {
+          success: false,
+          message: "Acceso denegado",
+        },
+        403,
+      );
     }
 
-    const groupId = parseInt(c.req.param('id'));
+    const groupId = parseInt(c.req.param("id"));
 
-    await db
-      .delete(groups)
-      .where(eq(groups.id, groupId));
+    await db.delete(groups).where(eq(groups.id, groupId));
 
     return c.json({
       success: true,
-      message: 'Grupo eliminado exitosamente'
+      message: "Grupo eliminado exitosamente",
     });
   } catch (error) {
-    console.error('Error eliminando grupo:', error);
-    return c.json({
-      success: false,
-      message: 'Error interno del servidor'
-    }, 500);
+    console.error("Error eliminando grupo:", error);
+    return c.json(
+      {
+        success: false,
+        message: "Error interno del servidor",
+      },
+      500,
+    );
   }
 });
 

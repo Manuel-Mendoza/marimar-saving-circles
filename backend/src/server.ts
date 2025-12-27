@@ -49,7 +49,7 @@ app.use(
       "Accept",
       "Origin",
     ],
-  })
+  }),
 );
 
 // Additional CORS headers for preflight requests
@@ -77,7 +77,10 @@ interface WebSocketMessage {
 const groupConnections = new Map<number, WebSocket[]>();
 
 // Function to broadcast messages to all connections in a group
-export const broadcastToGroup = (groupId: number, message: WebSocketMessage) => {
+export const broadcastToGroup = (
+  groupId: number,
+  message: WebSocketMessage,
+) => {
   const connections = groupConnections.get(groupId) || [];
   const messageString = JSON.stringify(message);
 
@@ -131,8 +134,6 @@ wss.on("connection", (ws, req) => {
     return;
   }
 
-
-
   // Add connection to group
   if (!groupConnections.has(groupId)) {
     groupConnections.set(groupId, []);
@@ -145,7 +146,7 @@ wss.on("connection", (ws, req) => {
       type: "CONNECTED",
       groupId,
       message: "Connected to group real-time updates",
-    })
+    }),
   );
 
   ws.on("message", (data) => {

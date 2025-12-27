@@ -1,19 +1,19 @@
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { Hono } from 'hono';
-import usersRoute from '../routes/users.js';
-import { db } from '../config/database.js';
-import { users as usersTable } from '../db/tables/users.js';
-import { products } from '../db/tables/products.js';
-import { groups } from '../db/tables/groups.js';
-import { userGroups } from '../db/tables/user-groups.js';
-import { eq, and } from 'drizzle-orm';
+import { describe, it, expect, beforeEach, afterEach } from "@jest/globals";
+import { Hono } from "hono";
+import usersRoute from "../routes/users.js";
+import { db } from "../config/database.js";
+import { users as usersTable } from "../db/tables/users.js";
+import { products } from "../db/tables/products.js";
+import { groups } from "../db/tables/groups.js";
+import { userGroups } from "../db/tables/user-groups.js";
+import { eq, and } from "drizzle-orm";
 
-describe('Group Creation Logic', () => {
+describe("Group Creation Logic", () => {
   let app: Hono;
 
   beforeEach(async () => {
     app = new Hono();
-    app.route('/api/users', usersRoute);
+    app.route("/api/users", usersRoute);
 
     // Clean up test data
     await db.delete(userGroups);
@@ -30,21 +30,21 @@ describe('Group Creation Logic', () => {
     await db.delete(usersTable);
   });
 
-  describe('POST /api/users/join - Product Selection and Group Assignment', () => {
-    it('should create a new group when no group exists for the product duration', async () => {
+  describe("POST /api/users/join - Product Selection and Group Assignment", () => {
+    it("should create a new group when no group exists for the product duration", async () => {
       // Create a test user
       const [testUser] = await db
         .insert(usersTable)
         .values({
-          nombre: 'Test',
-          apellido: 'User',
-          cedula: '12345678',
-          telefono: '04123456789',
-          direccion: 'Test Address',
-          correoElectronico: 'test@example.com',
-          password: 'hashedpassword',
-          tipo: 'USUARIO',
-          estado: 'APROBADO'
+          nombre: "Test",
+          apellido: "User",
+          cedula: "12345678",
+          telefono: "04123456789",
+          direccion: "Test Address",
+          correoElectronico: "test@example.com",
+          password: "hashedpassword",
+          tipo: "USUARIO",
+          estado: "APROBADO",
         })
         .returning();
 
@@ -52,28 +52,28 @@ describe('Group Creation Logic', () => {
       const [testProduct] = await db
         .insert(products)
         .values({
-          nombre: 'Test Product',
+          nombre: "Test Product",
           precioUsd: 100,
           precioVes: 1000000,
           tiempoDuracion: 8,
-          descripcion: 'Test product description',
-          activo: true
+          descripcion: "Test product description",
+          activo: true,
         })
         .returning();
 
       // Mock authentication middleware
-      app.use('/api/users/join', async (c, next) => {
-        c.set('user', { id: testUser.id, tipo: 'USUARIO' });
+      app.use("/api/users/join", async (c, next) => {
+        c.set("user", { id: testUser.id, tipo: "USUARIO" });
         await next();
       });
 
-      const response = await app.request('/api/users/join', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await app.request("/api/users/join", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           productId: testProduct.id,
-          currency: 'USD'
-        })
+          currency: "USD",
+        }),
       });
 
       const result = await response.json();
@@ -82,7 +82,7 @@ describe('Group Creation Logic', () => {
       expect(result.success).toBe(true);
       expect(result.data.groupId).toBeDefined();
       expect(result.data.position).toBe(null);
-      expect(result.data.currency).toBe('USD');
+      expect(result.data.currency).toBe("USD");
       expect(result.data.monthlyPayment).toBe(100);
 
       // Verify group was created
@@ -92,39 +92,39 @@ describe('Group Creation Logic', () => {
         .where(eq(groups.duracionMeses, 8));
 
       expect(createdGroups.length).toBe(1);
-      expect(createdGroups[0].nombre).toBe('Grupo 8 meses');
-      expect(createdGroups[0].estado).toBe('SIN_COMPLETAR');
+      expect(createdGroups[0].nombre).toBe("Grupo 8 meses");
+      expect(createdGroups[0].estado).toBe("SIN_COMPLETAR");
     });
 
-    it('should assign users to the same group when choosing products with same duration', async () => {
+    it("should assign users to the same group when choosing products with same duration", async () => {
       // Create test users
       const [user1] = await db
         .insert(usersTable)
         .values({
-          nombre: 'User',
-          apellido: 'One',
-          cedula: '11111111',
-          telefono: '04111111111',
-          direccion: 'Address 1',
-          correoElectronico: 'user1@example.com',
-          password: 'hashedpassword',
-          tipo: 'USUARIO',
-          estado: 'APROBADO'
+          nombre: "User",
+          apellido: "One",
+          cedula: "11111111",
+          telefono: "04111111111",
+          direccion: "Address 1",
+          correoElectronico: "user1@example.com",
+          password: "hashedpassword",
+          tipo: "USUARIO",
+          estado: "APROBADO",
         })
         .returning();
 
       const [user2] = await db
         .insert(usersTable)
         .values({
-          nombre: 'User',
-          apellido: 'Two',
-          cedula: '22222222',
-          telefono: '04222222222',
-          direccion: 'Address 2',
-          correoElectronico: 'user2@example.com',
-          password: 'hashedpassword',
-          tipo: 'USUARIO',
-          estado: 'APROBADO'
+          nombre: "User",
+          apellido: "Two",
+          cedula: "22222222",
+          telefono: "04222222222",
+          direccion: "Address 2",
+          correoElectronico: "user2@example.com",
+          password: "hashedpassword",
+          tipo: "USUARIO",
+          estado: "APROBADO",
         })
         .returning();
 
@@ -132,41 +132,41 @@ describe('Group Creation Logic', () => {
       const [product1] = await db
         .insert(products)
         .values({
-          nombre: 'Product 8 months A',
+          nombre: "Product 8 months A",
           precioUsd: 100,
           precioVes: 1000000,
           tiempoDuracion: 8,
-          descripcion: 'Product A',
-          activo: true
+          descripcion: "Product A",
+          activo: true,
         })
         .returning();
 
       const [product2] = await db
         .insert(products)
         .values({
-          nombre: 'Product 8 months B',
+          nombre: "Product 8 months B",
           precioUsd: 150,
           precioVes: 1500000,
           tiempoDuracion: 8,
-          descripcion: 'Product B',
-          activo: true
+          descripcion: "Product B",
+          activo: true,
         })
         .returning();
 
       // Mock authentication for user1
-      app.use('/api/users/join', async (c, next) => {
-        c.set('user', { id: user1.id, tipo: 'USUARIO' });
+      app.use("/api/users/join", async (c, next) => {
+        c.set("user", { id: user1.id, tipo: "USUARIO" });
         await next();
       });
 
       // User 1 joins with first product
-      const response1 = await app.request('/api/users/join', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response1 = await app.request("/api/users/join", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           productId: product1.id,
-          currency: 'USD'
-        })
+          currency: "USD",
+        }),
       });
 
       const result1 = await response1.json();
@@ -174,19 +174,19 @@ describe('Group Creation Logic', () => {
       const groupId1 = result1.data.groupId;
 
       // Mock authentication for user2
-      app.use('/api/users/join', async (c, next) => {
-        c.set('user', { id: user2.id, tipo: 'USUARIO' });
+      app.use("/api/users/join", async (c, next) => {
+        c.set("user", { id: user2.id, tipo: "USUARIO" });
         await next();
       });
 
       // User 2 joins with second product (same duration)
-      const response2 = await app.request('/api/users/join', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response2 = await app.request("/api/users/join", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           productId: product2.id,
-          currency: 'USD'
-        })
+          currency: "USD",
+        }),
       });
 
       const result2 = await response2.json();
@@ -215,20 +215,20 @@ describe('Group Creation Logic', () => {
       expect(groupMembers[1].posicion).toBe(null);
     });
 
-    it('should create separate groups for products with different durations', async () => {
+    it("should create separate groups for products with different durations", async () => {
       // Create test user
       const [testUser] = await db
         .insert(usersTable)
         .values({
-          nombre: 'Test',
-          apellido: 'User',
-          cedula: '12345678',
-          telefono: '04123456789',
-          direccion: 'Test Address',
-          correoElectronico: 'test@example.com',
-          password: 'hashedpassword',
-          tipo: 'USUARIO',
-          estado: 'APROBADO'
+          nombre: "Test",
+          apellido: "User",
+          cedula: "12345678",
+          telefono: "04123456789",
+          direccion: "Test Address",
+          correoElectronico: "test@example.com",
+          password: "hashedpassword",
+          tipo: "USUARIO",
+          estado: "APROBADO",
         })
         .returning();
 
@@ -236,30 +236,30 @@ describe('Group Creation Logic', () => {
       const [product8Months] = await db
         .insert(products)
         .values({
-          nombre: 'Product 8 months',
+          nombre: "Product 8 months",
           precioUsd: 100,
           precioVes: 1000000,
           tiempoDuracion: 8,
-          descripcion: '8 month product',
-          activo: true
+          descripcion: "8 month product",
+          activo: true,
         })
         .returning();
 
       const [product10Months] = await db
         .insert(products)
         .values({
-          nombre: 'Product 10 months',
+          nombre: "Product 10 months",
           precioUsd: 150,
           precioVes: 1500000,
           tiempoDuracion: 10,
-          descripcion: '10 month product',
-          activo: true
+          descripcion: "10 month product",
+          activo: true,
         })
         .returning();
 
       // Mock authentication
-      app.use('/api/users/join', async (c, next) => {
-        c.set('user', { id: testUser.id, tipo: 'USUARIO' });
+      app.use("/api/users/join", async (c, next) => {
+        c.set("user", { id: testUser.id, tipo: "USUARIO" });
         await next();
       });
 
@@ -267,13 +267,13 @@ describe('Group Creation Logic', () => {
       await db.delete(userGroups).where(eq(userGroups.userId, testUser.id));
 
       // Join 8-month product
-      const response1 = await app.request('/api/users/join', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response1 = await app.request("/api/users/join", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           productId: product8Months.id,
-          currency: 'USD'
-        })
+          currency: "USD",
+        }),
       });
 
       const result1 = await response1.json();
@@ -281,13 +281,13 @@ describe('Group Creation Logic', () => {
       const groupId8 = result1.data.groupId;
 
       // Join 10-month product (same user, different group)
-      const response2 = await app.request('/api/users/join', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response2 = await app.request("/api/users/join", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           productId: product10Months.id,
-          currency: 'USD'
-        })
+          currency: "USD",
+        }),
       });
 
       const result2 = await response2.json();
@@ -314,7 +314,7 @@ describe('Group Creation Logic', () => {
       expect(groups10Months[0].id).toBe(groupId10);
     });
 
-    it('should handle multiple users choosing different products simultaneously', async () => {
+    it("should handle multiple users choosing different products simultaneously", async () => {
       // Create multiple users
       const usersData = [];
       for (let i = 1; i <= 5; i++) {
@@ -327,9 +327,9 @@ describe('Group Creation Logic', () => {
             telefono: `041200000${i}`,
             direccion: `Address ${i}`,
             correoElectronico: `user${i}@example.com`,
-            password: 'hashedpassword',
-            tipo: 'USUARIO',
-            estado: 'APROBADO'
+            password: "hashedpassword",
+            tipo: "USUARIO",
+            estado: "APROBADO",
           })
           .returning();
         usersData.push(user);
@@ -343,11 +343,11 @@ describe('Group Creation Logic', () => {
           .insert(products)
           .values({
             nombre: `Product ${durations[i]} months`,
-            precioUsd: 100 + (i * 50),
-            precioVes: (100 + (i * 50)) * 10000,
+            precioUsd: 100 + i * 50,
+            precioVes: (100 + i * 50) * 10000,
             tiempoDuracion: durations[i],
             descripcion: `${durations[i]} month product`,
-            activo: true
+            activo: true,
           })
           .returning();
         productsData.push(product);
@@ -355,27 +355,35 @@ describe('Group Creation Logic', () => {
 
       // Simulate multiple users joining different groups
       const joinPromises = usersData.map(async (user, index) => {
-        const product = productsData[index % productsData.length] as { id: number; nombre: string; tiempoDuracion: number };
+        const product = productsData[index % productsData.length] as {
+          id: number;
+          nombre: string;
+          tiempoDuracion: number;
+        };
 
         // Mock authentication for each user
         const testApp = new Hono();
-        testApp.route('/api/users', usersRoute);
-        testApp.use('/api/users/join', async (c, next) => {
-          c.set('user', { id: user.id, tipo: 'USUARIO' });
+        testApp.route("/api/users", usersRoute);
+        testApp.use("/api/users/join", async (c, next) => {
+          c.set("user", { id: user.id, tipo: "USUARIO" });
           await next();
         });
 
-        const response = await testApp.request('/api/users/join', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const response = await testApp.request("/api/users/join", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             productId: product.id,
-            currency: 'USD'
-          })
+            currency: "USD",
+          }),
         });
 
         const result = await response.json();
-        return { userId: user.id, productDuration: product.tiempoDuracion, result };
+        return {
+          userId: user.id,
+          productDuration: product.tiempoDuracion,
+          result,
+        };
       });
 
       const results = await Promise.all(joinPromises);
@@ -393,8 +401,11 @@ describe('Group Creation Logic', () => {
 
       // Verify group distribution
       const durationGroups = new Map<number, number>();
-      allGroups.forEach(group => {
-        durationGroups.set(group.duracionMeses, (durationGroups.get(group.duracionMeses) || 0) + 1);
+      allGroups.forEach((group) => {
+        durationGroups.set(
+          group.duracionMeses,
+          (durationGroups.get(group.duracionMeses) || 0) + 1,
+        );
       });
 
       expect(durationGroups.get(6)).toBe(1);
@@ -407,27 +418,44 @@ describe('Group Creation Logic', () => {
       expect(allUserGroups.length).toBe(5); // 5 users joined
 
       // All positions should be null (to be assigned by admin lottery)
-      allUserGroups.forEach(ug => {
+      allUserGroups.forEach((ug) => {
         expect(ug.posicion).toBe(null);
       });
     });
 
-    it('should create a new group when the current group reaches maximum capacity', async () => {
+    it("should create a new group when the current group reaches maximum capacity", async () => {
       // Create users
-      const users: { id: number; nombre: string; apellido: string; cedula: string; telefono: string; direccion: string; correoElectronico: string; password: string; tipo: string; estado: string; imagenCedula: string | null; fechaRegistro: Date; ultimoAcceso: Date | null; aprobadoPor: number | null; fechaAprobacion: Date | null; motivo: string | null }[] = [];
+      const users: {
+        id: number;
+        nombre: string;
+        apellido: string;
+        cedula: string;
+        telefono: string;
+        direccion: string;
+        correoElectronico: string;
+        password: string;
+        tipo: string;
+        estado: string;
+        imagenCedula: string | null;
+        fechaRegistro: Date;
+        ultimoAcceso: Date | null;
+        aprobadoPor: number | null;
+        fechaAprobacion: Date | null;
+        motivo: string | null;
+      }[] = [];
       for (let i = 1; i <= 5; i++) {
         const [user] = await db
           .insert(usersTable)
           .values({
             nombre: `User${i}`,
-            apellido: 'Test',
+            apellido: "Test",
             cedula: `100000${i}`,
             telefono: `041200000${i}`,
             direccion: `Address ${i}`,
             correoElectronico: `user${i}@test.com`,
-            password: 'hashedpassword',
-            tipo: 'USUARIO',
-            estado: 'APROBADO'
+            password: "hashedpassword",
+            tipo: "USUARIO",
+            estado: "APROBADO",
           })
           .returning();
         users.push(user);
@@ -437,12 +465,12 @@ describe('Group Creation Logic', () => {
       const [product] = await db
         .insert(products)
         .values({
-          nombre: 'Product 3 months',
+          nombre: "Product 3 months",
           precioUsd: 50,
           precioVes: 500000,
           tiempoDuracion: 3,
-          descripcion: '3 month product',
-          activo: true
+          descripcion: "3 month product",
+          activo: true,
         })
         .returning();
 
@@ -451,19 +479,19 @@ describe('Group Creation Logic', () => {
 
       for (let i = 0; i < 3; i++) {
         const testApp = new Hono();
-        testApp.route('/api/users', usersRoute);
-        testApp.use('/api/users/join', async (c, next) => {
-          c.set('user', { id: users[i].id, tipo: 'USUARIO' });
+        testApp.route("/api/users", usersRoute);
+        testApp.use("/api/users/join", async (c, next) => {
+          c.set("user", { id: users[i].id, tipo: "USUARIO" });
           await next();
         });
 
-        const response = await testApp.request('/api/users/join', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const response = await testApp.request("/api/users/join", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             productId: product.id,
-            currency: 'USD'
-          })
+            currency: "USD",
+          }),
         });
 
         const result = await response.json();
@@ -486,19 +514,19 @@ describe('Group Creation Logic', () => {
 
       // 4th user should get a new group
       const testApp4 = new Hono();
-      testApp4.route('/api/users', usersRoute);
-      testApp4.use('/api/users/join', async (c, next) => {
-        c.set('user', { id: users[3].id, tipo: 'USUARIO' });
+      testApp4.route("/api/users", usersRoute);
+      testApp4.use("/api/users/join", async (c, next) => {
+        c.set("user", { id: users[3].id, tipo: "USUARIO" });
         await next();
       });
 
-      const response4 = await testApp4.request('/api/users/join', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response4 = await testApp4.request("/api/users/join", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           productId: product.id,
-          currency: 'USD'
-        })
+          currency: "USD",
+        }),
       });
 
       const result4 = await response4.json();
@@ -508,19 +536,19 @@ describe('Group Creation Logic', () => {
 
       // 5th user should join the second group
       const testApp5 = new Hono();
-      testApp5.route('/api/users', usersRoute);
-      testApp5.use('/api/users/join', async (c, next) => {
-        c.set('user', { id: users[4].id, tipo: 'USUARIO' });
+      testApp5.route("/api/users", usersRoute);
+      testApp5.use("/api/users/join", async (c, next) => {
+        c.set("user", { id: users[4].id, tipo: "USUARIO" });
         await next();
       });
 
-      const response5 = await testApp5.request('/api/users/join', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response5 = await testApp5.request("/api/users/join", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           productId: product.id,
-          currency: 'USD'
-        })
+          currency: "USD",
+        }),
       });
 
       const result5 = await response5.json();

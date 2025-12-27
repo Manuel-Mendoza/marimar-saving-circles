@@ -1,12 +1,11 @@
-import { MiddlewareHandler } from 'hono';
+import { MiddlewareHandler } from "hono";
 
 // Simple in-memory rate limiter
 const requests = new Map<string, { count: number; resetTime: number }>();
 
 export const rateLimiter: MiddlewareHandler = async (c, next) => {
-  const clientIP = c.req.header('x-forwarded-for') ||
-                   c.req.header('x-real-ip') ||
-                   'unknown';
+  const clientIP =
+    c.req.header("x-forwarded-for") || c.req.header("x-real-ip") || "unknown";
 
   const now = Date.now();
   const windowMs = 15 * 60 * 1000; // 15 minutes
@@ -18,15 +17,18 @@ export const rateLimiter: MiddlewareHandler = async (c, next) => {
     // Reset or initialize
     requests.set(clientIP, {
       count: 1,
-      resetTime: now + windowMs
+      resetTime: now + windowMs,
     });
   } else {
     // Increment counter
     if (clientData.count >= maxRequests) {
-      return c.json({
-        success: false,
-        message: 'Too many requests, please try again later'
-      }, 429);
+      return c.json(
+        {
+          success: false,
+          message: "Too many requests, please try again later",
+        },
+        429,
+      );
     }
     clientData.count++;
   }

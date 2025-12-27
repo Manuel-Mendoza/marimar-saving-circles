@@ -1,13 +1,13 @@
-import { Hono } from 'hono';
-import { eq, and, or, SQL } from 'drizzle-orm';
-import { users } from '../db/tables/users.js';
-import { groups } from '../db/tables/groups.js';
-import { products } from '../db/tables/products.js';
-import { userGroups } from '../db/tables/user-groups.js';
-import { contributions } from '../db/tables/contributions.js';
-import { deliveries } from '../db/tables/deliveries.js';
-import { db } from '../config/database.js';
-import { authenticate } from '../middleware/auth.js';
+import { Hono } from "hono";
+import { eq, and, or, SQL } from "drizzle-orm";
+import { users } from "../db/tables/users.js";
+import { groups } from "../db/tables/groups.js";
+import { products } from "../db/tables/products.js";
+import { userGroups } from "../db/tables/user-groups.js";
+import { contributions } from "../db/tables/contributions.js";
+import { deliveries } from "../db/tables/deliveries.js";
+import { db } from "../config/database.js";
+import { authenticate } from "../middleware/auth.js";
 
 // JWT payload type
 interface JWTPayload {
@@ -23,16 +23,19 @@ interface JWTPayload {
 const usersRoute = new Hono();
 
 // Get all users - Admin only
-usersRoute.get('/', authenticate, async (c) => {
+usersRoute.get("/", authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as JWTPayload;
+    const userPayload = c.get("user") as JWTPayload;
 
     // Verificar que sea administrador
-    if (userPayload.tipo !== 'ADMINISTRADOR') {
-      return c.json({
-        success: false,
-        message: 'Acceso denegado'
-      }, 403);
+    if (userPayload.tipo !== "ADMINISTRADOR") {
+      return c.json(
+        {
+          success: false,
+          message: "Acceso denegado",
+        },
+        403,
+      );
     }
 
     const allUsers = await db
@@ -48,7 +51,7 @@ usersRoute.get('/', authenticate, async (c) => {
         imagenCedula: users.imagenCedula,
         fechaRegistro: users.fechaRegistro,
         aprobadoPor: users.aprobadoPor,
-        fechaAprobacion: users.fechaAprobacion
+        fechaAprobacion: users.fechaAprobacion,
       })
       .from(users)
       .orderBy(users.fechaRegistro);
@@ -56,29 +59,34 @@ usersRoute.get('/', authenticate, async (c) => {
     return c.json({
       success: true,
       data: {
-        users: allUsers
-      }
+        users: allUsers,
+      },
     });
-
   } catch (error) {
-    console.error('Error obteniendo usuarios:', error);
-    return c.json({
-      success: false,
-      message: 'Error interno del servidor'
-    }, 500);
+    console.error("Error obteniendo usuarios:", error);
+    return c.json(
+      {
+        success: false,
+        message: "Error interno del servidor",
+      },
+      500,
+    );
   }
 });
 
 // Get pending users - Admin only
-usersRoute.get('/pending', authenticate, async (c) => {
+usersRoute.get("/pending", authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as JWTPayload;
+    const userPayload = c.get("user") as JWTPayload;
 
-    if (userPayload.tipo !== 'ADMINISTRADOR') {
-      return c.json({
-        success: false,
-        message: 'Acceso denegado'
-      }, 403);
+    if (userPayload.tipo !== "ADMINISTRADOR") {
+      return c.json(
+        {
+          success: false,
+          message: "Acceso denegado",
+        },
+        403,
+      );
     }
 
     const pendingUsers = await db
@@ -92,89 +100,109 @@ usersRoute.get('/pending', authenticate, async (c) => {
         tipo: users.tipo,
         estado: users.estado,
         imagenCedula: users.imagenCedula,
-        fechaRegistro: users.fechaRegistro
+        fechaRegistro: users.fechaRegistro,
       })
       .from(users)
-      .where(eq(users.estado, 'PENDIENTE'))
+      .where(eq(users.estado, "PENDIENTE"))
       .orderBy(users.fechaRegistro);
 
     return c.json({
       success: true,
       data: {
-        users: pendingUsers
-      }
+        users: pendingUsers,
+      },
     });
-
   } catch (error) {
-    console.error('Error obteniendo usuarios pendientes:', error);
-    return c.json({
-      success: false,
-      message: 'Error interno del servidor'
-    }, 500);
+    console.error("Error obteniendo usuarios pendientes:", error);
+    return c.json(
+      {
+        success: false,
+        message: "Error interno del servidor",
+      },
+      500,
+    );
   }
 });
 
 // Approve, reject, suspend or reactivate user - Admin only
-usersRoute.put('/:id/status', authenticate, async (c) => {
+usersRoute.put("/:id/status", authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as JWTPayload;
-    const userId = parseInt(c.req.param('id'));
+    const userPayload = c.get("user") as JWTPayload;
+    const userId = parseInt(c.req.param("id"));
 
-    if (userPayload.tipo !== 'ADMINISTRADOR') {
-      return c.json({
-        success: false,
-        message: 'Acceso denegado'
-      }, 403);
+    if (userPayload.tipo !== "ADMINISTRADOR") {
+      return c.json(
+        {
+          success: false,
+          message: "Acceso denegado",
+        },
+        403,
+      );
     }
 
     const body = await c.req.json();
     const { action, reason } = body; // 'approve', 'reject', 'suspend', or 'reactivate', and optional reason
 
-    if (!['approve', 'reject', 'suspend', 'reactivate'].includes(action)) {
-      return c.json({
-        success: false,
-        message: 'Acción inválida'
-      }, 400);
+    if (!["approve", "reject", "suspend", "reactivate"].includes(action)) {
+      return c.json(
+        {
+          success: false,
+          message: "Acción inválida",
+        },
+        400,
+      );
     }
 
     let status: string;
     let whereCondition!: SQL;
 
     switch (action) {
-      case 'approve':
-        status = 'APROBADO';
-        whereCondition = and(eq(users.id, userId), eq(users.estado, 'PENDIENTE'));
-        break;
-      case 'reject':
-        status = 'RECHAZADO';
-        whereCondition = and(eq(users.id, userId), eq(users.estado, 'PENDIENTE'));
-        break;
-      case 'suspend':
-        status = 'SUSPENDIDO';
+      case "approve":
+        status = "APROBADO";
         whereCondition = and(
           eq(users.id, userId),
-          or(eq(users.estado, 'APROBADO'), eq(users.estado, 'REACTIVADO'))
+          eq(users.estado, "PENDIENTE"),
         );
         break;
-      case 'reactivate':
-        status = 'REACTIVADO';
-        whereCondition = and(eq(users.id, userId), eq(users.estado, 'SUSPENDIDO'));
+      case "reject":
+        status = "RECHAZADO";
+        whereCondition = and(
+          eq(users.id, userId),
+          eq(users.estado, "PENDIENTE"),
+        );
+        break;
+      case "suspend":
+        status = "SUSPENDIDO";
+        whereCondition = and(
+          eq(users.id, userId),
+          or(eq(users.estado, "APROBADO"), eq(users.estado, "REACTIVADO")),
+        );
+        break;
+      case "reactivate":
+        status = "REACTIVADO";
+        whereCondition = and(
+          eq(users.id, userId),
+          eq(users.estado, "SUSPENDIDO"),
+        );
         break;
       default:
-        return c.json({
-          success: false,
-          message: 'Acción inválida'
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            message: "Acción inválida",
+          },
+          400,
+        );
     }
 
     const updateData: Record<string, unknown> = {
       estado: status,
       aprobadoPor: userPayload.id,
-      fechaAprobacion: new Date()
+      fechaAprobacion: new Date(),
     };
 
     // Add reason for reject action
-    if (action === 'reject' && reason) {
+    if (action === "reject" && reason) {
       updateData.motivo = reason;
     }
 
@@ -185,45 +213,58 @@ usersRoute.put('/:id/status', authenticate, async (c) => {
       .returning();
 
     if (updatedUsers.length === 0) {
-      return c.json({
-        success: false,
-        message: 'Usuario no encontrado o ya procesado'
-      }, 404);
+      return c.json(
+        {
+          success: false,
+          message: "Usuario no encontrado o ya procesado",
+        },
+        404,
+      );
     }
 
-    const actionText = action === 'approve' ? 'aprobado' :
-                      action === 'reject' ? 'rechazado' :
-                      action === 'suspend' ? 'suspendido' : 'reactivado';
+    const actionText =
+      action === "approve"
+        ? "aprobado"
+        : action === "reject"
+          ? "rechazado"
+          : action === "suspend"
+            ? "suspendido"
+            : "reactivado";
 
     return c.json({
       success: true,
       message: `Usuario ${actionText} exitosamente`,
       data: {
-        user: updatedUsers[0]
-      }
+        user: updatedUsers[0],
+      },
     });
-
   } catch (error) {
-    console.error('Error actualizando estado de usuario:', error);
-    return c.json({
-      success: false,
-      message: 'Error interno del servidor'
-    }, 500);
+    console.error("Error actualizando estado de usuario:", error);
+    return c.json(
+      {
+        success: false,
+        message: "Error interno del servidor",
+      },
+      500,
+    );
   }
 });
 
 // Get user by ID
-usersRoute.get('/:id', authenticate, async (c) => {
+usersRoute.get("/:id", authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as JWTPayload;
-    const userId = parseInt(c.req.param('id'));
+    const userPayload = c.get("user") as JWTPayload;
+    const userId = parseInt(c.req.param("id"));
 
     // Solo admin puede ver otros usuarios, usuarios normales solo su propio perfil
-    if (userPayload.tipo !== 'ADMINISTRADOR' && userPayload.id !== userId) {
-      return c.json({
-        success: false,
-        message: 'Acceso denegado'
-      }, 403);
+    if (userPayload.tipo !== "ADMINISTRADOR" && userPayload.id !== userId) {
+      return c.json(
+        {
+          success: false,
+          message: "Acceso denegado",
+        },
+        403,
+      );
     }
 
     const [user] = await db
@@ -240,46 +281,54 @@ usersRoute.get('/:id', authenticate, async (c) => {
         fechaRegistro: users.fechaRegistro,
         ultimoAcceso: users.ultimoAcceso,
         aprobadoPor: users.aprobadoPor,
-        fechaAprobacion: users.fechaAprobacion
+        fechaAprobacion: users.fechaAprobacion,
       })
       .from(users)
       .where(eq(users.id, userId))
       .limit(1);
 
     if (!user) {
-      return c.json({
-        success: false,
-        message: 'Usuario no encontrado'
-      }, 404);
+      return c.json(
+        {
+          success: false,
+          message: "Usuario no encontrado",
+        },
+        404,
+      );
     }
 
     return c.json({
       success: true,
       data: {
-        user
-      }
+        user,
+      },
     });
-
   } catch (error) {
-    console.error('Error obteniendo usuario:', error);
-    return c.json({
-      success: false,
-      message: 'Error interno del servidor'
-    }, 500);
+    console.error("Error obteniendo usuario:", error);
+    return c.json(
+      {
+        success: false,
+        message: "Error interno del servidor",
+      },
+      500,
+    );
   }
 });
 
 // Delete user - Admin only
-usersRoute.delete('/:id', authenticate, async (c) => {
+usersRoute.delete("/:id", authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as JWTPayload;
-    const userId = parseInt(c.req.param('id'));
+    const userPayload = c.get("user") as JWTPayload;
+    const userId = parseInt(c.req.param("id"));
 
-    if (userPayload.tipo !== 'ADMINISTRADOR') {
-      return c.json({
-        success: false,
-        message: 'Acceso denegado'
-      }, 403);
+    if (userPayload.tipo !== "ADMINISTRADOR") {
+      return c.json(
+        {
+          success: false,
+          message: "Acceso denegado",
+        },
+        403,
+      );
     }
 
     const body = await c.req.json();
@@ -293,17 +342,23 @@ usersRoute.delete('/:id', authenticate, async (c) => {
       .limit(1);
 
     if (!userToDelete) {
-      return c.json({
-        success: false,
-        message: 'Usuario no encontrado'
-      }, 404);
+      return c.json(
+        {
+          success: false,
+          message: "Usuario no encontrado",
+        },
+        404,
+      );
     }
 
-    if (userToDelete.tipo === 'ADMINISTRADOR') {
-      return c.json({
-        success: false,
-        message: 'No se pueden eliminar usuarios administradores'
-      }, 403);
+    if (userToDelete.tipo === "ADMINISTRADOR") {
+      return c.json(
+        {
+          success: false,
+          message: "No se pueden eliminar usuarios administradores",
+        },
+        403,
+      );
     }
 
     // Update the user with deletion reason before deleting (for audit purposes)
@@ -312,44 +367,52 @@ usersRoute.delete('/:id', authenticate, async (c) => {
       .set({
         motivo: reason,
         aprobadoPor: userPayload.id,
-        fechaAprobacion: new Date()
+        fechaAprobacion: new Date(),
       })
       .where(eq(users.id, userId));
 
     // Delete the user
-    await db
-      .delete(users)
-      .where(eq(users.id, userId));
+    await db.delete(users).where(eq(users.id, userId));
 
     return c.json({
       success: true,
-      message: 'Usuario eliminado exitosamente'
+      message: "Usuario eliminado exitosamente",
     });
-
   } catch (error) {
-    console.error('Error eliminando usuario:', error);
-    return c.json({
-      success: false,
-      message: 'Error interno del servidor'
-    }, 500);
+    console.error("Error eliminando usuario:", error);
+    return c.json(
+      {
+        success: false,
+        message: "Error interno del servidor",
+      },
+      500,
+    );
   }
 });
 
 // Join a group with selected product and currency
-usersRoute.post('/join', authenticate, async (c) => {
+usersRoute.post("/join", authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as JWTPayload;
+    const userPayload = c.get("user") as JWTPayload;
     const body = await c.req.json();
     const { productId, currency } = body;
 
     // Ensure productId is a number
     const parsedProductId = parseInt(productId);
 
-    if (!parsedProductId || isNaN(parsedProductId) || !currency || !['VES', 'USD'].includes(currency)) {
-      return c.json({
-        success: false,
-        message: 'Datos inválidos'
-      }, 400);
+    if (
+      !parsedProductId ||
+      isNaN(parsedProductId) ||
+      !currency ||
+      !["VES", "USD"].includes(currency)
+    ) {
+      return c.json(
+        {
+          success: false,
+          message: "Datos inválidos",
+        },
+        400,
+      );
     }
 
     // Users can join multiple groups, so no check for existing groups
@@ -362,20 +425,25 @@ usersRoute.post('/join', authenticate, async (c) => {
       .limit(1);
 
     if (!product) {
-      return c.json({
-        success: false,
-        message: 'Producto no encontrado'
-      }, 404);
+      return c.json(
+        {
+          success: false,
+          message: "Producto no encontrado",
+        },
+        404,
+      );
     }
 
     // Find available group for this duration (not full)
     const availableGroups = await db
       .select()
       .from(groups)
-      .where(and(
-        eq(groups.duracionMeses, product.tiempoDuracion),
-        eq(groups.estado, 'SIN_COMPLETAR')
-      ));
+      .where(
+        and(
+          eq(groups.duracionMeses, product.tiempoDuracion),
+          eq(groups.estado, "SIN_COMPLETAR"),
+        ),
+      );
 
     let group = null;
     for (const candidateGroup of availableGroups) {
@@ -397,27 +465,33 @@ usersRoute.post('/join', authenticate, async (c) => {
         .values({
           nombre: `Grupo ${product.tiempoDuracion} meses`,
           duracionMeses: product.tiempoDuracion,
-          estado: 'SIN_COMPLETAR',
+          estado: "SIN_COMPLETAR",
           turnoActual: 0,
-          fechaInicio: null
+          fechaInicio: null,
         })
         .returning();
 
       if (newGroup.length === 0) {
-        return c.json({
-          success: false,
-          message: 'Error al crear el grupo'
-        }, 500);
+        return c.json(
+          {
+            success: false,
+            message: "Error al crear el grupo",
+          },
+          500,
+        );
       }
 
       group = newGroup[0];
     }
 
     if (!group) {
-      return c.json({
-        success: false,
-        message: 'No hay grupos disponibles para esta duración'
-      }, 400);
+      return c.json(
+        {
+          success: false,
+          message: "No hay grupos disponibles para esta duración",
+        },
+        400,
+      );
     }
 
     // Get current members count to verify group is not full
@@ -428,30 +502,30 @@ usersRoute.post('/join', authenticate, async (c) => {
 
     // Check if group is already full
     if (currentMembers.length >= product.tiempoDuracion) {
-      return c.json({
-        success: false,
-        message: 'Este grupo ya está completo'
-      }, 400);
+      return c.json(
+        {
+          success: false,
+          message: "Este grupo ya está completo",
+        },
+        400,
+      );
     }
 
     // Position will be assigned by admin lottery later, so we use null for now
     const position = null;
 
     // Use price directly as monthly payment (stored as monthly amount in database)
-    const monthlyPayment = currency === 'USD'
-      ? product.precioUsd
-      : product.precioVes;
+    const monthlyPayment =
+      currency === "USD" ? product.precioUsd : product.precioVes;
 
     // Add user to group
-    await db
-      .insert(userGroups)
-      .values({
-        userId: userPayload.id,
-        groupId: group.id,
-        posicion: position,
-        productoSeleccionado: product.nombre,
-        monedaPago: currency
-      });
+    await db.insert(userGroups).values({
+      userId: userPayload.id,
+      groupId: group.id,
+      posicion: position,
+      productoSeleccionado: product.nombre,
+      monedaPago: currency,
+    });
 
     // Create pending contributions for each month
     const contributionsData = [];
@@ -464,42 +538,42 @@ usersRoute.post('/join', authenticate, async (c) => {
         fechaPago: null, // Will be set when payment is made
         periodo: `Mes ${month}`,
         metodoPago: null,
-        estado: 'PENDIENTE',
-        referenciaPago: null
+        estado: "PENDIENTE",
+        referenciaPago: null,
       });
     }
 
-    await db
-      .insert(contributions)
-      .values(contributionsData);
+    await db.insert(contributions).values(contributionsData);
 
     // Check if group is now full (assuming max 10 members for example)
     // For now, let's assume groups can have unlimited members or update logic later
 
     return c.json({
       success: true,
-      message: 'Te has unido exitosamente al grupo',
+      message: "Te has unido exitosamente al grupo",
       data: {
         groupId: group.id,
         position: position,
         currency: currency,
-        monthlyPayment: Math.round(monthlyPayment * 100) / 100
-      }
+        monthlyPayment: Math.round(monthlyPayment * 100) / 100,
+      },
     });
-
   } catch (error) {
-    console.error('Error joining group:', error);
-    return c.json({
-      success: false,
-      message: 'Error interno del servidor'
-    }, 500);
+    console.error("Error joining group:", error);
+    return c.json(
+      {
+        success: false,
+        message: "Error interno del servidor",
+      },
+      500,
+    );
   }
 });
 
 // Get current user's groups
-usersRoute.get('/me/groups', authenticate, async (c) => {
+usersRoute.get("/me/groups", authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as JWTPayload;
+    const userPayload = c.get("user") as JWTPayload;
 
     const userGroupsData = await db
       .select({
@@ -517,8 +591,8 @@ usersRoute.get('/me/groups', authenticate, async (c) => {
           estado: groups.estado,
           fechaInicio: groups.fechaInicio,
           fechaFinal: groups.fechaFinal,
-          turnoActual: groups.turnoActual
-        }
+          turnoActual: groups.turnoActual,
+        },
       })
       .from(userGroups)
       .innerJoin(groups, eq(userGroups.groupId, groups.id))
@@ -528,23 +602,25 @@ usersRoute.get('/me/groups', authenticate, async (c) => {
     return c.json({
       success: true,
       data: {
-        userGroups: userGroupsData
-      }
+        userGroups: userGroupsData,
+      },
     });
-
   } catch (error) {
-    console.error('Error obteniendo grupos del usuario:', error);
-    return c.json({
-      success: false,
-      message: 'Error interno del servidor'
-    }, 500);
+    console.error("Error obteniendo grupos del usuario:", error);
+    return c.json(
+      {
+        success: false,
+        message: "Error interno del servidor",
+      },
+      500,
+    );
   }
 });
 
 // Get current user's contributions
-usersRoute.get('/me/contributions', authenticate, async (c) => {
+usersRoute.get("/me/contributions", authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as JWTPayload;
+    const userPayload = c.get("user") as JWTPayload;
 
     const contributionsData = await db
       .select({
@@ -557,7 +633,7 @@ usersRoute.get('/me/contributions', authenticate, async (c) => {
         periodo: contributions.periodo,
         metodoPago: contributions.metodoPago,
         estado: contributions.estado,
-        referenciaPago: contributions.referenciaPago
+        referenciaPago: contributions.referenciaPago,
       })
       .from(contributions)
       .where(eq(contributions.userId, userPayload.id))
@@ -566,23 +642,25 @@ usersRoute.get('/me/contributions', authenticate, async (c) => {
     return c.json({
       success: true,
       data: {
-        contributions: contributionsData
-      }
+        contributions: contributionsData,
+      },
     });
-
   } catch (error) {
-    console.error('Error obteniendo contribuciones del usuario:', error);
-    return c.json({
-      success: false,
-      message: 'Error interno del servidor'
-    }, 500);
+    console.error("Error obteniendo contribuciones del usuario:", error);
+    return c.json(
+      {
+        success: false,
+        message: "Error interno del servidor",
+      },
+      500,
+    );
   }
 });
 
 // Get current user's deliveries
-usersRoute.get('/me/deliveries', authenticate, async (c) => {
+usersRoute.get("/me/deliveries", authenticate, async (c) => {
   try {
-    const userPayload = c.get('user') as JWTPayload;
+    const userPayload = c.get("user") as JWTPayload;
 
     const deliveriesData = await db
       .select({
@@ -594,7 +672,7 @@ usersRoute.get('/me/deliveries', authenticate, async (c) => {
         fechaEntrega: deliveries.fechaEntrega,
         mesEntrega: deliveries.mesEntrega,
         estado: deliveries.estado,
-        notas: deliveries.notas
+        notas: deliveries.notas,
       })
       .from(deliveries)
       .where(eq(deliveries.userId, userPayload.id))
@@ -603,16 +681,18 @@ usersRoute.get('/me/deliveries', authenticate, async (c) => {
     return c.json({
       success: true,
       data: {
-        deliveries: deliveriesData
-      }
+        deliveries: deliveriesData,
+      },
     });
-
   } catch (error) {
-    console.error('Error obteniendo entregas del usuario:', error);
-    return c.json({
-      success: false,
-      message: 'Error interno del servidor'
-    }, 500);
+    console.error("Error obteniendo entregas del usuario:", error);
+    return c.json(
+      {
+        success: false,
+        message: "Error interno del servidor",
+      },
+      500,
+    );
   }
 });
 

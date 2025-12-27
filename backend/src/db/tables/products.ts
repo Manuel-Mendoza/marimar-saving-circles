@@ -1,16 +1,23 @@
-import { pgTable, text, integer, real, serial, boolean } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  text,
+  integer,
+  real,
+  serial,
+  boolean,
+} from "drizzle-orm/pg-core";
 
 // Products table with numeric auto-increment ID
-export const products = pgTable('products', {
-  id: serial('id').primaryKey(),
-  nombre: text('nombre').notNull(),
-  precioUsd: real('precio_usd').notNull(), // Precio en dólares
-  precioVes: real('precio_ves').notNull(), // Precio en bolívares
-  tiempoDuracion: integer('tiempo_duracion').notNull(), // Duración en meses
-  imagen: text('imagen'),
-  descripcion: text('descripcion').notNull(),
-  tags: text('tags').array(), // Array of tags for categorization (e.g., ['electrodomésticos', 'lavadoras'])
-  activo: boolean('activo').notNull().default(true), // Producto disponible
+export const products = pgTable("products", {
+  id: serial("id").primaryKey(),
+  nombre: text("nombre").notNull(),
+  precioUsd: real("precio_usd").notNull(), // Precio en dólares
+  precioVes: real("precio_ves").notNull(), // Precio en bolívares
+  tiempoDuracion: integer("tiempo_duracion").notNull(), // Duración en meses
+  imagen: text("imagen"),
+  descripcion: text("descripcion").notNull(),
+  tags: text("tags").array(), // Array of tags for categorization (e.g., ['electrodomésticos', 'lavadoras'])
+  activo: boolean("activo").notNull().default(true), // Producto disponible
 });
 
 // Types
