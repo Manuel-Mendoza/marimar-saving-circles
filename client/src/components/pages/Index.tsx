@@ -2,12 +2,11 @@ import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { AppStateProvider } from '@/contexts/AppStateContext';
+import { Navigate } from 'react-router-dom';
 import {
   LoginForm,
   RegistrationForm,
   PendingApproval,
-  UserDashboard,
-  AdminDashboard,
 } from '@/components/organisms';
 import { LandingPage } from '@/components/pages';
 
@@ -88,37 +87,8 @@ const AppContent = () => {
     );
   }
 
-  // Si está aprobado, mostrar dashboard correspondiente
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {isAdmin ? (
-        <AdminDashboard
-          user={
-            user as {
-              id: number;
-              nombre: string;
-              apellido?: string;
-              tipo: 'ADMINISTRADOR';
-              imagenCedula?: string;
-            }
-          }
-        />
-      ) : (
-        <UserDashboard
-          user={
-            user as {
-              id: number;
-              nombre: string;
-              apellido?: string;
-              tipo: 'USUARIO';
-              imagenCedula?: string;
-              estado: 'APROBADO' | 'PENDIENTE' | 'RECHAZADO';
-            }
-          }
-        />
-      )}
-    </div>
-  );
+  // Si está aprobado, redirigir al dashboard
+  return <Navigate to="/dashboard" replace />;
 };
 
 const Index = () => {

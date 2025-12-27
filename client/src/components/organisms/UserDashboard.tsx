@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { NavigationSidebar } from '@/components/molecules';
 import { UserCard } from '@/components/molecules';
-import { CurrencyDisplay, StatusBadge, IconButton } from '@/components/atoms';
+import { CurrencyDisplay } from '@/components/atoms';
 import {
   Users,
   Package,
@@ -63,6 +62,8 @@ interface UserDashboardProps {
   onJoinGroup?: () => void;
   /** Loading state */
   isLoading?: boolean;
+  /** Mostrar sidebar */
+  showSidebar?: boolean;
 }
 
 /**
@@ -76,6 +77,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
   onLogout,
   onJoinGroup,
   isLoading = false,
+  showSidebar = true,
 }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
@@ -153,266 +155,274 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
     </Card>
   );
 
+  const DashboardContent = () => (
+    <div className="space-y-6">
+      {/* Welcome Section */}
+      <Card className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold mb-2">¡Hola {user.nombre}! 👋</h2>
+              <p className="text-blue-100">
+                {currentStats.activeGroups === 0
+                  ? '¿Listo para empezar a ahorrar? Únete a tu primer grupo.'
+                  : `Tienes ${currentStats.activeGroups} grupo${currentStats.activeGroups !== 1 ? 's' : ''} activo${currentStats.activeGroups !== 1 ? 's' : ''}.`}
+              </p>
+            </div>
+            {currentStats.activeGroups === 0 && (
+              <Button
+                onClick={onJoinGroup}
+                className="bg-white text-blue-600 hover:bg-blue-50"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Unirme a un grupo
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                  Grupos Activos
+                </p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {currentStats.activeGroups}
+                </p>
+              </div>
+              <div className="p-3 bg-blue-100 text-blue-600 rounded-full">
+                <BarChart3 className="h-6 w-6" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                  Grupos Completados
+                </p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {currentStats.completedGroups}
+                </p>
+              </div>
+              <div className="p-3 bg-green-100 text-green-600 rounded-full">
+                <CheckCircle className="h-6 w-6" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                  Pagos Pendientes
+                </p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {currentStats.pendingPayments}
+                </p>
+              </div>
+              <div
+                className={`p-3 rounded-full ${
+                  currentStats.pendingPayments > 0
+                    ? 'bg-red-100 text-red-600'
+                    : 'bg-green-100 text-green-600'
+                }`}
+              >
+                <Clock className="h-6 w-6" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                  Total Invertido
+                </p>
+                <CurrencyDisplay
+                  amount={currentStats.totalInvested}
+                  currency="USD"
+                  size="lg"
+                  className="text-gray-900 dark:text-white"
+                />
+              </div>
+              <div className="p-3 bg-purple-100 text-purple-600 rounded-full">
+                <DollarSign className="h-6 w-6" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Next Payment Alert */}
+      {currentStats.nextPayment && (
+        <Card className="border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-orange-100 text-orange-600 rounded-full">
+                  <AlertCircle className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-gray-900 dark:text-white">
+                    Próximo pago pendiente
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {currentStats.nextPayment.groupName} - Vence el{' '}
+                    {currentStats.nextPayment.dueDate.toLocaleDateString('es-ES')}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-3">
+                <CurrencyDisplay
+                  amount={currentStats.nextPayment.amount}
+                  currency={currentStats.nextPayment.currency}
+                  size="md"
+                />
+                <Button onClick={() => onNavigate?.('payments')} size="sm">
+                  Pagar ahora
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Activity Feed */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <ActivityFeed activities={currentStats.recentActivity} />
+        </div>
+
+        <div className="space-y-6">
+          {/* Quick Actions */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Acciones Rápidas</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Button
+                onClick={onJoinGroup}
+                className="w-full justify-start"
+                variant="outline"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Unirme a un grupo
+              </Button>
+              <Button
+                onClick={() => onNavigate?.('products')}
+                className="w-full justify-start"
+                variant="outline"
+              >
+                <Package className="h-4 w-4 mr-2" />
+                Ver productos
+              </Button>
+              <Button
+                onClick={() => onNavigate?.('payments')}
+                className="w-full justify-start"
+                variant="outline"
+              >
+                <CreditCard className="h-4 w-4 mr-2" />
+                Mis pagos
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* User Profile Summary */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <User className="h-5 w-5" />
+                <span>Mi Perfil</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <UserCard {...user} correoElectronico="" variant="compact" showActions={false} />
+              <Button
+                onClick={() => onNavigate?.('profile')}
+                className="w-full mt-3"
+                variant="outline"
+                size="sm"
+              >
+                Ver perfil completo
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+
+    </div>
+  );
+
   if (isLoading) {
+    if (showSidebar) {
+      return (
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex">
+          <NavigationSidebar
+            user={user}
+            collapsed={sidebarCollapsed}
+            onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+            onLogout={onLogout}
+          />
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Cargando tu dashboard...</p>
+            </div>
+          </div>
+        </div>
+      );
+    } else {
+      return (
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Cargando tu dashboard...</p>
+          </div>
+        </div>
+      );
+    }
+  }
+
+  if (showSidebar) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex">
         <NavigationSidebar
           user={user}
           collapsed={sidebarCollapsed}
           onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+          onNavigate={handleSidebarNavigate}
           onLogout={onLogout}
         />
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Cargando tu dashboard...</p>
-          </div>
+
+        <div className="flex-1 flex flex-col">
+          {/* Main Content */}
+          <main className="flex-1 p-6">
+            <DashboardContent />
+          </main>
         </div>
       </div>
     );
+  } else {
+    return (
+      <main className="flex-1 p-6">
+        <DashboardContent />
+      </main>
+    );
   }
-
-  return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex">
-      <NavigationSidebar
-        user={user}
-        collapsed={sidebarCollapsed}
-        onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
-        onNavigate={handleSidebarNavigate}
-        onLogout={onLogout}
-      />
-
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Mi Dashboard</h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Bienvenido, {user.nombre}</p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <StatusBadge status={user.estado} />
-              <Badge variant="outline" className="px-3 py-1">
-                <Clock className="h-4 w-4 mr-2" />
-                {new Date().toLocaleDateString('es-ES')}
-              </Badge>
-            </div>
-          </div>
-        </header>
-
-        {/* Main Content */}
-        <main className="flex-1 p-6">
-          <div className="space-y-6">
-            {/* Welcome Section */}
-            <Card className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-xl font-bold mb-2">¡Hola {user.nombre}! 👋</h2>
-                    <p className="text-blue-100">
-                      {currentStats.activeGroups === 0
-                        ? '¿Listo para empezar a ahorrar? Únete a tu primer grupo.'
-                        : `Tienes ${currentStats.activeGroups} grupo${currentStats.activeGroups !== 1 ? 's' : ''} activo${currentStats.activeGroups !== 1 ? 's' : ''}.`}
-                    </p>
-                  </div>
-                  {currentStats.activeGroups === 0 && (
-                    <Button
-                      onClick={onJoinGroup}
-                      className="bg-white text-blue-600 hover:bg-blue-50"
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Unirme a un grupo
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                        Grupos Activos
-                      </p>
-                      <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                        {currentStats.activeGroups}
-                      </p>
-                    </div>
-                    <div className="p-3 bg-blue-100 text-blue-600 rounded-full">
-                      <BarChart3 className="h-6 w-6" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                        Grupos Completados
-                      </p>
-                      <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                        {currentStats.completedGroups}
-                      </p>
-                    </div>
-                    <div className="p-3 bg-green-100 text-green-600 rounded-full">
-                      <CheckCircle className="h-6 w-6" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                        Pagos Pendientes
-                      </p>
-                      <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                        {currentStats.pendingPayments}
-                      </p>
-                    </div>
-                    <div
-                      className={`p-3 rounded-full ${
-                        currentStats.pendingPayments > 0
-                          ? 'bg-red-100 text-red-600'
-                          : 'bg-green-100 text-green-600'
-                      }`}
-                    >
-                      <Clock className="h-6 w-6" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                        Total Invertido
-                      </p>
-                      <CurrencyDisplay
-                        amount={currentStats.totalInvested}
-                        currency="USD"
-                        size="lg"
-                        className="text-gray-900 dark:text-white"
-                      />
-                    </div>
-                    <div className="p-3 bg-purple-100 text-purple-600 rounded-full">
-                      <DollarSign className="h-6 w-6" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Next Payment Alert */}
-            {currentStats.nextPayment && (
-              <Card className="border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-orange-100 text-orange-600 rounded-full">
-                        <AlertCircle className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <h3 className="font-medium text-gray-900 dark:text-white">
-                          Próximo pago pendiente
-                        </h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {currentStats.nextPayment.groupName} - Vence el{' '}
-                          {currentStats.nextPayment.dueDate.toLocaleDateString('es-ES')}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <CurrencyDisplay
-                        amount={currentStats.nextPayment.amount}
-                        currency={currentStats.nextPayment.currency}
-                        size="md"
-                      />
-                      <Button onClick={() => onNavigate?.('payments')} size="sm">
-                        Pagar ahora
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Activity Feed */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2">
-                <ActivityFeed activities={currentStats.recentActivity} />
-              </div>
-
-              <div className="space-y-6">
-                {/* Quick Actions */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Acciones Rápidas</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <Button
-                      onClick={onJoinGroup}
-                      className="w-full justify-start"
-                      variant="outline"
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Unirme a un grupo
-                    </Button>
-                    <Button
-                      onClick={() => onNavigate?.('products')}
-                      className="w-full justify-start"
-                      variant="outline"
-                    >
-                      <Package className="h-4 w-4 mr-2" />
-                      Ver productos
-                    </Button>
-                    <Button
-                      onClick={() => onNavigate?.('payments')}
-                      className="w-full justify-start"
-                      variant="outline"
-                    >
-                      <CreditCard className="h-4 w-4 mr-2" />
-                      Mis pagos
-                    </Button>
-                  </CardContent>
-                </Card>
-
-                {/* User Profile Summary */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <User className="h-5 w-5" />
-                      <span>Mi Perfil</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <UserCard {...user} variant="compact" showActions={false} />
-                    <Button
-                      onClick={() => onNavigate?.('profile')}
-                      className="w-full mt-3"
-                      variant="outline"
-                      size="sm"
-                    >
-                      Ver perfil completo
-                    </Button>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          </div>
-        </main>
-      </div>
-    </div>
-  );
 };
 
 export default UserDashboard;
