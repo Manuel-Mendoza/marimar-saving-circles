@@ -156,10 +156,10 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
   );
 
   const DashboardContent = () => (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Welcome Section */}
       <Card className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
-        <CardContent className="p-6">
+        <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-xl font-bold mb-2">¡Hola {user.nombre}! 👋</h2>
@@ -306,7 +306,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
           <ActivityFeed activities={currentStats.recentActivity} />
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Quick Actions */}
           <Card>
             <CardHeader>
@@ -410,7 +410,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
 
         <div className="flex-1 flex flex-col">
           {/* Main Content */}
-          <main className="flex-1 p-6">
+          <main className="flex-1 p-4">
             <DashboardContent />
           </main>
         </div>
@@ -418,7 +418,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
     );
   } else {
     return (
-      <main className="flex-1 p-6">
+      <main className="flex-1 p-4">
         <DashboardContent />
       </main>
     );

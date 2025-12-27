@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { NavigationSidebar } from '@/components/molecules';
 import { CurrencyDisplay, LoadingSpinner } from '@/components/atoms';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { Bar, BarChart, XAxis, YAxis } from 'recharts';
+import { Line, LineChart, Bar, BarChart, XAxis, YAxis } from 'recharts';
 import {
   Users,
   Package,
@@ -111,7 +111,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
     return (
       <Card className={variantStyles[variant]}>
-        <CardContent className="p-6">
+        <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{title}</p>
@@ -190,7 +190,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   );
 
   const DashboardContent = () => (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
@@ -247,9 +247,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
         <div className="lg:col-span-2">
           <ActivityFeed activities={currentStats.recentActivity} />
         </div>
-        <div className="space-y-6">
+        <div className="space-y-4 row-span-2">
           {/* Quick Actions */}
-          <Card>
+          <Card className='h-full'>
             <CardHeader>
               <CardTitle>Acciones Rápidas</CardTitle>
             </CardHeader>
@@ -281,69 +281,145 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </CardContent>
           </Card>
         </div>
-      </div>
 
-      {/* Revenue Chart - Debajo de Actividad Reciente, ocupando todo el ancho */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <BarChart3 className="h-5 w-5" />
-            <span>Ingresos Mensuales</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ChartContainer
-            config={{
-              ingresos: {
-                label: 'Ingresos',
-                color: 'hsl(var(--chart-1))',
-              },
-            }}
-            className="h-[300px]"
-          >
-            <BarChart
-              data={[
-                { mes: 'Ene', ingresos: 2500 },
-                { mes: 'Feb', ingresos: 2800 },
-                { mes: 'Mar', ingresos: 3200 },
-                { mes: 'Abr', ingresos: 2900 },
-                { mes: 'May', ingresos: 3500 },
-                { mes: 'Jun', ingresos: 3800 },
-                { mes: 'Jul', ingresos: 4200 },
-                { mes: 'Ago', ingresos: 3900 },
-                { mes: 'Sep', ingresos: 4500 },
-                { mes: 'Oct', ingresos: 4800 },
-                { mes: 'Nov', ingresos: 5200 },
-                { mes: 'Dic', ingresos: 5500 },
-              ]}
-            >
-              <XAxis
-                dataKey="mes"
-                stroke="#888888"
-                fontSize={12}
-                tickLine={false}
-                axisLine={false}
-              />
-              <YAxis
-                stroke="#888888"
-                fontSize={12}
-                tickLine={false}
-                axisLine={false}
-                tickFormatter={(value) => `$${value}`}
-              />
-              <ChartTooltip
-                content={<ChartTooltipContent />}
-                cursor={{ fill: 'rgba(0, 0, 0, 0.1)' }}
-              />
-              <Bar
-                dataKey="ingresos"
-                fill="var(--color-ingresos)"
-                radius={[4, 4, 0, 0]}
-              />
-            </BarChart>
-          </ChartContainer>
-        </CardContent>
-      </Card>
+        {/* Analytics Charts - 2 Charts */}
+        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Revenue Chart - Ingresos Mensuales */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <DollarSign className="h-5 w-5" />
+                <span>Ingresos Mensuales</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer
+                config={{
+                  ingresos: {
+                    label: 'Ingresos',
+                    color: 'hsl(var(--chart-1))',
+                  },
+                }}
+                className="h-[240px]"
+              >
+                <LineChart
+                  data={[
+                    { mes: 'Ene', ingresos: 2500 },
+                    { mes: 'Feb', ingresos: 2800 },
+                    { mes: 'Mar', ingresos: 3200 },
+                    { mes: 'Abr', ingresos: 2900 },
+                    { mes: 'May', ingresos: 3500 },
+                    { mes: 'Jun', ingresos: 3800 },
+                    { mes: 'Jul', ingresos: 4200 },
+                    { mes: 'Ago', ingresos: 3900 },
+                    { mes: 'Sep', ingresos: 4500 },
+                    { mes: 'Oct', ingresos: 4800 },
+                    { mes: 'Nov', ingresos: 5200 },
+                    { mes: 'Dic', ingresos: 5500 },
+                  ]}
+                >
+                  <XAxis
+                    dataKey="mes"
+                    stroke="#888888"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <YAxis
+                    stroke="#888888"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={value => `$${value}`}
+                  />
+                  <ChartTooltip
+                    content={<ChartTooltipContent />}
+                    cursor={{ stroke: 'var(--color-ingresos)', strokeWidth: 2 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="ingresos"
+                    stroke="var(--color-ingresos)"
+                    strokeWidth={3}
+                    dot={{ fill: 'var(--color-ingresos)', strokeWidth: 2, r: 4 }}
+                    activeDot={{ r: 6, stroke: 'var(--color-ingresos)', strokeWidth: 2 }}
+                  />
+                </LineChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+
+          {/* Activity Chart - Nuevos Usuarios y Grupos */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <UserPlus className="h-5 w-5" />
+                <span>Nuevos Usuarios y Grupos</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer
+                config={{
+                  usuarios: {
+                    label: 'Nuevos Usuarios',
+                    color: 'hsl(var(--chart-2))',
+                  },
+                  grupos: {
+                    label: 'Nuevos Grupos',
+                    color: 'hsl(var(--chart-3))',
+                  },
+                }}
+                className="h-[240px]"
+              >
+                <BarChart
+                  data={[
+                    { mes: 'Ene', usuarios: 45, grupos: 22 },
+                    { mes: 'Feb', usuarios: 52, grupos: 22 },
+                    { mes: 'Mar', usuarios: 61, grupos: 22 },
+                    { mes: 'Abr', usuarios: 58, grupos: 18 },
+                    { mes: 'May', usuarios: 67, grupos: 22 },
+                    { mes: 'Jun', usuarios: 73, grupos: 22 },
+                    { mes: 'Jul', usuarios: 79, grupos: 22 },
+                    { mes: 'Ago', usuarios: 85, grupos: 22 },
+                    { mes: 'Sep', usuarios: 91, grupos: 24 },
+                    { mes: 'Oct', usuarios: 96, grupos: 25 },
+                    { mes: 'Nov', usuarios: 102, grupos: 25 },
+                    { mes: 'Dic', usuarios: 108, grupos: 25 },
+                  ]}
+                >
+                  <XAxis
+                    dataKey="mes"
+                    stroke="#888888"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <YAxis
+                    stroke="#888888"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <ChartTooltip
+                    content={<ChartTooltipContent />}
+                    cursor={{ fill: 'rgba(0, 0, 0, 0.1)' }}
+                  />
+                  <Bar
+                    dataKey="usuarios"
+                    fill="var(--color-usuarios)"
+                    radius={[4, 4, 0, 0]}
+                  />
+                  <Bar
+                    dataKey="grupos"
+                    fill="var(--color-grupos)"
+                    radius={[4, 4, 0, 0]}
+                  />
+                </BarChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 
@@ -385,7 +461,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
         <div className="flex-1 flex flex-col">
           {/* Main Content */}
-          <main className="flex-1 p-6">
+          <main className="flex-1 p-4">
             <DashboardContent />
           </main>
         </div>
@@ -393,7 +469,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     );
   } else {
     return (
-      <main className="flex-1 p-6">
+      <main className="flex-1 p-4">
         <DashboardContent />
       </main>
     );
