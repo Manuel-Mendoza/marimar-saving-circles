@@ -13,3 +13,4 @@ export { default as PendingApproval } from './PendingApproval';
 // Componentes organizados por dominio
 export * from './users';
 export * from './products';
+export * from './groups';

@@ -7,6 +7,7 @@ export { default as Index } from './Index.tsx';
 export { default as NotFound } from './NotFound.tsx';
 export { default as DashboardLayout } from './DashboardLayout.tsx';
 
-// Gestión de usuarios y productos
+// Gestión de usuarios, productos y grupos
 export { UsersManagement } from './UsersManagement.tsx';
 export { ProductsManagement } from './ProductsManagement.tsx';
+export { GroupsManagement } from './GroupsManagement.tsx';

@@ -9,3 +9,4 @@ export { default as UserCard } from './UserCard';
 // Componentes organizados por dominio
 export * from './users';
 export * from './products';
+export * from './groups';

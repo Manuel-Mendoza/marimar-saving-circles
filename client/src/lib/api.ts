@@ -7,7 +7,8 @@ import type {
   Delivery,
   PaymentRequest,
   ProductSelection,
-} from '../../../shared/types';
+  GroupAdminDetails,
+} from './types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -277,20 +278,27 @@ class ApiClient {
   }
 
   async getGroupAdminDetails(groupId: number) {
-    return this.request<{
-      group: Grupo;
-      members: UserGroup[];
-      contributions: Contribution[];
-      deliveries: Delivery[];
-      stats: {
-        totalMembers: number;
-        totalContributions: number;
-        pendingContributions: number;
-        confirmedContributions: number;
-        totalDeliveries: number;
-        completedDeliveries: number;
-      };
-    }>(`/groups/${groupId}/admin`);
+    return this.request<GroupAdminDetails>(`/groups/${groupId}/admin`);
+  }
+
+  async createGroup(groupData: { nombre: string; duracionMeses: number }) {
+    return this.request<{ group: Grupo }>('/groups', {
+      method: 'POST',
+      body: JSON.stringify(groupData),
+    });
+  }
+
+  async updateGroup(groupId: number, groupData: { nombre?: string; duracionMeses?: number; estado?: string }) {
+    return this.request<{ group: Grupo }>(`/groups/${groupId}`, {
+      method: 'PUT',
+      body: JSON.stringify(groupData),
+    });
+  }
+
+  async deleteGroup(groupId: number) {
+    return this.request(`/groups/${groupId}`, {
+      method: 'DELETE',
+    });
   }
 
   // Payment Requests
