@@ -9,7 +9,6 @@ import {
 } from '@/components/ui/table';
 import { Grupo } from '@/lib/types';
 import { GroupStatusBadge } from '@/components/atoms';
-import { GroupActionButtons } from '@/components/molecules/groups';
 
 /**
  * Organism: Groups Table
@@ -60,12 +59,10 @@ export const GroupsTable: React.FC<GroupsTableProps> = ({
           <TableHeader>
             <TableRow className="bg-gray-50 dark:bg-gray-800">
               <TableHead className="font-semibold">Nombre</TableHead>
-              <TableHead className="font-semibold">Duración</TableHead>
               <TableHead className="font-semibold">Estado</TableHead>
               <TableHead className="font-semibold">Participantes</TableHead>
-              <TableHead className="font-semibold">Inicio</TableHead>
-              <TableHead className="font-semibold">Turno</TableHead>
-              <TableHead className="font-semibold w-12">Acciones</TableHead>
+              <TableHead className="font-semibold">Posiciones</TableHead>
+              <TableHead className="font-semibold w-32">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -75,35 +72,41 @@ export const GroupsTable: React.FC<GroupsTableProps> = ({
                   {group.nombre}
                 </TableCell>
                 <TableCell>
-                  {group.duracionMeses} meses
-                </TableCell>
-                <TableCell>
                   <GroupStatusBadge status={group.estado} />
                 </TableCell>
                 <TableCell>
                   {group.participantes || 0}
                 </TableCell>
                 <TableCell>
-                  {group.fechaInicio
-                    ? new Date(group.fechaInicio).toLocaleDateString('es-ES')
-                    : '-'
-                  }
+                  {group.fechaInicio ? 'Asignadas' : 'Sin definir'}
                 </TableCell>
                 <TableCell>
-                  {group.turnoActual > 0 ? group.turnoActual : '-'}
-                </TableCell>
-                <TableCell>
-                  Posiciones: {group.estado === 'EN_MARCHA' ? 'Asignadas' : 'Sin definir'}
-                </TableCell>
-                <TableCell>
-                  <GroupActionButtons
-                    group={group}
-                    actionLoadingId={actionLoadingId}
-                    onViewGroup={onViewGroup}
-                    onEditGroup={onEditGroup}
-                    onStartDraw={onStartDraw}
-                    onDeleteGroup={onDeleteGroup}
-                  />
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => onViewGroup(group)}
+                      className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:hover:bg-blue-800"
+                    >
+                      Ver
+                    </button>
+
+                    {group.estado === 'LLENO' && (
+                      <button
+                        onClick={() => onStartDraw(group)}
+                        disabled={actionLoadingId === group.id}
+                        className="px-3 py-1 text-sm bg-green-100 text-green-700 rounded hover:bg-green-200 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-green-900 dark:text-green-300 dark:hover:bg-green-800"
+                      >
+                        {actionLoadingId === group.id ? 'Iniciando...' : 'Sortear'}
+                      </button>
+                    )}
+
+                    <button
+                      onClick={() => onDeleteGroup(group)}
+                      disabled={actionLoadingId === group.id}
+                      className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-red-900 dark:text-red-300 dark:hover:bg-red-800"
+                    >
+                      Eliminar
+                    </button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}

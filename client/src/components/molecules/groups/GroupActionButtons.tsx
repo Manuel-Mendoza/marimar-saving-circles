@@ -31,12 +31,24 @@ export const GroupActionButtons: React.FC<GroupActionButtonsProps> = ({
   onStartDraw,
   onDeleteGroup,
 }) => {
-  const isLoading = actionLoadingId === group.id;
+  // Only disable for actual operations, not for viewing details
+  const isLoading = actionLoadingId === group.id && actionLoadingId !== null;
+
+
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="h-8 w-8 p-0" disabled={isLoading}>
+        <Button
+          variant="ghost"
+          className="h-8 w-8 p-0"
+          disabled={isLoading}
+          onClick={(e) => {
+            // Prevent event bubbling and ensure button works
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+        >
           <span className="sr-only">Abrir menú</span>
           <MoreHorizontal className="h-4 w-4" />
         </Button>

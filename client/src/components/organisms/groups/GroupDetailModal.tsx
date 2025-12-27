@@ -28,6 +28,8 @@ export const GroupDetailModal: React.FC<GroupDetailModalProps> = ({
   groupDetails,
   isLoading = false,
 }) => {
+  if (!isOpen) return null;
+
   if (!groupDetails && !isLoading) return null;
 
   const formatCurrency = (amount: number, currency: 'VES' | 'USD') => {
@@ -201,9 +203,15 @@ export const GroupDetailModal: React.FC<GroupDetailModalProps> = ({
                           </div>
                         </div>
                         <div className="text-right">
-                          <Badge variant="outline">
-                            {member.posicion ? `Posición ${member.posicion}` : 'Sin definir'}
-                          </Badge>
+                          {group.fechaInicio ? (
+                            <Badge variant="outline">
+                              {member.posicion ? `Posición ${member.posicion}` : 'Sin definir'}
+                            </Badge>
+                          ) : (
+                            <Badge variant="secondary">
+                              Posiciones no asignadas
+                            </Badge>
+                          )}
                           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                             {member.monedaPago}
                           </p>

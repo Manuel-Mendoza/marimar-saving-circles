@@ -49,6 +49,8 @@ export const GroupsManagement: React.FC<GroupsManagementProps> = ({ user }) => {
   const [currentDrawGroup, setCurrentDrawGroup] = useState<Grupo | null>(null);
   const [drawPositions, setDrawPositions] = useState<{ position: number; userId: number; name: string }[]>([]);
 
+
+
   const { toast } = useToast();
 
   // Load groups data
@@ -125,6 +127,8 @@ export const GroupsManagement: React.FC<GroupsManagementProps> = ({ user }) => {
     try {
       setLoadingDetails(true);
       setShowDetailModal(true);
+      setGroupDetails(null); // Reset previous data
+
       const response = await api.getGroupAdminDetails(group.id);
 
       if (response.success) {
@@ -382,6 +386,7 @@ export const GroupsManagement: React.FC<GroupsManagementProps> = ({ user }) => {
         onClose={() => {
           setShowDetailModal(false);
           setGroupDetails(null);
+          setLoadingDetails(false);
         }}
         groupDetails={groupDetails}
         isLoading={loadingDetails}
