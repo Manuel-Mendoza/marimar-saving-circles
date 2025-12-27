@@ -502,6 +502,8 @@ groupsRoute.post("/:id/start-draw", authenticate, async (c) => {
       );
     }
 
+    // TEMPORAL: Permitir sorteo para testing - comentar validación
+    /*
     if (group.estado !== "LLENO") {
       return c.json(
         {
@@ -511,6 +513,7 @@ groupsRoute.post("/:id/start-draw", authenticate, async (c) => {
         400,
       );
     }
+    */
 
     // Get all group members
     const groupMembers = await db

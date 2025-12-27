@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { LoadingSpinner } from '@/components/atoms';
 import { GroupSearchFilter } from '@/components/molecules/groups';
 import { GroupStatsGrid, GroupsTable, GroupActionDialogs, GroupDetailModal, DrawAnimation } from '@/components/organisms/groups';
+import { DrawCompletionModal } from '@/components/organisms';
 import { useToast } from '@/hooks/use-toast';
 import api from '@/lib/api';
 import { Grupo, GroupAdminDetails } from '@/lib/types';
@@ -48,6 +49,9 @@ export const GroupsManagement: React.FC<GroupsManagementProps> = ({ user }) => {
   const [showDrawAnimation, setShowDrawAnimation] = useState(false);
   const [currentDrawGroup, setCurrentDrawGroup] = useState<Grupo | null>(null);
   const [drawPositions, setDrawPositions] = useState<{ position: number; userId: number; name: string }[]>([]);
+
+  // Draw completion modal state
+  const [showDrawCompletionModal, setShowDrawCompletionModal] = useState(false);
 
 
 
@@ -303,9 +307,14 @@ export const GroupsManagement: React.FC<GroupsManagementProps> = ({ user }) => {
   };
 
   const handleDrawAnimationComplete = async () => {
-    // Reload groups data after animation completes
+    // Animation completed, but don't close automatically - let user close manually
+    // Just reload groups data in background
     await loadGroups();
-    handleDrawAnimationClose();
+  };
+
+  const handleDrawCompleted = () => {
+    // Show completion modal when draw animation finishes
+    setShowDrawCompletionModal(true);
   };
 
   // Calculate statistics
@@ -400,8 +409,17 @@ export const GroupsManagement: React.FC<GroupsManagementProps> = ({ user }) => {
           finalPositions={drawPositions}
           onClose={handleDrawAnimationClose}
           onComplete={handleDrawAnimationComplete}
+          onDrawComplete={handleDrawCompleted}
+          useInternalWebSocket={false}
         />
       )}
+
+      {/* Draw Completion Modal */}
+      <DrawCompletionModal
+        isOpen={showDrawCompletionModal}
+        onClose={() => setShowDrawCompletionModal(false)}
+        groupId={currentDrawGroup?.id || 0}
+      />
     </div>
   );
 };

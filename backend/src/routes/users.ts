@@ -49,6 +49,7 @@ usersRoute.get("/", authenticate, async (c) => {
         tipo: users.tipo,
         estado: users.estado,
         imagenCedula: users.imagenCedula,
+        imagenPerfil: users.imagenPerfil,
         fechaRegistro: users.fechaRegistro,
         aprobadoPor: users.aprobadoPor,
         fechaAprobacion: users.fechaAprobacion,
@@ -100,6 +101,7 @@ usersRoute.get("/pending", authenticate, async (c) => {
         tipo: users.tipo,
         estado: users.estado,
         imagenCedula: users.imagenCedula,
+        imagenPerfil: users.imagenPerfil,
         fechaRegistro: users.fechaRegistro,
       })
       .from(users)
@@ -244,6 +246,66 @@ usersRoute.put("/:id/status", authenticate, async (c) => {
   }
 });
 
+// Update user profile (including profile picture)
+usersRoute.put("/:id/profile", authenticate, async (c) => {
+  try {
+    const userPayload = c.get("user") as JWTPayload;
+    const userId = parseInt(c.req.param("id"));
+
+    // Users can only update their own profile
+    if (userPayload.id !== userId) {
+      return c.json(
+        {
+          success: false,
+          message: "Acceso denegado",
+        },
+        403,
+      );
+    }
+
+    const body = await c.req.json();
+    const { imagenPerfil } = body;
+
+    const updateData: Record<string, unknown> = {};
+    if (imagenPerfil !== undefined) {
+      updateData.imagenPerfil = imagenPerfil;
+    }
+
+    const updatedUsers = await db
+      .update(users)
+      .set(updateData)
+      .where(eq(users.id, userId))
+      .returning();
+
+    if (updatedUsers.length === 0) {
+      return c.json(
+        {
+          success: false,
+          message: "Usuario no encontrado",
+        },
+        404,
+      );
+    }
+
+    return c.json({
+      success: true,
+      message: "Perfil actualizado exitosamente",
+      data: {
+        user: updatedUsers[0],
+      },
+    });
+  } catch (error) {
+    console.error("Error actualizando perfil:", error);
+    return c.json(
+      {
+        success: false,
+        message: "Error interno del servidor",
+      },
+      500,
+    );
+  }
+});
+
 // Get user by ID
 usersRoute.get("/:id", authenticate, async (c) => {
   try {
@@ -272,6 +334,7 @@ usersRoute.get("/:id", authenticate, async (c) => {
         tipo: users.tipo,
         estado: users.estado,
         imagenCedula: users.imagenCedula,
+        imagenPerfil: users.imagenPerfil,
         fechaRegistro: users.fechaRegistro,
         ultimoAcceso: users.ultimoAcceso,
         aprobadoPor: users.aprobadoPor,

@@ -181,6 +181,13 @@ class ApiClient {
     });
   }
 
+  async updateProfile(userId: number, profileData: { imagenPerfil?: string }) {
+    return this.request<{ user: User }>(`/users/${userId}/profile`, {
+      method: 'PUT',
+      body: JSON.stringify(profileData),
+    });
+  }
+
   async joinGroup(productId: number, currency: 'VES' | 'USD') {
     return this.request<{
       groupId: number;

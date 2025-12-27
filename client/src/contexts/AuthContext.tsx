@@ -2,28 +2,13 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { apiClient } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
-
-interface User {
-  id: number;
-  nombre: string;
-  apellido: string;
-  cedula: string;
-  telefono: string;
-  direccion: string;
-  correoElectronico: string;
-  tipo: 'USUARIO' | 'ADMINISTRADOR';
-  estado?: 'PENDIENTE' | 'APROBADO' | 'RECHAZADO' | 'SUSPENDIDO' | 'REACTIVADO';
-  imagenCedula?: string;
-  fechaRegistro: Date;
-  ultimoAcceso?: Date;
-  aprobadoPor?: number;
-  fechaAprobacion?: Date;
-}
+import type { User } from '@/lib/types';
 
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
   isAuthenticated: boolean;
   isAdmin: boolean;
   isLoading: boolean;
@@ -77,6 +62,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setUser(null);
       localStorage.removeItem('auth_token');
       localStorage.removeItem('sanmarimar_user');
+    }
+  };
+
+  const refreshUser = async () => {
+    try {
+      const response = await apiClient.getCurrentUser();
+      if (response.success && response.data) {
+        const currentUser = response.data.user;
+        setUser(currentUser);
+        localStorage.setItem('sanmarimar_user', JSON.stringify(currentUser));
+      }
+    } catch (error) {
+      console.error('Error refreshing user:', error);
     }
   };
 
@@ -149,6 +147,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         user,
         login,
         logout,
+        refreshUser,
         isAuthenticated,
         isAdmin,
         isLoading,

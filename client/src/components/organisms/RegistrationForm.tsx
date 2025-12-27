@@ -1,12 +1,29 @@
 import React, { useState, useRef } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AuthTemplate } from '@/components/templates';
-import { IconButton, LoadingSpinner } from '@/components/atoms';
-import { Eye, EyeOff, Mail, Lock, User, Phone, AlertCircle, Upload, CheckCircle, XCircle, FileText, Camera } from 'lucide-react';
+import { apiClient } from '@/lib/api';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import {
+  Eye,
+  EyeOff,
+  Mail,
+  Lock,
+  User,
+  Phone,
+  AlertCircle,
+  Upload,
+  CheckCircle,
+  XCircle,
+  FileText,
+  Camera,
+} from 'lucide-react';
 
 interface RegistrationFormProps {
   onBack?: () => void;
@@ -21,8 +38,10 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onBack, onRegistrat
   const [formData, setFormData] = useState({
     nombre: '',
     apellido: '',
-    email: '',
+    cedula: '',
     telefono: '',
+    direccion: '',
+    email: '',
     password: '',
     confirmPassword: '',
   });
@@ -31,9 +50,12 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onBack, onRegistrat
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [fieldErrors, setFieldErrors] = useState<{[key: string]: string}>({});
-  const [touched, setTouched] = useState<{[key: string]: boolean}>({});
+  const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
+  const [touched, setTouched] = useState<{ [key: string]: boolean }>({});
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [showErrorDialog, setShowErrorDialog] = useState(false);
+  const [dialogErrorMessage, setDialogErrorMessage] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Validation functions
@@ -51,9 +73,11 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onBack, onRegistrat
   };
 
   const validatePhone = (phone: string) => {
-    const phoneRegex = /^\+58\s\d{3}\s\d{3}\s\d{4}$/;
+    // Remove all spaces, dashes, and dots for validation
+    const cleanPhone = phone.replace(/[\s\-\.]/g, '');
+    const phoneRegex = /^(\+58)?0?4\d{2}\d{7}$/;
     if (!phone) return 'El teléfono es requerido';
-    if (!phoneRegex.test(phone)) return 'Formato: +58 123 456 7890';
+    if (!phoneRegex.test(cleanPhone)) return 'Ingresa un número de teléfono venezolano válido';
     return '';
   };
 
@@ -62,6 +86,18 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onBack, onRegistrat
     if (password.length < 6) return 'La contraseña debe tener al menos 6 caracteres';
     if (!/(?=.*[a-z])(?=.*[A-Z])/.test(password)) return 'Debe contener mayúsculas y minúsculas';
     if (!/(?=.*\d)/.test(password)) return 'Debe contener al menos un número';
+    return '';
+  };
+
+  const validateCedula = (cedula: string) => {
+    if (!cedula) return 'La cédula es requerida';
+    if (cedula.length < 7) return 'La cédula debe tener al menos 7 caracteres';
+    return '';
+  };
+
+  const validateDireccion = (direccion: string) => {
+    if (!direccion) return 'La dirección es requerida';
+    if (direccion.length < 10) return 'La dirección debe tener al menos 10 caracteres';
     return '';
   };
 
@@ -100,11 +136,17 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onBack, onRegistrat
       case 'apellido':
         error = validateName(formData.apellido);
         break;
-      case 'email':
-        error = validateEmail(formData.email);
+      case 'cedula':
+        error = validateCedula(formData.cedula);
         break;
       case 'telefono':
         error = validatePhone(formData.telefono);
+        break;
+      case 'direccion':
+        error = validateDireccion(formData.direccion);
+        break;
+      case 'email':
+        error = validateEmail(formData.email);
         break;
       case 'password':
         error = validatePassword(formData.password);
@@ -128,11 +170,13 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onBack, onRegistrat
   };
 
   const validateForm = () => {
-    const errors: {[key: string]: string} = {};
+    const errors: { [key: string]: string } = {};
     errors.nombre = validateName(formData.nombre);
     errors.apellido = validateName(formData.apellido);
-    errors.email = validateEmail(formData.email);
+    errors.cedula = validateCedula(formData.cedula);
     errors.telefono = validatePhone(formData.telefono);
+    errors.direccion = validateDireccion(formData.direccion);
+    errors.email = validateEmail(formData.email);
     errors.password = validatePassword(formData.password);
     errors.confirmPassword = validateConfirmPassword(formData.confirmPassword);
     errors.profilePhoto = validateFile(profilePhoto);
@@ -144,8 +188,15 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onBack, onRegistrat
 
     setFieldErrors(errors);
     setTouched({
-      nombre: true, apellido: true, email: true, telefono: true,
-      password: true, confirmPassword: true, profilePhoto: true
+      nombre: true,
+      apellido: true,
+      cedula: true,
+      telefono: true,
+      direccion: true,
+      email: true,
+      password: true,
+      confirmPassword: true,
+      profilePhoto: true,
     });
 
     return !Object.values(errors).some(error => error);
@@ -163,23 +214,41 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onBack, onRegistrat
     setError('');
 
     try {
-      // TODO: Implement registration logic
-      console.log('Registration attempt:', { ...formData, profilePhoto, acceptedTerms });
+      // Create FormData for API call
+      const formDataToSend = new FormData();
+      formDataToSend.append('nombre', formData.nombre);
+      formDataToSend.append('apellido', formData.apellido);
+      formDataToSend.append('cedula', formData.cedula);
+      formDataToSend.append('telefono', formData.telefono);
+      formDataToSend.append('direccion', formData.direccion);
+      formDataToSend.append('correoElectronico', formData.email);
+      formDataToSend.append('password', formData.password);
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      if (profilePhoto) {
+        formDataToSend.append('imagenCedula', profilePhoto);
+      }
 
-      // For now, just call success
-      onRegistrationSuccess?.();
+      // Call registration API
+      const response = await apiClient.register(formDataToSend);
+
+      if (response.success) {
+        setShowSuccessDialog(true);
+      } else {
+        setDialogErrorMessage(response.message || 'Error al registrar usuario. Inténtalo de nuevo.');
+        setShowErrorDialog(true);
+      }
     } catch (err) {
-      setError('Error al registrar usuario. Inténtalo de nuevo.');
+      console.error('Registration error:', err);
+      setDialogErrorMessage('Error al registrar usuario. Inténtalo de nuevo.');
+      setShowErrorDialog(true);
     } finally {
       setIsLoading(false);
     }
   };
 
   const getFieldClassName = (field: string) => {
-    const baseClasses = "w-full pl-12 pr-4 py-3 border rounded-lg transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500";
+    const baseClasses =
+      'w-full pl-12 pr-4 py-3 border rounded-lg transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500';
     const hasError = fieldErrors[field] && touched[field];
 
     if (hasError) {
@@ -198,12 +267,16 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onBack, onRegistrat
 
   // Calculate completion percentage
   const getCompletionPercentage = () => {
-    const fields = ['nombre', 'apellido', 'email', 'telefono', 'password', 'confirmPassword'];
-    const completedFields = fields.filter(field => formData[field as keyof typeof formData] && !fieldErrors[field]);
-    return profilePhoto && !fieldErrors.profilePhoto ? completedFields.length + 1 : completedFields.length;
+    const fields = ['nombre', 'apellido', 'cedula', 'telefono', 'direccion', 'email', 'password', 'confirmPassword'];
+    const completedFields = fields.filter(
+      field => formData[field as keyof typeof formData] && !fieldErrors[field]
+    );
+    return profilePhoto && !fieldErrors.profilePhoto
+      ? completedFields.length + 1
+      : completedFields.length;
   };
 
-  const completionPercentage = (getCompletionPercentage() / 7) * 100;
+  const completionPercentage = (getCompletionPercentage() / 9) * 100;
 
   return (
     <AuthTemplate
@@ -229,7 +302,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onBack, onRegistrat
         <p className="text-gray-600">Completa tu información para comenzar</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6 max-w-4xl mx-auto">
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center space-x-3">
             <XCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
@@ -252,7 +325,9 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onBack, onRegistrat
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <User className={`h-5 w-5 ${fieldErrors.nombre && touched.nombre ? 'text-red-400' : 'text-gray-400'}`} />
+                  <User
+                    className={`h-5 w-5 ${fieldErrors.nombre && touched.nombre ? 'text-red-400' : 'text-gray-400'}`}
+                  />
                 </div>
                 <input
                   id="nombre"
@@ -260,11 +335,11 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onBack, onRegistrat
                   autoComplete="given-name"
                   placeholder="Tu nombre"
                   value={formData.nombre}
-                  onChange={(e) => handleInputChange('nombre', e.target.value)}
+                  onChange={e => handleInputChange('nombre', e.target.value)}
                   onBlur={() => handleBlur('nombre')}
                   className={getFieldClassName('nombre')}
-                  aria-describedby={fieldErrors.nombre ? "nombre-error" : undefined}
-                  aria-invalid={fieldErrors.nombre ? "true" : "false"}
+                  aria-describedby={fieldErrors.nombre ? 'nombre-error' : undefined}
+                  aria-invalid={fieldErrors.nombre ? 'true' : 'false'}
                 />
                 {formData.nombre && !fieldErrors.nombre && touched.nombre && (
                   <div className="absolute inset-y-0 right-0 pr-4 flex items-center">
@@ -291,11 +366,11 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onBack, onRegistrat
                 autoComplete="family-name"
                 placeholder="Tu apellido"
                 value={formData.apellido}
-                onChange={(e) => handleInputChange('apellido', e.target.value)}
+                onChange={e => handleInputChange('apellido', e.target.value)}
                 onBlur={() => handleBlur('apellido')}
                 className={getFieldClassName('apellido')}
-                aria-describedby={fieldErrors.apellido ? "apellido-error" : undefined}
-                aria-invalid={fieldErrors.apellido ? "true" : "false"}
+                aria-describedby={fieldErrors.apellido ? 'apellido-error' : undefined}
+                aria-invalid={fieldErrors.apellido ? 'true' : 'false'}
               />
               {formData.apellido && !fieldErrors.apellido && touched.apellido && (
                 <div className="absolute inset-y-0 right-0 pr-4 flex items-center">
@@ -318,7 +393,9 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onBack, onRegistrat
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <Mail className={`h-5 w-5 ${fieldErrors.email && touched.email ? 'text-red-400' : 'text-gray-400'}`} />
+                <Mail
+                  className={`h-5 w-5 ${fieldErrors.email && touched.email ? 'text-red-400' : 'text-gray-400'}`}
+                />
               </div>
               <input
                 id="email"
@@ -326,11 +403,11 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onBack, onRegistrat
                 autoComplete="email"
                 placeholder="tu@email.com"
                 value={formData.email}
-                onChange={(e) => handleInputChange('email', e.target.value)}
+                onChange={e => handleInputChange('email', e.target.value)}
                 onBlur={() => handleBlur('email')}
                 className={getFieldClassName('email')}
-                aria-describedby={fieldErrors.email ? "email-error" : undefined}
-                aria-invalid={fieldErrors.email ? "true" : "false"}
+                aria-describedby={fieldErrors.email ? 'email-error' : undefined}
+                aria-invalid={fieldErrors.email ? 'true' : 'false'}
               />
               {formData.email && !fieldErrors.email && touched.email && (
                 <div className="absolute inset-y-0 right-0 pr-4 flex items-center">
@@ -353,19 +430,21 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onBack, onRegistrat
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <Phone className={`h-5 w-5 ${fieldErrors.telefono && touched.telefono ? 'text-red-400' : 'text-gray-400'}`} />
+                <Phone
+                  className={`h-5 w-5 ${fieldErrors.telefono && touched.telefono ? 'text-red-400' : 'text-gray-400'}`}
+                />
               </div>
               <input
                 id="telefono"
                 type="tel"
                 autoComplete="tel"
-                placeholder="+58 123 456 7890"
+                placeholder="412 123 4567"
                 value={formData.telefono}
-                onChange={(e) => handleInputChange('telefono', e.target.value)}
+                onChange={e => handleInputChange('telefono', e.target.value)}
                 onBlur={() => handleBlur('telefono')}
                 className={getFieldClassName('telefono')}
-                aria-describedby={fieldErrors.telefono ? "telefono-error" : undefined}
-                aria-invalid={fieldErrors.telefono ? "true" : "false"}
+                aria-describedby={fieldErrors.telefono ? 'telefono-error' : undefined}
+                aria-invalid={fieldErrors.telefono ? 'true' : 'false'}
               />
               {formData.telefono && !fieldErrors.telefono && touched.telefono && (
                 <div className="absolute inset-y-0 right-0 pr-4 flex items-center">
@@ -377,6 +456,80 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onBack, onRegistrat
               <p id="telefono-error" className="text-red-600 text-sm flex items-center space-x-1">
                 <XCircle className="h-4 w-4" />
                 <span>{fieldErrors.telefono}</span>
+              </p>
+            )}
+          </div>
+
+          {/* Cédula */}
+          <div className="space-y-2">
+            <label htmlFor="cedula" className="block text-sm font-medium text-gray-700">
+              Cédula *
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <FileText
+                  className={`h-5 w-5 ${fieldErrors.cedula && touched.cedula ? 'text-red-400' : 'text-gray-400'}`}
+                />
+              </div>
+              <input
+                id="cedula"
+                type="text"
+                autoComplete="off"
+                placeholder="V-12345678"
+                value={formData.cedula}
+                onChange={e => handleInputChange('cedula', e.target.value)}
+                onBlur={() => handleBlur('cedula')}
+                className={getFieldClassName('cedula')}
+                aria-describedby={fieldErrors.cedula ? 'cedula-error' : undefined}
+                aria-invalid={fieldErrors.cedula ? 'true' : 'false'}
+              />
+              {formData.cedula && !fieldErrors.cedula && touched.cedula && (
+                <div className="absolute inset-y-0 right-0 pr-4 flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500" />
+                </div>
+              )}
+            </div>
+            {fieldErrors.cedula && touched.cedula && (
+              <p id="cedula-error" className="text-red-600 text-sm flex items-center space-x-1">
+                <XCircle className="h-4 w-4" />
+                <span>{fieldErrors.cedula}</span>
+              </p>
+            )}
+          </div>
+
+          {/* Dirección */}
+          <div className="space-y-2">
+            <label htmlFor="direccion" className="block text-sm font-medium text-gray-700">
+              Dirección *
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <User
+                  className={`h-5 w-5 ${fieldErrors.direccion && touched.direccion ? 'text-red-400' : 'text-gray-400'}`}
+                />
+              </div>
+              <input
+                id="direccion"
+                type="text"
+                autoComplete="address"
+                placeholder="Dirección completa de tu domicilio"
+                value={formData.direccion}
+                onChange={e => handleInputChange('direccion', e.target.value)}
+                onBlur={() => handleBlur('direccion')}
+                className={getFieldClassName('direccion')}
+                aria-describedby={fieldErrors.direccion ? 'direccion-error' : undefined}
+                aria-invalid={fieldErrors.direccion ? 'true' : 'false'}
+              />
+              {formData.direccion && !fieldErrors.direccion && touched.direccion && (
+                <div className="absolute inset-y-0 right-0 pr-4 flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500" />
+                </div>
+              )}
+            </div>
+            {fieldErrors.direccion && touched.direccion && (
+              <p id="direccion-error" className="text-red-600 text-sm flex items-center space-x-1">
+                <XCircle className="h-4 w-4" />
+                <span>{fieldErrors.direccion}</span>
               </p>
             )}
           </div>
@@ -396,7 +549,9 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onBack, onRegistrat
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <Lock className={`h-5 w-5 ${fieldErrors.password && touched.password ? 'text-red-400' : 'text-gray-400'}`} />
+                <Lock
+                  className={`h-5 w-5 ${fieldErrors.password && touched.password ? 'text-red-400' : 'text-gray-400'}`}
+                />
               </div>
               <input
                 id="password"
@@ -404,11 +559,11 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onBack, onRegistrat
                 autoComplete="new-password"
                 placeholder="Mínimo 6 caracteres, mayúsculas, minúsculas y números"
                 value={formData.password}
-                onChange={(e) => handleInputChange('password', e.target.value)}
+                onChange={e => handleInputChange('password', e.target.value)}
                 onBlur={() => handleBlur('password')}
                 className={`${getFieldClassName('password')} pr-12`}
-                aria-describedby={fieldErrors.password ? "password-error" : undefined}
-                aria-invalid={fieldErrors.password ? "true" : "false"}
+                aria-describedby={fieldErrors.password ? 'password-error' : undefined}
+                aria-invalid={fieldErrors.password ? 'true' : 'false'}
               />
               <button
                 type="button"
@@ -434,7 +589,9 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onBack, onRegistrat
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <Lock className={`h-5 w-5 ${fieldErrors.confirmPassword && touched.confirmPassword ? 'text-red-400' : 'text-gray-400'}`} />
+                <Lock
+                  className={`h-5 w-5 ${fieldErrors.confirmPassword && touched.confirmPassword ? 'text-red-400' : 'text-gray-400'}`}
+                />
               </div>
               <input
                 id="confirmPassword"
@@ -442,11 +599,11 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onBack, onRegistrat
                 autoComplete="new-password"
                 placeholder="Repite tu contraseña"
                 value={formData.confirmPassword}
-                onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                onChange={e => handleInputChange('confirmPassword', e.target.value)}
                 onBlur={() => handleBlur('confirmPassword')}
                 className={`${getFieldClassName('confirmPassword')} pr-12`}
-                aria-describedby={fieldErrors.confirmPassword ? "confirmPassword-error" : undefined}
-                aria-invalid={fieldErrors.confirmPassword ? "true" : "false"}
+                aria-describedby={fieldErrors.confirmPassword ? 'confirmPassword-error' : undefined}
+                aria-invalid={fieldErrors.confirmPassword ? 'true' : 'false'}
               />
               <button
                 type="button"
@@ -458,7 +615,10 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onBack, onRegistrat
               </button>
             </div>
             {fieldErrors.confirmPassword && touched.confirmPassword && (
-              <p id="confirmPassword-error" className="text-red-600 text-sm flex items-center space-x-1">
+              <p
+                id="confirmPassword-error"
+                className="text-red-600 text-sm flex items-center space-x-1"
+              >
                 <XCircle className="h-4 w-4" />
                 <span>{fieldErrors.confirmPassword}</span>
               </p>
@@ -474,9 +634,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onBack, onRegistrat
           </h3>
 
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
-              Foto de perfil *
-            </label>
+            <label className="block text-sm font-medium text-gray-700">Foto de perfil *</label>
 
             {!profilePhoto ? (
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
@@ -487,7 +645,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onBack, onRegistrat
                   accept="image/jpeg,image/jpg,image/png"
                   onChange={handleFileChange}
                   className="hidden"
-                  aria-describedby={fieldErrors.profilePhoto ? "file-error" : undefined}
+                  aria-describedby={fieldErrors.profilePhoto ? 'file-error' : undefined}
                 />
                 <label htmlFor="profilePhoto" className="cursor-pointer">
                   <div className="flex flex-col items-center space-y-2">
@@ -542,15 +700,19 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onBack, onRegistrat
             <input
               type="checkbox"
               checked={acceptedTerms}
-              onChange={(e) => setAcceptedTerms(e.target.checked)}
+              onChange={e => setAcceptedTerms(e.target.checked)}
               className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
             />
             <span className="text-sm text-gray-600">
               Acepto los{' '}
-              <a href="#" className="text-blue-600 hover:underline">Términos de servicio</a>
-              {' '}y{' '}
-              <a href="#" className="text-blue-600 hover:underline">Política de privacidad</a>
-              {' '}de San Marimar *
+              <a href="#" className="text-blue-600 hover:underline">
+                Términos de servicio
+              </a>{' '}
+              y{' '}
+              <a href="#" className="text-blue-600 hover:underline">
+                Política de privacidad
+              </a>{' '}
+              de San Marimar *
             </span>
           </label>
         </div>
@@ -588,9 +750,76 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onBack, onRegistrat
       {/* Footer */}
       <div className="bg-gray-50 px-8 py-4 text-center border-t mt-8">
         <p className="text-xs text-gray-500">
-          Tus datos están protegidos y se utilizan únicamente para el proceso de registro y verificación.
+          Tus datos están protegidos y se utilizan únicamente para el proceso de registro y
+          verificación.
         </p>
       </div>
+
+      {/* Success Dialog */}
+      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2 text-green-600">
+              <CheckCircle className="h-6 w-6" />
+              <span>¡Registro exitoso!</span>
+            </DialogTitle>
+            <DialogDescription>
+              Tu cuenta ha sido creada exitosamente. Ahora puedes iniciar sesión y comenzar a ahorrar con San Marimar.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowSuccessDialog(false);
+                onBack?.(); // Redirect to login
+              }}
+            >
+              Iniciar sesión
+            </Button>
+            <Button
+              onClick={() => {
+                setShowSuccessDialog(false);
+                onRegistrationSuccess?.();
+              }}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              Continuar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Error Dialog */}
+      <Dialog open={showErrorDialog} onOpenChange={setShowErrorDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2 text-red-600">
+              <XCircle className="h-6 w-6" />
+              <span>Error en el registro</span>
+            </DialogTitle>
+            <DialogDescription>
+              {dialogErrorMessage}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowErrorDialog(false)}
+            >
+              Cerrar
+            </Button>
+            <Button
+              onClick={() => {
+                setShowErrorDialog(false);
+                // Optionally retry or focus on form
+              }}
+            >
+              Intentar de nuevo
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AuthTemplate>
   );
 };

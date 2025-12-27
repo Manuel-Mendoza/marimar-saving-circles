@@ -37,6 +37,7 @@ interface NavigationSidebarProps {
     apellido?: string;
     tipo: 'USUARIO' | 'ADMINISTRADOR';
     imagenCedula?: string;
+    imagenPerfil?: string;
   };
   /** Item activo actualmente */
   activeItem?: string;
@@ -211,7 +212,7 @@ const NavigationSidebar: React.FC<NavigationSidebarProps> = ({
             <UserAvatar
               name={user.nombre}
               lastname={user.apellido}
-              imageUrl={user.imagenCedula}
+              imageUrl={user.imagenPerfil || user.imagenCedula}
               size={collapsed ? 'sm' : 'md'}
             />
             {!collapsed && (

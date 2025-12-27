@@ -13,6 +13,7 @@ export const users = pgTable("users", {
   tipo: text("tipo").notNull().default("USUARIO"),
   estado: text("estado").notNull().default("PENDIENTE"), // PENDIENTE, APROBADO, RECHAZADO, SUSPENDIDO, REACTIVADO
   imagenCedula: text("imagen_cedula"),
+  imagenPerfil: text("imagen_perfil"),
   fechaRegistro: timestamp("fecha_registro").notNull().defaultNow(),
   ultimoAcceso: timestamp("ultimo_acceso"),
   aprobadoPor: integer("aprobado_por"), // ID del admin que aprobó

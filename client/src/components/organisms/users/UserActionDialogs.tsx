@@ -20,11 +20,25 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { LoadingSpinner } from '@/components/atoms';
+import { CheckCircle, User, Mail, Phone, Calendar, CreditCard } from 'lucide-react';
+import { StatusBadge } from '@/components/atoms';
 
 interface User {
   id: number;
   nombre: string;
   apellido: string;
+  cedula: string;
+  telefono: string;
+  correoElectronico: string;
+  tipo: 'USUARIO' | 'ADMINISTRADOR';
+  estado: 'PENDIENTE' | 'APROBADO' | 'RECHAZADO' | 'SUSPENDIDO' | 'REACTIVADO';
+  imagenCedula?: string;
+  imagenPerfil?: string;
+  fechaRegistro: string;
+  ultimoAcceso?: string;
+  aprobadoPor?: number;
+  fechaAprobacion?: string;
+  motivo?: string;
 }
 
 interface UserActionDialogsProps {
@@ -73,7 +87,12 @@ const UserActionDialogs: React.FC<UserActionDialogsProps> = ({
   const getDialogTitle = (action: string) => {
     switch (action) {
       case 'approve':
-        return 'Aprobar Usuario';
+        return (
+          <div className="flex items-center space-x-2">
+            <CheckCircle className="h-5 w-5 text-green-600" />
+            <span>Aprobar Usuario</span>
+          </div>
+        );
       case 'reject':
         return 'Rechazar Usuario';
       case 'suspend':
@@ -90,6 +109,8 @@ const UserActionDialogs: React.FC<UserActionDialogsProps> = ({
   // Get dialog description based on action type
   const getDialogDescription = (action: string) => {
     switch (action) {
+      case 'approve':
+        return '¿Estás seguro de que quieres aprobar este usuario? Esta acción activará su cuenta y le permitirá acceder al sistema.';
       case 'reject':
         return 'Por favor, indique el motivo del rechazo:';
       case 'suspend':
@@ -104,11 +125,22 @@ const UserActionDialogs: React.FC<UserActionDialogsProps> = ({
     return action === 'reject' || action === 'suspend' || action === 'delete';
   };
 
+  // Format date helper
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
   return (
     <>
       {/* Action Dialog (Approve/Reject/Suspend/Reactivate) */}
       <Dialog open={showActionDialog} onOpenChange={onActionDialogChange}>
-        <DialogContent>
+        <DialogContent className={actionType === 'approve' ? 'sm:max-w-md' : ''}>
           <DialogHeader>
             <DialogTitle>
               {getDialogTitle(actionType)}
@@ -117,6 +149,61 @@ const UserActionDialogs: React.FC<UserActionDialogsProps> = ({
               {getDialogDescription(actionType)}
             </DialogDescription>
           </DialogHeader>
+
+          {actionType === 'approve' && selectedUser && (
+            <div className="space-y-4">
+              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <h4 className="font-medium text-gray-900 dark:text-white">
+                      {selectedUser.nombre} {selectedUser.apellido}
+                    </h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {selectedUser.tipo === 'ADMINISTRADOR' ? 'Administrador' : 'Usuario'}
+                    </p>
+                  </div>
+                  <StatusBadge status={selectedUser.estado} />
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2 text-sm">
+                    <Mail className="h-4 w-4 text-gray-500" />
+                    <span>{selectedUser.correoElectronico}</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm">
+                    <Phone className="h-4 w-4 text-gray-500" />
+                    <span>{selectedUser.telefono}</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm">
+                    <CreditCard className="h-4 w-4 text-gray-500" />
+                    <span>{selectedUser.cedula}</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm">
+                    <Calendar className="h-4 w-4 text-gray-500" />
+                    <span>Registrado el {formatDate(selectedUser.fechaRegistro)}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-green-50 dark:bg-green-950 p-3 rounded-lg border border-green-200 dark:border-green-800">
+                <div className="flex items-start space-x-2">
+                  <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-green-800 dark:text-green-300">
+                      Al aprobar este usuario:
+                    </p>
+                    <ul className="text-sm text-green-700 dark:text-green-400 mt-1 space-y-1">
+                      <li>• Se activará su cuenta y podrá iniciar sesión</li>
+                      <li>• Podrá unirse a grupos de ahorro</li>
+                      <li>• Tendrá acceso a todas las funciones del sistema</li>
+                      <li>• Recibirá una notificación de aprobación</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {requiresReason(actionType) && (
             <div>
               <Textarea
@@ -127,6 +214,7 @@ const UserActionDialogs: React.FC<UserActionDialogsProps> = ({
               />
             </div>
           )}
+
           <DialogFooter>
             <Button variant="outline" onClick={() => onActionDialogChange(false)}>
               Cancelar
@@ -134,12 +222,13 @@ const UserActionDialogs: React.FC<UserActionDialogsProps> = ({
             <Button
               onClick={onConfirmAction}
               disabled={isLoading}
+              className={actionType === 'approve' ? 'bg-green-600 hover:bg-green-700' : ''}
               variant={
                 actionType === 'reject' || actionType === 'suspend' ? 'destructive' : 'default'
               }
             >
               {isLoading && <LoadingSpinner size="sm" className="mr-2" />}
-              Confirmar
+              {actionType === 'approve' ? 'Aprobar Usuario' : 'Confirmar'}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -10,6 +10,7 @@ export interface User {
   tipo: 'USUARIO' | 'ADMINISTRADOR';
   estado: 'PENDIENTE' | 'APROBADO' | 'RECHAZADO' | 'SUSPENDIDO' | 'REACTIVADO';
   imagenCedula?: string;
+  imagenPerfil?: string;
   fechaRegistro: string;
   ultimoAcceso?: string;
   aprobadoPor?: number;
@@ -130,6 +131,15 @@ export interface UserGroup {
   fechaUnion: string;
   productoSeleccionado: string;
   monedaPago: 'VES' | 'USD';
+  group?: {
+    id: number;
+    nombre: string;
+    duracionMeses: number;
+    estado: string;
+    fechaInicio: string | null;
+    fechaFinal: string | null;
+    turnoActual: number;
+  };
   user?: {
     id: number;
     nombre: string;

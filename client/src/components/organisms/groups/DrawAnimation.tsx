@@ -23,6 +23,10 @@ interface DrawAnimationProps {
   onClose: () => void;
   /** Función para recargar datos después del sorteo */
   onComplete: () => void;
+  /** Función llamada cuando el sorteo termina (para mostrar modal de completado) */
+  onDrawComplete?: () => void;
+  /** Si debe usar WebSocket interno (para admins) */
+  useInternalWebSocket?: boolean;
 }
 
 /**
@@ -35,15 +39,17 @@ export const DrawAnimation: React.FC<DrawAnimationProps> = ({
   finalPositions,
   onClose,
   onComplete,
+  onDrawComplete,
+  useInternalWebSocket = true,
 }) => {
   const [revealedPositions, setRevealedPositions] = useState<DrawPosition[]>([]);
   const [isAnimating, setIsAnimating] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [wsConnection, setWsConnection] = useState<WebSocket | null>(null);
 
-  // Conectar al WebSocket cuando se activa la animación
+  // Conectar al WebSocket cuando se activa la animación (solo si useInternalWebSocket es true)
   useEffect(() => {
-    if (isActive && groupId) {
+    if (isActive && groupId && useInternalWebSocket) {
       const ws = new WebSocket(`ws://localhost:6001/groups/${groupId}`);
 
       ws.onopen = () => {
@@ -80,7 +86,22 @@ export const DrawAnimation: React.FC<DrawAnimationProps> = ({
         }
       };
     }
-  }, [isActive, groupId]);
+  }, [isActive, groupId, useInternalWebSocket]);
+
+  // Iniciar animación automáticamente cuando no usa WebSocket interno (modo usuario)
+  useEffect(() => {
+    if (isActive && !useInternalWebSocket && finalPositions.length > 0) {
+      console.log('🎬 Iniciando animación automática para usuarios');
+      console.log('Posiciones finales:', finalPositions);
+
+      // Agregar delays a las posiciones para la animación
+      const positionsWithDelays = finalPositions.map((pos, index) => ({
+        ...pos,
+        delay: index * 2000, // 2 segundos entre cada posición para máxima emoción
+      }));
+      startAnimation(positionsWithDelays);
+    }
+  }, [isActive, useInternalWebSocket, finalPositions]);
 
   // Función para iniciar la animación
   const startAnimation = (positions: DrawPosition[]) => {
@@ -98,8 +119,9 @@ export const DrawAnimation: React.FC<DrawAnimationProps> = ({
         if (index === positions.length - 1) {
           setTimeout(() => {
             setIsAnimating(false);
-            onComplete();
-          }, 2000); // Esperar 2 segundos después de la última posición
+            // Notificar que el sorteo se completó para mostrar modal de celebración
+            onDrawComplete?.();
+          }, 1000); // Pequeño delay antes de mostrar el modal
         }
       }, (position.delay || 0));
     });
@@ -109,7 +131,7 @@ export const DrawAnimation: React.FC<DrawAnimationProps> = ({
   const simulateDraw = () => {
     const simulatedPositions = finalPositions.map((pos, index) => ({
       ...pos,
-      delay: index * 1000,
+      delay: index * 2000, // Mantener consistencia con el delay principal
     }));
     startAnimation(simulatedPositions);
   };
@@ -233,26 +255,16 @@ export const DrawAnimation: React.FC<DrawAnimationProps> = ({
             ))}
           </div>
 
-          {/* Mensaje final */}
-          {!isAnimating && revealedPositions.length === finalPositions.length && (
-            <div className="text-center py-6">
-              <div className="inline-flex items-center space-x-2 px-6 py-3 bg-green-50 dark:bg-green-900 rounded-full">
-                <Trophy className="h-6 w-6 text-green-600" />
-                <span className="font-semibold text-green-700 dark:text-green-300">
-                  ¡Sorteo completado!
-                </span>
-              </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                Las posiciones han sido asignadas exitosamente
-              </p>
-            </div>
-          )}
+
 
           {/* Botones de acción */}
           <div className="flex justify-end space-x-3 pt-4 border-t">
             <Button
               variant="outline"
-              onClick={onClose}
+              onClick={() => {
+                onClose();
+                onComplete(); // Reload data when user closes manually
+              }}
               disabled={isAnimating}
             >
               <X className="h-4 w-4 mr-1" />
