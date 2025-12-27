@@ -1,19 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '@/lib/api';
-import { UserGroup } from '@/lib/types';
-
-interface Contribution {
-  id: number;
-  monto: number;
-  moneda: string;
-  fechaPago: string | null;
-  periodo: string;
-  estado: string;
-  user: {
-    nombre: string;
-    apellido: string;
-  };
-}
+import { UserGroup, Contribution } from '@/lib/types';
 
 interface UserDashboardData {
   userGroups: UserGroup[];
@@ -59,6 +46,10 @@ export const useUserDashboard = (userId: number) => {
       const userGroupsResponse = await api.getMyGroups();
       const userGroups = userGroupsResponse.success ? userGroupsResponse.data.userGroups : [];
 
+      // Fetch contributions to get real pending payments
+      const contributionsResponse = await api.getMyContributions();
+      const contributions = contributionsResponse.success ? contributionsResponse.data.contributions : [];
+
       // Calculate real stats from user groups
       const activeGroups = userGroups.filter(ug => ug.group.estado === 'EN_MARCHA').length;
       const completedGroups = userGroups.filter(ug => ug.group.estado === 'COMPLETADO').length;
@@ -66,9 +57,8 @@ export const useUserDashboard = (userId: number) => {
       // Calculate products acquired (completed groups = products received)
       const productsAcquired = completedGroups;
 
-      // For now, we'll use simplified calculations since we don't have a dedicated contributions endpoint
-      // In a real implementation, you'd fetch actual contribution data from the backend
-      const pendingPayments = Math.max(0, activeGroups * 2 - Math.floor(Math.random() * 3)); // More realistic calculation
+      // Calculate pending payments from actual unpaid contributions
+      const pendingPayments = contributions.filter(contribution => contribution.estado === 'PENDIENTE').length;
 
       // Generate activity from real group data
       const recentActivity: ActivityItem[] = [];
@@ -116,16 +106,25 @@ export const useUserDashboard = (userId: number) => {
       // Sort activities by timestamp (most recent first)
       recentActivity.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
 
-      // Find next payment (more realistic based on group status)
-      const nextPayment = activeGroups > 0 && pendingPayments > 0 ? {
-        amount: Math.floor(Math.random() * 30) + 20, // Random amount between 20-50
-        currency: (Math.random() > 0.5 ? 'USD' : 'VES') as 'USD' | 'VES',
-        dueDate: new Date(Date.now() + (Math.floor(Math.random() * 14) + 1) * 24 * 60 * 60 * 1000), // 1-14 days from now
-        groupName: userGroups.find(ug => ug.group.estado === 'EN_MARCHA')?.group.nombre || 'Grupo Activo',
-      } : undefined;
+      // Find next payment from actual pending contributions
+      const nextPayment = pendingPayments > 0 ? (() => {
+        // Get the most recent pending contribution (earliest period)
+        const pendingContribution = contributions
+          .filter(contribution => contribution.estado === 'PENDIENTE')
+          .sort((a, b) => a.periodo.localeCompare(b.periodo))[0]; // Sort by period (Mes 1, Mes 2, etc.)
 
-      // Empty contributions array since we don't have real contribution data yet
-      const contributions: Contribution[] = [];
+        if (pendingContribution) {
+          // Find the group name from user groups
+          const groupInfo = userGroups.find(ug => ug.groupId === pendingContribution.groupId);
+          return {
+            amount: pendingContribution.monto,
+            currency: pendingContribution.moneda,
+            dueDate: new Date(Date.now() + (Math.floor(Math.random() * 14) + 1) * 24 * 60 * 60 * 1000), // Still using some randomization for due date since it's not in the contribution
+            groupName: groupInfo?.group.nombre || 'Grupo Activo',
+          };
+        }
+        return undefined;
+      })() : undefined;
 
       const dashboardData: UserDashboardData = {
         userGroups,

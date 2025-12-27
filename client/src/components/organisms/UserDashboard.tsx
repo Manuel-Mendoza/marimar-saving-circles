@@ -102,6 +102,17 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
   // Use real data from hook, fallback to props or defaults
   const currentStats = ensureStatsComplete(dashboardData?.stats ?? stats);
 
+  // Rating system: 10/10 = green, 7/10 = yellow, 4/10 = red
+  const getRatingColor = (rating: number) => {
+    if (rating >= 10) return { bg: 'bg-green-100', icon: 'text-green-600', text: 'text-green-700' };
+    if (rating >= 7) return { bg: 'bg-yellow-100', icon: 'text-yellow-600', text: 'text-yellow-700' };
+    if (rating >= 4) return { bg: 'bg-red-100', icon: 'text-red-600', text: 'text-red-700' };
+    return { bg: 'bg-red-100', icon: 'text-red-600', text: 'text-red-700' }; // Default to red for very low ratings
+  };
+
+  const ratingValue = 10; // TODO: Replace with actual rating from backend
+  const ratingColors = getRatingColor(ratingValue);
+
   const isLoading = externalLoading || dashboardLoading;
 
   const ActivityFeed: React.FC<{ activities: ActivityItem[] }> = ({ activities }) => (
@@ -216,14 +227,14 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  Grupos Completados
+                  Puntuación
                 </p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {currentStats.completedGroups}
+                <p className={`text-2xl font-bold ${ratingColors.text}`}>
+                  10/10
                 </p>
               </div>
-              <div className="p-3 bg-green-100 text-green-600 rounded-full">
-                <CheckCircle className="h-6 w-6" />
+              <div className={`p-3 ${ratingColors.bg} ${ratingColors.icon} rounded-full`}>
+                <TrendingUp className="h-6 w-6" />
               </div>
             </div>
           </CardContent>
