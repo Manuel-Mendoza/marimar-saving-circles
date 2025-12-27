@@ -11,7 +11,7 @@
     "dev": "concurrently \"cd client && bunx vite\" \"cd backend && bun run dev\"",
     "dev:client": "bun run dev --cwd client",
     "dev:backend": "bun run dev --cwd backend",
-    "build": "bun run build --cwd client && bun run build --cwd backend",
+    "build": "cd client && bunx vite build && cd ../backend && bun run build",
     "build:client": "bun run build --cwd client",
     "build:backend": "bun run build --cwd backend",
     "start": "concurrently \"bun run preview --cwd client\" \"bun run start --cwd backend\"",

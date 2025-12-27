@@ -124,10 +124,19 @@ const WS_PORT = 6001; // Fixed WebSocket port
 const wss = new WebSocketServer({ port: WS_PORT });
 
 wss.on("connection", (ws, req) => {
-  const requestUrl = ensureString(req.url);
+  const requestUrl = req.url;
+  if (!requestUrl) {
+    ws.close(1008, "Invalid request URL");
+    return;
+  }
   const url = new URL(requestUrl, `http://localhost:${WS_PORT}`);
   const pathParts = url.pathname.split("/");
-  const groupId = parseInt(pathParts[pathParts.length - 1]);
+  const groupIdStr = pathParts[pathParts.length - 1];
+  if (!groupIdStr) {
+    ws.close(1008, "Invalid group path");
+    return;
+  }
+  const groupId = parseInt(groupIdStr);
 
   if (isNaN(groupId)) {
     ws.close(1008, "Invalid group ID");

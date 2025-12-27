@@ -10,6 +10,7 @@
     "start": "bun run dist/server.js",
     "lint": "eslint src/**/*.ts",
     "format": "prettier --write .",
+    "type-check": "tsc --noEmit",
     "test": "jest",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",

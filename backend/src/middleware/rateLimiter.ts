@@ -34,4 +34,5 @@ export const rateLimiter: MiddlewareHandler = async (c, next) => {
   }
 
   await next();
+  return;
 };

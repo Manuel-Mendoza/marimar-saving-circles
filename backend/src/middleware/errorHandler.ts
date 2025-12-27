@@ -4,7 +4,10 @@ export const errorHandler: ErrorHandler = (err, c) => {
   console.error("Error:", err);
 
   // Default error response
-  const statusCode = err.statusCode || err.status || 500;
+  const statusCode =
+    (err as { statusCode?: number; status?: number }).statusCode ||
+    (err as { statusCode?: number; status?: number }).status ||
+    500;
   const message = err.message || "Internal Server Error";
 
   return c.json(
@@ -13,6 +16,7 @@ export const errorHandler: ErrorHandler = (err, c) => {
       message,
       ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
     },
-    statusCode,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    statusCode as any,
   );
 };

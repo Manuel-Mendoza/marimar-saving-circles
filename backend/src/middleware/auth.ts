@@ -65,6 +65,7 @@ export const authenticate: MiddlewareHandler = async (c, next) => {
     // Add user info to context
     c.set("user", payload);
     await next();
+    return;
   } catch (error) {
     console.error("Error en middleware de autenticación:", error);
     return c.json(

@@ -154,7 +154,7 @@ usersRoute.put("/:id/status", authenticate, async (c) => {
     }
 
     let status: string;
-    let whereCondition!: SQL;
+    let whereCondition: SQL;
 
     switch (action) {
       case "approve":
@@ -162,37 +162,31 @@ usersRoute.put("/:id/status", authenticate, async (c) => {
         whereCondition = and(
           eq(users.id, userId),
           eq(users.estado, "PENDIENTE"),
-        );
+        )!;
         break;
       case "reject":
         status = "RECHAZADO";
         whereCondition = and(
           eq(users.id, userId),
           eq(users.estado, "PENDIENTE"),
-        );
+        )!;
         break;
       case "suspend":
         status = "SUSPENDIDO";
         whereCondition = and(
           eq(users.id, userId),
-          or(eq(users.estado, "APROBADO"), eq(users.estado, "REACTIVADO")),
-        );
+          or(eq(users.estado, "APROBADO"), eq(users.estado, "REACTIVADO"))!,
+        )!;
         break;
       case "reactivate":
         status = "REACTIVADO";
         whereCondition = and(
           eq(users.id, userId),
           eq(users.estado, "SUSPENDIDO"),
-        );
+        )!;
         break;
       default:
-        return c.json(
-          {
-            success: false,
-            message: "Acción inválida",
-          },
-          400,
-        );
+        throw new Error("Invalid action");
     }
 
     const updateData: Record<string, unknown> = {
@@ -209,7 +203,7 @@ usersRoute.put("/:id/status", authenticate, async (c) => {
     const updatedUsers = await db
       .update(users)
       .set(updateData)
-      .where(whereCondition)
+      .where(whereCondition!)
       .returning();
 
     if (updatedUsers.length === 0) {
