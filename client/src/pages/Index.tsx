@@ -2,13 +2,8 @@ import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { AppStateProvider } from '@/contexts/AppStateContext';
-import Header from '@/components/Layout/Header';
-import LoginForm from '@/components/Auth/LoginForm';
-import RegistrationForm from '@/components/Auth/RegistrationForm';
-import UserDashboard from '@/components/Dashboard/UserDashboard';
-import AdminDashboard from '@/components/Dashboard/AdminDashboard';
-import LandingPage from '@/components/Landing/LandingPage';
-import PendingApproval from '@/components/Auth/PendingApproval';
+import { LoginForm, RegistrationForm, PendingApproval, UserDashboard, AdminDashboard } from '@/components/organisms';
+import { LandingPage } from '@/components/pages';
 
 const AppContent = () => {
   const { user, isAuthenticated, isAdmin, isLoading } = useAuth();
@@ -90,8 +85,11 @@ const AppContent = () => {
   // Si está aprobado, mostrar dashboard correspondiente
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
-      {isAdmin ? <AdminDashboard /> : <UserDashboard />}
+      {isAdmin ? (
+        <AdminDashboard user={user as any} />
+      ) : (
+        <UserDashboard user={user as any} />
+      )}
     </div>
   );
 };
