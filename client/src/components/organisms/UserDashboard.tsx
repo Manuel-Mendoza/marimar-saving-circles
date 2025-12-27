@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { NavigationSidebar } from '@/components/molecules';
 import { UserCard } from '@/components/molecules';
 import { CurrencyDisplay } from '@/components/atoms';
+import { useUserDashboard } from '@/hooks/useUserDashboard';
 import {
   Users,
   Package,
@@ -24,7 +25,7 @@ interface UserDashboardStats {
   activeGroups: number;
   completedGroups: number;
   pendingPayments: number;
-  totalInvested: number;
+  productsAcquired: number;
   nextPayment?: {
     amount: number;
     currency: 'USD' | 'VES';
@@ -76,24 +77,32 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
   onNavigate,
   onLogout,
   onJoinGroup,
-  isLoading = false,
+  isLoading: externalLoading = false,
   showSidebar = true,
 }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  // Use real dashboard data hook
+  const { data: dashboardData, loading: dashboardLoading, error } = useUserDashboard(user.id);
 
   const handleSidebarNavigate = (itemId: string) => {
     onNavigate?.(itemId);
   };
 
-  const defaultStats: UserDashboardStats = {
-    activeGroups: 0,
-    completedGroups: 0,
-    pendingPayments: 0,
-    totalInvested: 0,
-    recentActivity: [],
-  };
+  // Helper function to ensure stats object has all required properties
+  const ensureStatsComplete = (stats?: Partial<UserDashboardStats>): UserDashboardStats => ({
+    activeGroups: stats?.activeGroups ?? 0,
+    completedGroups: stats?.completedGroups ?? 0,
+    pendingPayments: stats?.pendingPayments ?? 0,
+    productsAcquired: stats?.productsAcquired ?? 0,
+    recentActivity: stats?.recentActivity ?? [],
+    nextPayment: stats?.nextPayment,
+  });
 
-  const currentStats = stats || defaultStats;
+  // Use real data from hook, fallback to props or defaults
+  const currentStats = ensureStatsComplete(dashboardData?.stats ?? stats);
+
+  const isLoading = externalLoading || dashboardLoading;
 
   const ActivityFeed: React.FC<{ activities: ActivityItem[] }> = ({ activities }) => (
     <Card>
@@ -249,17 +258,14 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  Total Invertido
+                  Productos Adquiridos
                 </p>
-                <CurrencyDisplay
-                  amount={currentStats.totalInvested}
-                  currency="USD"
-                  size="lg"
-                  className="text-gray-900 dark:text-white"
-                />
+                <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                  {currentStats.productsAcquired}
+                </p>
               </div>
               <div className="p-3 bg-purple-100 text-purple-600 rounded-full">
-                <DollarSign className="h-6 w-6" />
+                <ShoppingCart className="h-6 w-6" />
               </div>
             </div>
           </CardContent>
