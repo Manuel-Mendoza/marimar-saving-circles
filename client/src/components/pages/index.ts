@@ -6,3 +6,4 @@ export { default as LandingPage } from './LandingPage.tsx';
 export { default as Index } from './Index.tsx';
 export { default as NotFound } from './NotFound.tsx';
 export { default as DashboardLayout } from './DashboardLayout.tsx';
+export { UsersManagement } from './UsersManagement.tsx';
