@@ -7,5 +7,7 @@ export { default as StatusBadge } from './StatusBadge';
 export { default as UserAvatar } from './UserAvatar';
 export { default as IconButton } from './IconButton';
 export { default as LoadingSpinner } from './LoadingSpinner';
+export { default as PaymentStatusBadge } from './PaymentStatusBadge';
+export { default as PaymentInfo } from './PaymentInfo';
 export { GroupStatusBadge } from './GroupStatusBadge';
 export { GroupCard } from './GroupCard';

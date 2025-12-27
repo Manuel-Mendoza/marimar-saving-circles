@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { NavigationSidebar } from '@/components/molecules';
 import { AdminDashboard, UserDashboard } from '@/components/organisms';
-import { UsersManagement, ProductsManagement, GroupsManagement } from '@/components/pages';
+import { UsersManagement, ProductsManagement, GroupsManagement, PaymentsManagement } from '@/components/pages';
 
 interface DashboardLayoutProps {
   user: {
@@ -161,16 +161,20 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ user, onLogout }) => 
           <Route
             path="payments"
             element={
-              <div className="flex-1 p-6">
-                <div className="text-center py-12">
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                    Gestión de Pagos
-                  </h2>
-                  <p className="text-gray-600 dark:text-gray-400">
-                    Funcionalidad de gestión de pagos próximamente disponible.
-                  </p>
+              user.tipo === 'ADMINISTRADOR' ? (
+                <PaymentsManagement user={user as any} />
+              ) : (
+                <div className="flex-1 p-6">
+                  <div className="text-center py-12">
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                      Acceso Denegado
+                    </h2>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      No tienes permisos para acceder a esta sección.
+                    </p>
+                  </div>
                 </div>
-              </div>
+              )
             }
           />
           <Route
