@@ -259,8 +259,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 className="w-full justify-start"
                 variant="outline"
               >
-                <Users className="h-4 w-4 mr-2" />
-                Gestionar Usuarios
+                <UserPlus className="h-4 w-4 mr-2" />
+                Nuevos Clientes
               </Button>
               <Button
                 onClick={() => handleSidebarNavigate('products')}
@@ -268,15 +268,23 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 variant="outline"
               >
                 <Package className="h-4 w-4 mr-2" />
-                Gestionar Productos
+                Agregar Productos
               </Button>
               <Button
-                onClick={() => handleSidebarNavigate('payments')}
+                onClick={() => handleSidebarNavigate('groups')}
+                className="w-full justify-start"
+                variant="outline"
+              >
+                <BarChart3 className="h-4 w-4 mr-2" />
+                Gestionar Grupos
+              </Button>
+              <Button
+                onClick={() => handleSidebarNavigate('settings')}
                 className="w-full justify-start"
                 variant="outline"
               >
                 <CreditCard className="h-4 w-4 mr-2" />
-                Revisar Pagos
+                Editar Metodo de Pago
               </Button>
             </CardContent>
           </Card>
