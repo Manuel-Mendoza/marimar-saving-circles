@@ -31,12 +31,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
     {
       icon: Users,
       title: 'Ahorro Colectivo',
-      description: 'Únete a grupos de ahorro colaborativo y alcanza tus metas financieras más rápido.',
+      description:
+        'Únete a grupos de ahorro colaborativo y alcanza tus metas financieras más rápido.',
     },
     {
       icon: Shield,
       title: 'Seguro y Confiable',
-      description: 'Tu dinero está protegido con procesos verificados y administradores certificados.',
+      description:
+        'Tu dinero está protegido con procesos verificados y administradores certificados.',
     },
     {
       icon: TrendingUp,
@@ -91,8 +93,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                 <span className="text-yellow-300">Alcanza tus Sueños</span>
               </h1>
               <p className="text-xl lg:text-2xl mb-8 text-blue-100">
-                Únete a la revolución del ahorro colaborativo en Venezuela.
-                Compra lo que quieres con pagos mensuales accesibles.
+                Únete a la revolución del ahorro colaborativo en Venezuela. Compra lo que quieres
+                con pagos mensuales accesibles.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button
@@ -124,9 +126,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                 <div className="text-gray-600">Ahorradores Activos</div>
               </div>
               <div>
-                <div className="text-4xl font-bold text-green-600 mb-2">
-                  Bs. 5.000.000
-                </div>
+                <div className="text-4xl font-bold text-green-600 mb-2">Bs. 5.000.000</div>
                 <div className="text-gray-600">Ahorrados Este Mes</div>
               </div>
               <div>
@@ -156,9 +156,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                     <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
                       <feature.icon className="h-8 w-8 text-blue-600" />
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                      {feature.title}
-                    </h3>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">{feature.title}</h3>
                     <p className="text-gray-600">{feature.description}</p>
                   </CardContent>
                 </Card>
@@ -171,12 +169,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         <section className="py-20 bg-gray-50">
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
-              <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-                ¿Cómo funciona?
-              </h2>
-              <p className="text-xl text-gray-600">
-                Tres pasos simples para comenzar tu ahorro
-              </p>
+              <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">¿Cómo funciona?</h2>
+              <p className="text-xl text-gray-600">Tres pasos simples para comenzar tu ahorro</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -184,9 +178,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                 <div className="inline-flex items-center justify-center w-20 h-20 bg-blue-600 text-white rounded-full text-2xl font-bold mb-4">
                   1
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  Elige tu producto
-                </h3>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Elige tu producto</h3>
                 <p className="text-gray-600">
                   Selecciona el producto que quieres comprar de nuestro catálogo disponible.
                 </p>
@@ -196,9 +188,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                 <div className="inline-flex items-center justify-center w-20 h-20 bg-green-600 text-white rounded-full text-2xl font-bold mb-4">
                   2
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  Únete al grupo
-                </h3>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Únete al grupo</h3>
                 <p className="text-gray-600">
                   Forma parte de un grupo de ahorro con personas que quieren el mismo producto.
                 </p>
@@ -208,9 +198,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                 <div className="inline-flex items-center justify-center w-20 h-20 bg-purple-600 text-white rounded-full text-2xl font-bold mb-4">
                   3
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  Paga mensualmente
-                </h3>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Paga mensualmente</h3>
                 <p className="text-gray-600">
                   Realiza tus pagos mensuales y recibe tu producto cuando llegue tu turno.
                 </p>
@@ -271,9 +259,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         {/* CTA Section */}
         <section className="py-20 bg-blue-600 text-white">
           <div className="container mx-auto px-4 text-center">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-4">
-              ¿Listo para comenzar tu ahorro?
-            </h2>
+            <h2 className="text-3xl lg:text-4xl font-bold mb-4">¿Listo para comenzar tu ahorro?</h2>
             <p className="text-xl mb-8 text-blue-100">
               Únete hoy y comienza a construir el futuro que mereces
             </p>

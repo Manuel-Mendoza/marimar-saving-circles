@@ -47,7 +47,9 @@ const PendingApproval: React.FC<PendingApprovalProps> = ({ user, onContactAdmin 
               <div className="space-y-2 text-sm">
                 <div className="flex items-center space-x-2">
                   <span className="font-medium text-gray-700">Nombre:</span>
-                  <span>{user?.nombre} {user?.apellido}</span>
+                  <span>
+                    {user?.nombre} {user?.apellido}
+                  </span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Mail className="h-4 w-4 text-gray-400" />
@@ -66,9 +68,11 @@ const PendingApproval: React.FC<PendingApprovalProps> = ({ user, onContactAdmin 
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                <strong>¿Qué sucede ahora?</strong><br />
-                Un administrador revisará tu información y la copia de tu cédula de identidad.
-                Una vez aprobado, recibirás un correo electrónico de confirmación y podrás acceder a tu cuenta.
+                <strong>¿Qué sucede ahora?</strong>
+                <br />
+                Un administrador revisará tu información y la copia de tu cédula de identidad. Una
+                vez aprobado, recibirás un correo electrónico de confirmación y podrás acceder a tu
+                cuenta.
               </AlertDescription>
             </Alert>
 
@@ -84,11 +88,7 @@ const PendingApproval: React.FC<PendingApprovalProps> = ({ user, onContactAdmin 
               <Button onClick={onContactAdmin} variant="outline" className="w-full">
                 Contactar Administrador
               </Button>
-              <Button
-                onClick={() => window.location.reload()}
-                variant="ghost"
-                className="w-full"
-              >
+              <Button onClick={() => window.location.reload()} variant="ghost" className="w-full">
                 Verificar Estado
               </Button>
             </div>

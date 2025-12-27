@@ -110,7 +110,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onBack, onRegistrat
                       id="nombre"
                       placeholder="Tu nombre"
                       value={formData.nombre}
-                      onChange={(e) => handleInputChange('nombre', e.target.value)}
+                      onChange={e => handleInputChange('nombre', e.target.value)}
                       className="pl-10"
                       required
                     />
@@ -123,7 +123,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onBack, onRegistrat
                     id="apellido"
                     placeholder="Tu apellido"
                     value={formData.apellido}
-                    onChange={(e) => handleInputChange('apellido', e.target.value)}
+                    onChange={e => handleInputChange('apellido', e.target.value)}
                     required
                   />
                 </div>
@@ -138,7 +138,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onBack, onRegistrat
                     type="email"
                     placeholder="tu@email.com"
                     value={formData.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    onChange={e => handleInputChange('email', e.target.value)}
                     className="pl-10"
                     required
                   />
@@ -154,7 +154,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onBack, onRegistrat
                     type="tel"
                     placeholder="+58 123 456 7890"
                     value={formData.telefono}
-                    onChange={(e) => handleInputChange('telefono', e.target.value)}
+                    onChange={e => handleInputChange('telefono', e.target.value)}
                     className="pl-10"
                     required
                   />
@@ -170,7 +170,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onBack, onRegistrat
                     type={showPassword ? 'text' : 'password'}
                     placeholder="Mínimo 6 caracteres"
                     value={formData.password}
-                    onChange={(e) => handleInputChange('password', e.target.value)}
+                    onChange={e => handleInputChange('password', e.target.value)}
                     className="pl-10 pr-10"
                     required
                   />
@@ -193,7 +193,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onBack, onRegistrat
                     type={showConfirmPassword ? 'text' : 'password'}
                     placeholder="Repite tu contraseña"
                     value={formData.confirmPassword}
-                    onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                    onChange={e => handleInputChange('confirmPassword', e.target.value)}
                     className="pl-10 pr-10"
                     required
                   />
@@ -234,10 +234,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onBack, onRegistrat
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
                 ¿Ya tienes cuenta?{' '}
-                <button
-                  onClick={onBack}
-                  className="font-medium text-blue-600 hover:text-blue-500"
-                >
+                <button onClick={onBack} className="font-medium text-blue-600 hover:text-blue-500">
                   Inicia sesión
                 </button>
               </p>

@@ -2,7 +2,13 @@ import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { AppStateProvider } from '@/contexts/AppStateContext';
-import { LoginForm, RegistrationForm, PendingApproval, UserDashboard, AdminDashboard } from '@/components/organisms';
+import {
+  LoginForm,
+  RegistrationForm,
+  PendingApproval,
+  UserDashboard,
+  AdminDashboard,
+} from '@/components/organisms';
 import { LandingPage } from '@/components/pages';
 
 const AppContent = () => {
@@ -86,9 +92,30 @@ const AppContent = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {isAdmin ? (
-        <AdminDashboard user={user as any} />
+        <AdminDashboard
+          user={
+            user as {
+              id: number;
+              nombre: string;
+              apellido?: string;
+              tipo: 'ADMINISTRADOR';
+              imagenCedula?: string;
+            }
+          }
+        />
       ) : (
-        <UserDashboard user={user as any} />
+        <UserDashboard
+          user={
+            user as {
+              id: number;
+              nombre: string;
+              apellido?: string;
+              tipo: 'USUARIO';
+              imagenCedula?: string;
+              estado: 'APROBADO' | 'PENDIENTE' | 'RECHAZADO';
+            }
+          }
+        />
       )}
     </div>
   );

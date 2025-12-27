@@ -73,7 +73,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onNewUser, onLoginSuccess }) => {
                     type="email"
                     placeholder="tu@email.com"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={e => setEmail(e.target.value)}
                     className="pl-10"
                     required
                   />
@@ -89,7 +89,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onNewUser, onLoginSuccess }) => {
                     type={showPassword ? 'text' : 'password'}
                     placeholder="Tu contraseña"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={e => setPassword(e.target.value)}
                     className="pl-10 pr-10"
                     required
                   />
