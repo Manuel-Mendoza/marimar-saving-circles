@@ -10,7 +10,6 @@ export { default as LoginForm } from './LoginForm';
 export { default as RegistrationForm } from './RegistrationForm';
 export { default as PendingApproval } from './PendingApproval';
 
-// Gestión de usuarios
-export { default as UserStatsGrid } from './UserStatsGrid';
-export { default as UsersTable } from './UsersTable';
-export { default as UserActionDialogs } from './UserActionDialogs';
+// Componentes organizados por dominio
+export * from './users';
+export * from './products';

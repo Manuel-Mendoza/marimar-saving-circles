@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Search, Filter } from 'lucide-react';
+import { Search, Filter, CheckCircle, Ban, RotateCcw, XCircle, Clock } from 'lucide-react';
 
 interface UserSearchFilterProps {
   /** Valor del campo de búsqueda */
@@ -60,8 +60,26 @@ const UserSearchFilter: React.FC<UserSearchFilterProps> = ({
     return statuses.join(', ');
   };
 
+  // Get status icon and color
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'APROBADO':
+        return <CheckCircle className="w-4 h-4 mr-2 text-green-600" />;
+      case 'SUSPENDIDO':
+        return <Ban className="w-4 h-4 mr-2 text-red-600" />;
+      case 'REACTIVADO':
+        return <RotateCcw className="w-4 h-4 mr-2 text-blue-600" />;
+      case 'RECHAZADO':
+        return <XCircle className="w-4 h-4 mr-2 text-red-600" />;
+      case 'PENDIENTE':
+        return <Clock className="w-4 h-4 mr-2 text-yellow-600" />;
+      default:
+        return null;
+    }
+  };
+
   return (
-    <div className="flex items-center space-x-4">
+    <div className="flex items-center space-x-4 mb-6">
       <div className="relative flex-1 max-w-md">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
         <Input
@@ -87,11 +105,14 @@ const UserSearchFilter: React.FC<UserSearchFilterProps> = ({
               checked={statusFilters.has(status)}
               onCheckedChange={checked => onStatusFilterChange(status, checked)}
             >
-              {status === 'APROBADO' && 'Aprobados'}
-              {status === 'SUSPENDIDO' && 'Suspendidos'}
-              {status === 'REACTIVADO' && 'Reactivados'}
-              {status === 'RECHAZADO' && 'Rechazados'}
-              {status === 'PENDIENTE' && 'Pendientes'}
+              <div className="flex items-center">
+                {getStatusIcon(status)}
+                {status === 'APROBADO' && 'Aprobados'}
+                {status === 'SUSPENDIDO' && 'Suspendidos'}
+                {status === 'REACTIVADO' && 'Reactivados'}
+                {status === 'RECHAZADO' && 'Rechazados'}
+                {status === 'PENDIENTE' && 'Pendientes'}
+              </div>
             </DropdownMenuCheckboxItem>
           ))}
           <DropdownMenuSeparator />

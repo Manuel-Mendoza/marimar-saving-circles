@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/table';
 import { UserAvatar } from '@/components/atoms';
 import StatusBadge from '@/components/atoms/StatusBadge';
-import UserActionButtons from '@/components/molecules/UserActionButtons';
+import UserActionButtons from '@/components/molecules/users/UserActionButtons';
 import {
   CheckCircle,
   XCircle,

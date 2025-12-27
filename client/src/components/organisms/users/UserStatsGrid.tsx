@@ -1,6 +1,6 @@
 import React from 'react';
 import { Users, Clock, CheckCircle, Ban } from 'lucide-react';
-import UserStatsCard from '@/components/molecules/UserStatsCard';
+import UserStatsCard from '@/components/molecules/users/UserStatsCard';
 
 interface UserStats {
   totalUsers: number;
