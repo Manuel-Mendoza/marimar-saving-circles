@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LoadingSpinner } from '@/components/atoms';
 import {
-  PaymentSearchFilter,
   PaymentRequestCard
 } from '@/components/molecules/payments';
 import {
@@ -34,10 +33,7 @@ const PaymentsManagement: React.FC<PaymentsManagementProps> = ({ user }) => {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
 
-  // Estados de filtros
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilters, setStatusFilters] = useState<Set<string>>(new Set());
-  const [currencyFilters, setCurrencyFilters] = useState<Set<string>>(new Set());
+
 
   // Estados de diálogos
   const [selectedRequest, setSelectedRequest] = useState<PaymentRequest | null>(null);
@@ -71,37 +67,10 @@ const PaymentsManagement: React.FC<PaymentsManagementProps> = ({ user }) => {
     loadPaymentRequests();
   }, []);
 
-  // Filter payment requests
-  const filteredRequests = useMemo(() => {
-    let filtered = paymentRequests;
-
-    // Filter by search term
-    if (searchTerm) {
-      filtered = filtered.filter(request =>
-        request.user?.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        request.user?.apellido?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        request.group?.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        request.periodo?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    // Filter by status
-    if (statusFilters.size > 0) {
-      filtered = filtered.filter(request => statusFilters.has(request.estado));
-    }
-
-    // Filter by currency
-    if (currencyFilters.size > 0) {
-      filtered = filtered.filter(request => currencyFilters.has(request.moneda));
-    }
-
-    return filtered;
-  }, [paymentRequests, searchTerm, statusFilters, currencyFilters]);
-
   // Separate requests by status
-  const pendingRequests = filteredRequests.filter(r => r.estado === 'PENDIENTE');
-  const confirmedRequests = filteredRequests.filter(r => r.estado === 'CONFIRMADO');
-  const rejectedRequests = filteredRequests.filter(r => r.estado === 'RECHAZADO');
+  const pendingRequests = paymentRequests.filter(r => r.estado === 'PENDIENTE');
+  const confirmedRequests = paymentRequests.filter(r => r.estado === 'CONFIRMADO');
+  const rejectedRequests = paymentRequests.filter(r => r.estado === 'RECHAZADO');
 
   // Calculate stats
   const stats = useMemo(() => {
@@ -126,32 +95,7 @@ const PaymentsManagement: React.FC<PaymentsManagementProps> = ({ user }) => {
     };
   }, [paymentRequests]);
 
-  // Handle filter changes
-  const handleStatusFilterChange = (status: string, checked: boolean) => {
-    const newFilters = new Set(statusFilters);
-    if (checked) {
-      newFilters.add(status);
-    } else {
-      newFilters.delete(status);
-    }
-    setStatusFilters(newFilters);
-  };
 
-  const handleCurrencyFilterChange = (currency: string, checked: boolean) => {
-    const newFilters = new Set(currencyFilters);
-    if (checked) {
-      newFilters.add(currency);
-    } else {
-      newFilters.delete(currency);
-    }
-    setCurrencyFilters(newFilters);
-  };
-
-  const clearFilters = () => {
-    setSearchTerm('');
-    setStatusFilters(new Set());
-    setCurrencyFilters(new Set());
-  };
 
   // Handle payment actions
   const handleApprove = (requestId: number) => {
@@ -264,18 +208,6 @@ const PaymentsManagement: React.FC<PaymentsManagementProps> = ({ user }) => {
       {/* Stats Grid */}
       <PaymentStatsGrid stats={stats} className="mb-6" />
 
-      {/* Search and Filter */}
-      <PaymentSearchFilter
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        statusFilters={statusFilters}
-        onStatusFilterChange={handleStatusFilterChange}
-        currencyFilters={currencyFilters}
-        onCurrencyFilterChange={handleCurrencyFilterChange}
-        onClearFilters={clearFilters}
-        className="mb-6"
-      />
-
       {/* Payment Requests Tabs */}
       <Tabs defaultValue="pending" className="space-y-4">
         <TabsList>
@@ -289,7 +221,7 @@ const PaymentsManagement: React.FC<PaymentsManagementProps> = ({ user }) => {
             Rechazadas ({rejectedRequests.length})
           </TabsTrigger>
           <TabsTrigger value="all">
-            Todas ({filteredRequests.length})
+            Todas ({paymentRequests.length})
           </TabsTrigger>
         </TabsList>
 
@@ -349,7 +281,7 @@ const PaymentsManagement: React.FC<PaymentsManagementProps> = ({ user }) => {
 
         <TabsContent value="all" className="space-y-4">
           <PaymentRequestsTable
-            paymentRequests={filteredRequests}
+            paymentRequests={paymentRequests}
             mode="admin"
             loadingIds={actionLoading ? [actionLoading] : []}
             onApprove={handleApprove}

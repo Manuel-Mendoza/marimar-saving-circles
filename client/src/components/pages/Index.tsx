@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { AuthProvider } from '@/contexts/AuthContext';
-import { AppStateProvider } from '@/contexts/AppStateContext';
 import { Navigate } from 'react-router-dom';
 import {
   LoginForm,
@@ -29,7 +27,19 @@ const AppContent = () => {
 
   // Si no está autenticado y no ha decidido entrar al sistema, mostrar landing
   if (!isAuthenticated && !showAuthSection) {
-    return <LandingPage onGetStarted={() => setShowAuthSection(true)} />;
+    return (
+      <LandingPage
+        onGetStarted={() => setShowAuthSection(true)}
+        onLogin={() => {
+          setShowAuthSection(true);
+          setShowRegistration(false);
+        }}
+        onRegister={() => {
+          setShowAuthSection(true);
+          setShowRegistration(true);
+        }}
+      />
+    );
   }
 
   // Si no está autenticado pero ya decidió entrar, mostrar formularios
@@ -92,13 +102,7 @@ const AppContent = () => {
 };
 
 const Index = () => {
-  return (
-    <AuthProvider>
-      <AppStateProvider>
-        <AppContent />
-      </AppStateProvider>
-    </AuthProvider>
-  );
+  return <AppContent />;
 };
 
 export default Index;

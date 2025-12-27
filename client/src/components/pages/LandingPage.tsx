@@ -18,6 +18,8 @@ import {
 
 interface LandingPageProps {
   onGetStarted?: () => void;
+  onLogin?: () => void;
+  onRegister?: () => void;
 }
 
 /**
@@ -25,8 +27,10 @@ interface LandingPageProps {
  * Presenta la aplicación y sus beneficios
  *
  * @param onGetStarted - Función llamada cuando el usuario hace clic en "Comenzar"
+ * @param onLogin - Función llamada cuando el usuario hace clic en "Iniciar Sesión"
+ * @param onRegister - Función llamada cuando el usuario hace clic en "Registrarse"
  */
-const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLogin, onRegister }) => {
   const features = [
     {
       icon: Users,
@@ -80,7 +84,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
   ];
 
   return (
-    <PublicTemplate>
+    <PublicTemplate onLogin={onLogin} onRegister={onRegister}>
       <div className="min-h-screen">
         {/* Hero Section */}
         <section className="relative bg-gradient-to-br from-blue-600 via-purple-600 to-blue-800 text-white">
@@ -107,8 +111,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                 </Button>
                 <Button
                   size="lg"
-                  variant="outline"
-                  className="border-white text-white hover:bg-white hover:text-blue-600 px-8 py-4 text-lg"
+                  variant="secondary"
+                  className="bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white hover:text-blue-600 px-8 py-4 text-lg"
                 >
                   Ver Productos Disponibles
                 </Button>
