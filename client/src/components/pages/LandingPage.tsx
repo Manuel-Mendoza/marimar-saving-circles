@@ -23,6 +23,8 @@ interface LandingPageProps {
 /**
  * Page: Página de inicio/landing
  * Presenta la aplicación y sus beneficios
+ *
+ * @param onGetStarted - Función llamada cuando el usuario hace clic en "Comenzar"
  */
 const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
   const features = [
