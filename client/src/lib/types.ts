@@ -165,3 +165,24 @@ export interface GroupAdminDetails {
     completedDeliveries: number;
   };
 }
+
+export interface PaymentOption {
+  id: number;
+  tipo: 'movil' | 'banco';
+  detalles: string; // JSON string
+  activo: boolean;
+  fechaCreacion: string;
+}
+
+export interface MobilePaymentData {
+  numero: string;
+  titular: string;
+  banco?: string;
+}
+
+export interface BankPaymentData {
+  numeroCuenta: string;
+  titular: string;
+  banco: string;
+  tipoCuenta: 'corriente' | 'ahorros';
+}
