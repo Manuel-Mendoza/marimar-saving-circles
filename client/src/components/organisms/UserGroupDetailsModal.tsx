@@ -9,6 +9,7 @@ import { Users, Calendar, DollarSign, CheckCircle, Clock, AlertCircle, CreditCar
 import { useToast } from '@/hooks/use-toast';
 import api from '@/lib/api';
 import { UserGroup, Contribution } from '@/lib/types';
+import { PaymentRequestModal } from './PaymentRequestModal';
 
 /**
  * Modal: User Group Details
@@ -38,6 +39,8 @@ export const UserGroupDetailsModal: React.FC<UserGroupDetailsModalProps> = ({
 }) => {
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [loading, setLoading] = useState(false);
+  const [showPaymentRequestModal, setShowPaymentRequestModal] = useState(false);
+  const [selectedContribution, setSelectedContribution] = useState<Contribution | null>(null);
 
   const { toast } = useToast();
 
@@ -82,11 +85,14 @@ export const UserGroupDetailsModal: React.FC<UserGroupDetailsModalProps> = ({
 
   // Handle payment action
   const handleMakePayment = (contribution: Contribution) => {
-    // TODO: Implement payment flow
-    toast({
-      title: 'Funcionalidad próximamente',
-      description: 'La opción de pago estará disponible próximamente',
-    });
+    setSelectedContribution(contribution);
+    setShowPaymentRequestModal(true);
+  };
+
+  // Handle payment request success
+  const handlePaymentRequestSuccess = () => {
+    // Reload contributions to show updated status
+    loadContributions();
   };
 
   // Format currency
@@ -316,6 +322,17 @@ export const UserGroupDetailsModal: React.FC<UserGroupDetailsModalProps> = ({
           </Card>
         </div>
       </DialogContent>
+
+      {/* Payment Request Modal */}
+      <PaymentRequestModal
+        isOpen={showPaymentRequestModal}
+        onClose={() => {
+          setShowPaymentRequestModal(false);
+          setSelectedContribution(null);
+        }}
+        contribution={selectedContribution}
+        onSuccess={handlePaymentRequestSuccess}
+      />
     </Dialog>
   );
 };

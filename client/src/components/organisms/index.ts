@@ -30,3 +30,6 @@ export { GroupProductSelectionModal } from './GroupProductSelectionModal';
 
 // Completado de sorteo
 export { DrawCompletionModal } from './DrawCompletionModal';
+
+// Solicitud de pago
+export { PaymentRequestModal } from './PaymentRequestModal';
