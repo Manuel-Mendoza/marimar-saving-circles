@@ -11,6 +11,7 @@ import userRoutes from "./routes/users.js";
 import productRoutes from "./routes/products.js";
 import productSelectionsRoutes from "./routes/product-selections.js";
 import paymentRequestsRoutes from "./routes/payment-requests.js";
+import paymentOptionsRoutes from "./routes/payment-options.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { rateLimiter } from "./middleware/rateLimiter.js";
 
@@ -66,6 +67,7 @@ app.route("/api/users", userRoutes);
 app.route("/api/products", productRoutes);
 app.route("/api/product-selections", productSelectionsRoutes);
 app.route("/api/payment-requests", paymentRequestsRoutes);
+app.route("/api/payment-options", paymentOptionsRoutes);
 
 // WebSocket message type
 interface WebSocketMessage {

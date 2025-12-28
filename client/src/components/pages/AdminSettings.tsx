@@ -6,8 +6,9 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LoadingSpinner } from '@/components/atoms';
 import { useToast } from '@/hooks/use-toast';
-import { Smartphone, Building2, Save } from 'lucide-react';
+import { Smartphone, Building2, Save, Trash2 } from 'lucide-react';
 import type { MobilePaymentData, BankPaymentData } from '@/lib/types';
+import api from '@/lib/api';
 
 interface AdminSettingsProps {
   user: {
@@ -44,40 +45,22 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ user }) => {
   const loadPaymentSettings = async () => {
     try {
       setLoading(true);
-      // TODO: Implementar llamada a API
-      // const response = await api.getPaymentSettings();
-      // if (response.success) {
-      //   if (response.data.mobile) setMobilePayment(response.data.mobile);
-      //   if (response.data.bank) setBankPayment(response.data.bank);
-      // }
 
-      // Simulación de datos por ahora
-      setMobilePayment({
-        numero: '04141234567',
-        titular: 'Juan Pérez',
-        banco: 'Mercantil'
-      });
+      // Cargar configuración de pago móvil
+      const mobileResponse = await api.getPaymentOptionByType('movil');
+      if (mobileResponse.success && mobileResponse.data?.option) {
+        const mobileData = JSON.parse(mobileResponse.data.option.detalles) as MobilePaymentData;
+        setMobilePayment(mobileData);
+        setMobileFormData(mobileData);
+      }
 
-      setBankPayment({
-        numeroCuenta: '01081234567890123456',
-        titular: 'Empresa XYZ C.A.',
-        banco: 'Banco Mercantil',
-        tipoCuenta: 'corriente'
-      });
-
-      // Inicializar formularios con datos existentes
-      setMobileFormData({
-        numero: '04141234567',
-        titular: 'Juan Pérez',
-        banco: 'Mercantil'
-      });
-
-      setBankFormData({
-        numeroCuenta: '01081234567890123456',
-        titular: 'Empresa XYZ C.A.',
-        banco: 'Banco Mercantil',
-        tipoCuenta: 'corriente'
-      });
+      // Cargar configuración de pago bancario
+      const bankResponse = await api.getPaymentOptionByType('banco');
+      if (bankResponse.success && bankResponse.data?.option) {
+        const bankData = JSON.parse(bankResponse.data.option.detalles) as BankPaymentData;
+        setBankPayment(bankData);
+        setBankFormData(bankData);
+      }
     } catch (error) {
       console.error('Error loading payment settings:', error);
       toast({
@@ -107,16 +90,15 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ user }) => {
 
     try {
       setSaving(true);
-      // TODO: Implementar llamada a API
-      // const response = await api.saveMobilePayment(mobileFormData);
+      const response = await api.savePaymentOption('movil', mobileFormData);
 
-      // Simulación
-      setMobilePayment(mobileFormData);
-
-      toast({
-        title: 'Éxito',
-        description: 'Configuración de pago móvil guardada exitosamente',
-      });
+      if (response.success) {
+        setMobilePayment(mobileFormData);
+        toast({
+          title: 'Éxito',
+          description: 'Configuración de pago móvil guardada exitosamente',
+        });
+      }
     } catch (error) {
       console.error('Error saving mobile payment:', error);
       toast({
@@ -142,16 +124,15 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ user }) => {
 
     try {
       setSaving(true);
-      // TODO: Implementar llamada a API
-      // const response = await api.saveBankPayment(bankFormData);
+      const response = await api.savePaymentOption('banco', bankFormData);
 
-      // Simulación
-      setBankPayment(bankFormData);
-
-      toast({
-        title: 'Éxito',
-        description: 'Configuración de pago bancario guardada exitosamente',
-      });
+      if (response.success) {
+        setBankPayment(bankFormData);
+        toast({
+          title: 'Éxito',
+          description: 'Configuración de pago bancario guardada exitosamente',
+        });
+      }
     } catch (error) {
       console.error('Error saving bank payment:', error);
       toast({
@@ -161,6 +142,90 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ user }) => {
       });
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Eliminar configuración de pago móvil
+  const handleDeleteMobilePayment = async () => {
+    if (!mobilePayment) return;
+
+    const confirmDelete = window.confirm(
+      '¿Estás seguro de que quieres eliminar la configuración de Pago Móvil? Los usuarios ya no podrán ver esta opción de pago.'
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      // Primero obtener el ID de la opción actual
+      const response = await api.getPaymentOptionByType('movil');
+      if (!response.success || !response.data?.option) {
+        toast({
+          title: 'Error',
+          description: 'No se pudo encontrar la configuración a eliminar',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const deleteResponse = await api.deletePaymentOption(response.data.option.id);
+
+      if (deleteResponse.success) {
+        setMobilePayment(null);
+        setMobileFormData({ numero: '', titular: '', banco: '' });
+        toast({
+          title: 'Éxito',
+          description: 'Configuración de pago móvil eliminada exitosamente',
+        });
+      }
+    } catch (error) {
+      console.error('Error deleting mobile payment:', error);
+      toast({
+        title: 'Error',
+        description: 'No se pudo eliminar la configuración de pago móvil',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Eliminar configuración de pago bancario
+  const handleDeleteBankPayment = async () => {
+    if (!bankPayment) return;
+
+    const confirmDelete = window.confirm(
+      '¿Estás seguro de que quieres eliminar la configuración de Transferencia Bancaria? Los usuarios ya no podrán ver esta opción de pago.'
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      // Primero obtener el ID de la opción actual
+      const response = await api.getPaymentOptionByType('banco');
+      if (!response.success || !response.data?.option) {
+        toast({
+          title: 'Error',
+          description: 'No se pudo encontrar la configuración a eliminar',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const deleteResponse = await api.deletePaymentOption(response.data.option.id);
+
+      if (deleteResponse.success) {
+        setBankPayment(null);
+        setBankFormData({ numeroCuenta: '', titular: '', banco: '', tipoCuenta: 'corriente' });
+        toast({
+          title: 'Éxito',
+          description: 'Configuración de transferencia bancaria eliminada exitosamente',
+        });
+      }
+    } catch (error) {
+      console.error('Error deleting bank payment:', error);
+      toast({
+        title: 'Error',
+        description: 'No se pudo eliminar la configuración de transferencia bancaria',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -202,9 +267,20 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ user }) => {
           {mobilePayment && (
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Smartphone className="h-5 w-5" />
-                  <span>Configuración Actual de Pago Móvil</span>
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Smartphone className="h-5 w-5" />
+                    <span>Configuración Actual de Pago Móvil</span>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleDeleteMobilePayment}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950"
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Eliminar
+                  </Button>
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -291,9 +367,20 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ user }) => {
           {bankPayment && (
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Building2 className="h-5 w-5" />
-                  <span>Configuración Actual de Transferencia Bancaria</span>
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Building2 className="h-5 w-5" />
+                    <span>Configuración Actual de Transferencia Bancaria</span>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleDeleteBankPayment}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950"
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Eliminar
+                  </Button>
                 </CardTitle>
               </CardHeader>
               <CardContent>

@@ -8,6 +8,9 @@ import type {
   PaymentRequest,
   ProductSelection,
   GroupAdminDetails,
+  PaymentOption,
+  MobilePaymentData,
+  BankPaymentData,
 } from './types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -360,6 +363,48 @@ class ApiClient {
     }>(`/payment-requests/${requestId}/reject`, {
       method: 'PUT',
       body: JSON.stringify({ notasAdmin }),
+    });
+  }
+
+  // Payment Options
+  async getPaymentOptions() {
+    return this.request<{
+      options: PaymentOption[];
+    }>('/payment-options');
+  }
+
+  async getAllPaymentOptions() {
+    return this.request<{
+      options: PaymentOption[];
+    }>('/payment-options/admin');
+  }
+
+  async getPaymentOptionByType(tipo: 'movil' | 'banco') {
+    return this.request<{
+      option: PaymentOption | null;
+    }>(`/payment-options/${tipo}`);
+  }
+
+  async savePaymentOption(tipo: 'movil' | 'banco', detalles: MobilePaymentData | BankPaymentData) {
+    return this.request<{
+      option: PaymentOption;
+    }>(`/payment-options/${tipo}`, {
+      method: 'PUT',
+      body: JSON.stringify({ detalles }),
+    });
+  }
+
+  async togglePaymentOption(optionId: number) {
+    return this.request<{
+      option: PaymentOption;
+    }>(`/payment-options/${optionId}/toggle`, {
+      method: 'PUT',
+    });
+  }
+
+  async deletePaymentOption(optionId: number) {
+    return this.request(`/payment-options/${optionId}`, {
+      method: 'DELETE',
     });
   }
 }
