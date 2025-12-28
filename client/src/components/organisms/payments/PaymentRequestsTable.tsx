@@ -170,28 +170,19 @@ const PaymentRequestsTable: React.FC<PaymentRequestsTableProps> = ({
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => onViewComprobante?.(request.comprobantePago!)}
-                        className="text-blue-600 hover:text-blue-700"
+                        onClick={() => onViewComprobante?.(request.comprobantePago)}
+                        className="h-8 px-2"
                       >
                         <FileText className="h-4 w-4 mr-1" />
                         Ver
                       </Button>
                     ) : (
-                      <span className="text-gray-400 dark:text-gray-600 text-sm">No requerido</span>
+                      <span className="text-gray-400">No disponible</span>
                     )}
                   </TableCell>
 
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onViewDetails?.(request)}
-                        className="text-gray-600 hover:text-gray-700"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-
                       {mode === 'admin' && isPending && (
                         <>
                           <Button

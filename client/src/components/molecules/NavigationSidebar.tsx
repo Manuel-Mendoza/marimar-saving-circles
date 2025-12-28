@@ -87,7 +87,6 @@ const NavigationSidebar: React.FC<NavigationSidebarProps> = ({
           { id: 'dashboard', label: 'Mi Dashboard', icon: Home, href: '/dashboard' },
           { id: 'products', label: 'Productos', icon: Package, href: '/dashboard/products' },
           { id: 'groups', label: 'Mis Grupos', icon: BarChart3, href: '/dashboard/groups' },
-          { id: 'payments', label: 'Mis Pagos', icon: CreditCard, href: '/dashboard/payments' },
           { id: 'profile', label: 'Perfil', icon: User, href: '/dashboard/profile' },
         ];
 

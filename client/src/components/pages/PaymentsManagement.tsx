@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { LoadingSpinner } from '@/components/atoms';
 import {
   PaymentRequestCard
@@ -39,6 +40,8 @@ const PaymentsManagement: React.FC<PaymentsManagementProps> = ({ user }) => {
   const [selectedRequest, setSelectedRequest] = useState<PaymentRequest | null>(null);
   const [showApproveDialog, setShowApproveDialog] = useState(false);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [showComprobanteDialog, setShowComprobanteDialog] = useState(false);
+  const [comprobanteUrl, setComprobanteUrl] = useState<string>('');
   const [rejectNotes, setRejectNotes] = useState('');
 
   const { toast } = useToast();
@@ -121,8 +124,9 @@ const PaymentsManagement: React.FC<PaymentsManagementProps> = ({ user }) => {
   };
 
   const handleViewComprobante = (comprobanteUrl: string) => {
-    // Abrir comprobante en nueva ventana
-    window.open(comprobanteUrl, '_blank');
+    // Abrir comprobante en dialog
+    setComprobanteUrl(comprobanteUrl);
+    setShowComprobanteDialog(true);
   };
 
   // Confirm approve
@@ -250,6 +254,7 @@ const PaymentsManagement: React.FC<PaymentsManagementProps> = ({ user }) => {
                   onApprove={handleApprove}
                   onReject={handleReject}
                   onViewDetails={handleViewDetails}
+                  onViewComprobante={handleViewComprobante}
                   isLoading={actionLoading === request.id}
                 />
               ))}
@@ -306,6 +311,32 @@ const PaymentsManagement: React.FC<PaymentsManagementProps> = ({ user }) => {
         onConfirmApprove={confirmApprove}
         onConfirmReject={confirmReject}
       />
+
+      {/* Comprobante Dialog */}
+      <Dialog open={showComprobanteDialog} onOpenChange={() => setShowComprobanteDialog(false)}>
+        <DialogContent className="max-w-4xl max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>Comprobante de Pago</DialogTitle>
+          </DialogHeader>
+          <div className="flex justify-center items-center min-h-[400px]">
+            {comprobanteUrl && (
+              <img
+                src={comprobanteUrl}
+                alt="Comprobante de pago"
+                className="max-w-full max-h-full object-contain rounded-lg shadow-lg"
+                onError={(e) => {
+                  console.error('Error loading comprobante image:', e);
+                  toast({
+                    title: 'Error',
+                    description: 'No se pudo cargar la imagen del comprobante',
+                    variant: 'destructive',
+                  });
+                }}
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

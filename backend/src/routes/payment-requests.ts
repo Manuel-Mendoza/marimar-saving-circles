@@ -317,18 +317,23 @@ paymentRequestsRoute.put("/:id/approve", authenticate, async (c) => {
       .where(eq(paymentRequests.id, requestId))
       .returning();
 
-    // Create corresponding contribution record
-    await db.insert(contributions).values({
-      userId: request.userId,
-      groupId: request.groupId,
-      monto: request.monto,
-      moneda: request.moneda,
-      fechaPago: new Date(),
-      periodo: request.periodo,
-      metodoPago: request.metodoPago,
-      estado: "CONFIRMADO",
-      referenciaPago: request.referenciaPago,
-    });
+    // Update the existing contribution record to CONFIRMADO
+    await db
+      .update(contributions)
+      .set({
+        estado: "CONFIRMADO",
+        fechaPago: new Date(),
+        metodoPago: request.metodoPago,
+        referenciaPago: request.referenciaPago,
+      })
+      .where(
+        and(
+          eq(contributions.userId, request.userId),
+          eq(contributions.groupId, request.groupId),
+          eq(contributions.periodo, request.periodo),
+          eq(contributions.estado, "PENDIENTE"),
+        ),
+      );
 
     return c.json({
       success: true,

@@ -19,6 +19,8 @@ interface PaymentRequestCardProps {
   onReject?: (requestId: number) => void;
   /** Función para ver detalles */
   onViewDetails?: (request: PaymentRequest) => void;
+  /** Función para ver comprobante en dialog */
+  onViewComprobante?: (comprobanteUrl: string) => void;
   /** Loading state para acciones */
   isLoading?: boolean;
   /** Clases CSS adicionales */
@@ -35,6 +37,7 @@ const PaymentRequestCard: React.FC<PaymentRequestCardProps> = ({
   onApprove,
   onReject,
   onViewDetails,
+  onViewComprobante,
   isLoading = false,
   className,
 }) => {
@@ -110,9 +113,12 @@ const PaymentRequestCard: React.FC<PaymentRequestCardProps> = ({
           {comprobantePago && (
             <div className="flex items-center space-x-2">
               <FileText className="h-4 w-4 text-blue-600" />
-              <span className="text-blue-600 hover:underline cursor-pointer">
+              <button
+                onClick={() => onViewComprobante?.(comprobantePago)}
+                className="text-blue-600 hover:underline cursor-pointer text-sm"
+              >
                 Ver comprobante
-              </span>
+              </button>
             </div>
           )}
         </div>
@@ -130,41 +136,29 @@ const PaymentRequestCard: React.FC<PaymentRequestCardProps> = ({
         <Separator />
 
         {/* Acciones */}
-        <div className="flex items-center justify-between">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onViewDetails?.(paymentRequest)}
-            className="flex items-center space-x-2"
-          >
-            <Eye className="h-4 w-4" />
-            <span>Ver detalles</span>
-          </Button>
-
-          {mode === 'admin' && isPending && (
-            <div className="flex space-x-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onReject?.(id)}
-                disabled={isLoading}
-                className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
-              >
-                <XCircle className="h-4 w-4 mr-1" />
-                Rechazar
-              </Button>
-              <Button
-                size="sm"
-                onClick={() => onApprove?.(id)}
-                disabled={isLoading}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                <CheckCircle className="h-4 w-4 mr-1" />
-                Aprobar
-              </Button>
-            </div>
-          )}
-        </div>
+        {mode === 'admin' && isPending && (
+          <div className="flex justify-end space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onReject?.(id)}
+              disabled={isLoading}
+              className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+            >
+              <XCircle className="h-4 w-4 mr-1" />
+              Rechazar
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => onApprove?.(id)}
+              disabled={isLoading}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              <CheckCircle className="h-4 w-4 mr-1" />
+              Aprobar
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

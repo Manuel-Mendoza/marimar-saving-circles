@@ -3,7 +3,7 @@ import api from '@/lib/api';
 
 interface ActivityItem {
   id: string;
-  type: 'payment_made' | 'payment_approved' | 'group_joined' | 'draw_completed' | 'product_delivered';
+  type: 'payment_made' | 'payment_approved' | 'payment_rejected' | 'group_joined' | 'draw_completed' | 'product_delivered';
   message: string;
   timestamp: Date;
   groupId?: number;
@@ -75,6 +75,34 @@ export const useRecentActivities = (userId: number) => {
           });
         });
 
+      // 3.5. Pagos rechazados - "Tu pago de $25 fue rechazado en Grupo Ahorro Navidad"
+      contributions
+        .filter(contribution => contribution.estado === 'RECHAZADO')
+        .forEach((contribution) => {
+          const groupName = userGroups.find(ug => ug.groupId === contribution.groupId)?.group.nombre || 'Grupo';
+          recentActivity.push({
+            id: `payment-rejected-${contribution.id}`,
+            type: 'payment_rejected',
+            message: `Tu pago de $${contribution.monto} fue rechazado en ${groupName}`,
+            timestamp: contribution.fechaPago ? new Date(contribution.fechaPago) : new Date(), // usar fecha actual si no hay fechaPago
+            groupId: contribution.groupId,
+          });
+        });
+
+      // 3.6. Solicitudes de pago rechazadas - "Tu solicitud de pago de $25 fue rechazada en Grupo Ahorro Navidad"
+      paymentRequests
+        .filter(pr => pr.estado === 'RECHAZADO')
+        .forEach((pr) => {
+          const groupName = userGroups.find(ug => ug.groupId === pr.groupId)?.group.nombre || 'Grupo';
+          recentActivity.push({
+            id: `payment-request-rejected-${pr.id}`,
+            type: 'payment_rejected',
+            message: `Tu solicitud de pago de $${pr.monto} fue rechazada en ${groupName}`,
+            timestamp: new Date(pr.fechaAprobacion || pr.fechaSolicitud),
+            groupId: pr.groupId,
+          });
+        });
+
       // 4. Sorteos realizados - "Quedaste en la Posición X"
       userGroups
         .filter(ug => ug.group.estado === 'COMPLETADO' && ug.group.fechaFinal)
@@ -108,6 +136,13 @@ export const useRecentActivities = (userId: number) => {
       if (recentActivity.length === 0) {
         console.log('No activities found, creating example activities for demo');
         recentActivity.push(
+          {
+            id: 'example-payment-rejected',
+            type: 'payment_rejected',
+            message: 'Tu solicitud de pago de $35 fue rechazada en Grupo de 5 meses',
+            timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000), // 1 hour ago
+            groupId: 1,
+          },
           {
             id: 'example-payment-approved',
             type: 'payment_approved',

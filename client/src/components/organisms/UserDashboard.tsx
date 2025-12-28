@@ -19,6 +19,7 @@ import {
   Plus,
   Eye,
   User,
+  X,
 } from 'lucide-react';
 
 interface UserDashboardStats {
@@ -37,7 +38,7 @@ interface UserDashboardStats {
 
 interface ActivityItem {
   id: string;
-  type: 'payment_made' | 'payment_approved' | 'group_joined' | 'draw_completed' | 'product_delivered';
+  type: 'payment_made' | 'payment_approved' | 'payment_rejected' | 'group_joined' | 'draw_completed' | 'product_delivered';
   message: string;
   timestamp: Date;
   groupId?: number;
@@ -147,17 +148,20 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
                         ? 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300'
                         : activity.type === 'payment_approved'
                           ? 'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300'
-                          : activity.type === 'group_joined'
-                            ? 'bg-purple-100 text-purple-600 dark:bg-purple-900 dark:text-purple-300'
-                            : activity.type === 'draw_completed'
-                              ? 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900 dark:text-yellow-300'
-                              : activity.type === 'product_delivered'
-                                ? 'bg-orange-100 text-orange-600 dark:bg-orange-900 dark:text-orange-300'
-                                : 'bg-gray-100 text-gray-600 dark:bg-gray-900 dark:text-gray-300'
+                          : activity.type === 'payment_rejected'
+                            ? 'bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-300'
+                            : activity.type === 'group_joined'
+                              ? 'bg-purple-100 text-purple-600 dark:bg-purple-900 dark:text-purple-300'
+                              : activity.type === 'draw_completed'
+                                ? 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900 dark:text-yellow-300'
+                                : activity.type === 'product_delivered'
+                                  ? 'bg-orange-100 text-orange-600 dark:bg-orange-900 dark:text-orange-300'
+                                  : 'bg-gray-100 text-gray-600 dark:bg-gray-900 dark:text-gray-300'
                     }`}
                   >
                     {activity.type === 'payment_made' && <CreditCard className="h-4 w-4" />}
                     {activity.type === 'payment_approved' && <CheckCircle className="h-4 w-4" />}
+                    {activity.type === 'payment_rejected' && <X className="h-4 w-4" />}
                     {activity.type === 'group_joined' && <Users className="h-4 w-4" />}
                     {activity.type === 'draw_completed' && <BarChart3 className="h-4 w-4" />}
                     {activity.type === 'product_delivered' && <Package className="h-4 w-4" />}

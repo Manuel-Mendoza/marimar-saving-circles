@@ -39,7 +39,7 @@ export interface Contribution {
   fechaPago: string | null;
   periodo: string;
   metodoPago: string | null;
-  estado: 'PENDIENTE' | 'CONFIRMADO';
+  estado: 'PENDIENTE' | 'CONFIRMADO' | 'RECHAZADO';
   referenciaPago: string | null;
   user?: {
     nombre: string;
@@ -177,12 +177,15 @@ export interface PaymentOption {
 export interface MobilePaymentData {
   numero: string;
   titular: string;
-  banco?: string;
+  cedula: string;
+  cuentaBancaria: string; // Primeros 4 dígitos de la cuenta bancaria
 }
 
 export interface BankPaymentData {
   numeroCuenta: string;
   titular: string;
+  tipoDocumento: 'V' | 'J' | 'E' | 'P'; // V=Venezolano, J=Jurídico, E=Extranjero, P=Pasaporte
+  cedula: string;
   banco: string;
   tipoCuenta: 'corriente' | 'ahorros';
 }

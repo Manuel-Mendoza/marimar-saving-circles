@@ -145,7 +145,18 @@ export const UserGroupDetailsModal: React.FC<UserGroupDetailsModalProps> = ({
   const totalContributions = contributions.length;
   const paidContributions = contributions.filter(c => c.estado === 'CONFIRMADO').length;
   const pendingContributions = contributions.filter(c => c.estado === 'PENDIENTE').length;
-  const nextPendingContribution = contributions.find(c => c.estado === 'PENDIENTE');
+
+  // Sort contributions by period to find the next chronological pending contribution
+  const sortedContributions = [...contributions].sort((a, b) => {
+    // Extract month number from periodo (e.g., "Mes 1" -> 1, "Mes 10" -> 10)
+    const aMatch = a.periodo.match(/Mes (\d+)/);
+    const bMatch = b.periodo.match(/Mes (\d+)/);
+    const aNum = aMatch ? parseInt(aMatch[1]) : 0;
+    const bNum = bMatch ? parseInt(bMatch[1]) : 0;
+    return aNum - bNum;
+  });
+
+  const nextPendingContribution = sortedContributions.find(c => c.estado === 'PENDIENTE');
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -280,13 +291,26 @@ export const UserGroupDetailsModal: React.FC<UserGroupDetailsModalProps> = ({
                 <div className="flex items-center justify-center py-8">
                   <LoadingSpinner size="sm" text="Cargando contribuciones..." />
                 </div>
-              ) : contributions.length > 0 ? (
+              ) : contributions.filter(c => c.estado === 'CONFIRMADO').length > 0 ? (
                 <div className="space-y-3">
-                  {contributions.map((contribution, index) => (
+                  {contributions
+                    .filter(c => c.estado === 'CONFIRMADO')
+                    .sort((a, b) => {
+                      // Sort by period chronologically
+                      const aMatch = a.periodo.match(/Mes (\d+)/);
+                      const bMatch = b.periodo.match(/Mes (\d+)/);
+                      const aNum = aMatch ? parseInt(aMatch[1]) : 0;
+                      const bNum = bMatch ? parseInt(bMatch[1]) : 0;
+                      return aNum - bNum;
+                    })
+                    .map((contribution, index) => (
                     <div key={contribution.id} className="flex items-center justify-between p-3 border rounded-lg">
                       <div className="flex items-center gap-3">
                         <div className="flex-shrink-0">
-                          {getContributionStatusBadge(contribution.estado)}
+                          <Badge variant="default" className="flex items-center gap-1 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                            <CheckCircle className="h-3 w-3" />
+                            Pagado
+                          </Badge>
                         </div>
                         <div>
                           <div className="font-medium">{contribution.periodo}</div>
@@ -296,19 +320,9 @@ export const UserGroupDetailsModal: React.FC<UserGroupDetailsModalProps> = ({
                         </div>
                       </div>
                       <div className="text-right">
-                        {contribution.fechaPago ? (
-                          <div className="text-sm text-gray-600 dark:text-gray-400">
-                            Pagado: {new Date(contribution.fechaPago).toLocaleDateString()}
-                          </div>
-                        ) : contribution.estado === 'PENDIENTE' ? (
-                          <Button
-                            onClick={() => handleMakePayment(contribution)}
-                            size="sm"
-                            variant="outline"
-                          >
-                            Pagar
-                          </Button>
-                        ) : null}
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                          Pagado: {new Date(contribution.fechaPago!).toLocaleDateString('es-ES')}
+                        </div>
                       </div>
                     </div>
                   ))}
