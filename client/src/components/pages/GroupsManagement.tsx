@@ -194,6 +194,38 @@ export const GroupsManagement: React.FC<GroupsManagementProps> = ({ user }) => {
     }
   };
 
+  const handleAdvanceMonth = async (group: Grupo) => {
+    try {
+      setActionLoading(group.id);
+      const response = await api.advanceGroupMonth(group.id);
+
+      if (response.success) {
+        toast({
+          title: 'Éxito',
+          description: response.data.completed
+            ? 'Grupo completado exitosamente'
+            : `Mes avanzado exitosamente. Turno ${response.data.newTurn} activado.`,
+        });
+        await loadGroups(); // Reload groups to show updated status
+      } else {
+        toast({
+          title: 'Error',
+          description: 'No se pudo avanzar el mes del grupo',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Error advancing month:', error);
+      toast({
+        title: 'Error',
+        description: 'Error interno del servidor',
+        variant: 'destructive',
+      });
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const handleDeleteGroup = (group: Grupo) => {
     setSelectedGroup(group);
     setShowDeleteDialog(true);
@@ -399,6 +431,8 @@ export const GroupsManagement: React.FC<GroupsManagementProps> = ({ user }) => {
         }}
         groupDetails={groupDetails}
         isLoading={loadingDetails}
+        onAdvanceMonth={handleAdvanceMonth}
+        actionLoading={actionLoading === groupDetails?.group.id}
       />
 
       {/* Draw Animation */}

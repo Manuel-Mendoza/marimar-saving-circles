@@ -17,6 +17,10 @@ interface GroupDetailModalProps {
   groupDetails: GroupAdminDetails | null;
   /** Si está cargando */
   isLoading?: boolean;
+  /** Función para avanzar mes del grupo */
+  onAdvanceMonth?: (group: { id: number; nombre: string; estado: string }) => void;
+  /** Estado de carga para acciones */
+  actionLoading?: boolean;
 }
 
 /**
@@ -28,6 +32,8 @@ export const GroupDetailModal: React.FC<GroupDetailModalProps> = ({
   onClose,
   groupDetails,
   isLoading = false,
+  onAdvanceMonth,
+  actionLoading = false,
 }) => {
   if (!isOpen) return null;
 
@@ -191,6 +197,29 @@ export const GroupDetailModal: React.FC<GroupDetailModalProps> = ({
                       </div>
                     </div>
                   </div>
+
+                  {/* Action Buttons */}
+                  {group.estado === 'EN_MARCHA' && onAdvanceMonth && (
+                    <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-900 dark:text-white">
+                            Gestión del Grupo
+                          </h4>
+                          <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                            Avanzar al siguiente mes cuando todos los pagos estén confirmados
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => onAdvanceMonth({ id: group.id, nombre: group.nombre, estado: group.estado })}
+                          disabled={actionLoading}
+                          className="px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-purple-900 dark:text-purple-300 dark:hover:bg-purple-800 transition-colors"
+                        >
+                          {actionLoading ? 'Avanzando...' : 'Avanzar Mes'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </ScrollArea>
@@ -271,11 +300,22 @@ export const GroupDetailModal: React.FC<GroupDetailModalProps> = ({
                     </p>
                   ) : (
                     <div className="space-y-2">
-                      {/* Mostrar solo las más recientes (últimas 15) */}
+                      {/* Mostrar todas las contribuciones únicas por usuario y periodo */}
                       {contributions
                         .filter(c => c.fechaPago) // Solo pagos realizados
-                        .sort((a, b) => new Date(b.fechaPago!).getTime() - new Date(a.fechaPago!).getTime()) // Más recientes primero
-                        .slice(0, 15) // Últimos 15 pagos
+                        .sort((a, b) => {
+                          // Ordenar por fecha descendente, luego por periodo descendente
+                          const dateCompare = new Date(b.fechaPago!).getTime() - new Date(a.fechaPago!).getTime();
+                          if (dateCompare !== 0) return dateCompare;
+                          return b.periodo.localeCompare(a.periodo);
+                        })
+                        // Eliminar duplicados por usuario + periodo (mantener el más reciente)
+                        .filter((contribution, index, self) =>
+                          index === self.findIndex(c =>
+                            c.userId === contribution.userId && c.periodo === contribution.periodo
+                          )
+                        )
+                        .slice(0, 15) // Limitar a 15 para performance
                         .map((contribution, index) => {
                           const isRecent = index < 3; // Marcar los 3 más recientes
                           const daysSincePayment = contribution.fechaPago

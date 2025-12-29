@@ -9,6 +9,8 @@ import { useAdminRecentActivities } from '@/hooks/useAdminRecentActivities';
 import { useAdminDashboardStats } from '@/hooks/useAdminDashboardStats';
 import { useAdminDashboardCharts } from '@/hooks/useAdminDashboardCharts';
 import { useExchangeRate } from '@/hooks/useCurrencyConversion';
+import { useToast } from '@/hooks/use-toast';
+import api from '@/lib/api';
 import {
   Users,
   Package,
@@ -20,6 +22,7 @@ import {
   DollarSign,
   UserPlus,
   Activity,
+  Play,
 } from 'lucide-react';
 
 interface DashboardStats {
@@ -83,6 +86,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   showSidebar = true,
 }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [autoAdvanceLoading, setAutoAdvanceLoading] = useState(false);
+  const { toast } = useToast();
 
   // Hook para estadísticas del dashboard
   const { stats: dashboardStats, loading: statsLoading } = useAdminDashboardStats();
@@ -102,6 +107,35 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   const handleSidebarNavigate = (itemId: string) => {
     onNavigate?.(itemId);
+  };
+
+  const handleAutoAdvance = async () => {
+    try {
+      setAutoAdvanceLoading(true);
+      const response = await api.runAutoAdvance();
+
+      if (response.success) {
+        toast({
+          title: 'Éxito',
+          description: `Procesados ${response.data.processedGroups} grupos. Avanzados ${response.data.advancedGroups} grupos.`,
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: 'No se pudo ejecutar el avance automático',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Error running auto advance:', error);
+      toast({
+        title: 'Error',
+        description: 'Error interno del servidor',
+        variant: 'destructive',
+      });
+    } finally {
+      setAutoAdvanceLoading(false);
+    }
   };
 
   const defaultStats: DashboardStats = {
@@ -455,6 +489,15 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
               >
                 <CreditCard className="h-4 w-4 mr-2" />
                 Editar Metodo de Pago
+              </Button>
+              <Button
+                onClick={handleAutoAdvance}
+                disabled={autoAdvanceLoading}
+                className="w-full justify-start bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100 dark:bg-purple-950 dark:border-purple-800 dark:text-purple-300 dark:hover:bg-purple-900"
+                variant="outline"
+              >
+                <Play className="h-4 w-4 mr-2" />
+                {autoAdvanceLoading ? 'Procesando...' : 'Avance Automático de Mes'}
               </Button>
             </CardContent>
           </Card>

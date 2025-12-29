@@ -548,6 +548,49 @@ class ApiClient {
       method: 'DELETE',
     });
   }
+
+  // Group management admin endpoints
+  async advanceGroupMonth(groupId: number, deliveryNotes?: string) {
+    return this.request<{
+      groupId: number;
+      previousTurn: number;
+      newTurn: number;
+      completed: boolean;
+      deliveryCreated: boolean;
+    }>(`/admin/groups/${groupId}/advance-month`, {
+      method: 'POST',
+      body: JSON.stringify({ deliveryNotes }),
+    });
+  }
+
+  async completeDelivery(deliveryId: number, notas?: string) {
+    return this.request<{
+      delivery: Delivery;
+    }>(`/admin/deliveries/${deliveryId}/complete`, {
+      method: 'PUT',
+      body: JSON.stringify({ notas }),
+    });
+  }
+
+  async autoAdvanceMonth() {
+    return this.request<{
+      processedGroups: number;
+      advancedGroups: number;
+      currentPeriod: string;
+    }>(`/admin/groups/auto-advance-month`, {
+      method: 'POST',
+    });
+  }
+
+  async runAutoAdvance() {
+    return this.request<{
+      processedGroups: number;
+      advancedGroups: number;
+      currentPeriod: string;
+    }>(`/admin/groups/auto-advance-month`, {
+      method: 'POST',
+    });
+  }
 }
 
 export const apiClient = new ApiClient(API_BASE_URL);
