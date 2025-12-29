@@ -9,6 +9,7 @@ export { default as DashboardLayout } from './DashboardLayout.tsx';
 
 // Gestión de usuarios, productos, grupos y pagos
 export { UsersManagement } from './UsersManagement.tsx';
+export { RatingsManagement } from './RatingsManagement.tsx';
 export { ProductsManagement } from './ProductsManagement.tsx';
 export { GroupsManagement } from './GroupsManagement.tsx';
 export { default as PaymentsManagement } from './PaymentsManagement.tsx';

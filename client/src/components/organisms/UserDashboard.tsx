@@ -106,14 +106,16 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
 
   // Rating system: 10/10 = green, 7/10 = yellow, 4/10 = red
   const getRatingColor = (rating: number) => {
-    if (rating >= 10) return { bg: 'bg-green-100', icon: 'text-green-600', text: 'text-green-700' };
-    if (rating >= 7) return { bg: 'bg-yellow-100', icon: 'text-yellow-600', text: 'text-yellow-700' };
-    if (rating >= 4) return { bg: 'bg-red-100', icon: 'text-red-600', text: 'text-red-700' };
+    if (rating >= 9.0) return { bg: 'bg-green-100', icon: 'text-green-600', text: 'text-green-700' };
+    if (rating >= 7.0) return { bg: 'bg-yellow-100', icon: 'text-yellow-600', text: 'text-yellow-700' };
+    if (rating >= 5.0) return { bg: 'bg-yellow-100', icon: 'text-yellow-600', text: 'text-yellow-700' };
     return { bg: 'bg-red-100', icon: 'text-red-600', text: 'text-red-700' }; // Default to red for very low ratings
   };
 
-  const ratingValue = 10; // TODO: Replace with actual rating from backend
-  const ratingColors = getRatingColor(ratingValue);
+  // Use real reputation data from backend
+  const reputationScore = dashboardData?.reputation?.score || 10.0;
+  const ratingValue = Math.round(reputationScore * 10) / 10; // Round to 1 decimal place
+  const ratingColors = getRatingColor(reputationScore);
 
   const isLoading = externalLoading || dashboardLoading;
 
@@ -236,7 +238,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
                   Puntuación
                 </p>
                 <p className={`text-2xl font-bold ${ratingColors.text}`}>
-                  10/10
+                  {ratingValue}/10
                 </p>
               </div>
               <div className={`p-3 ${ratingColors.bg} ${ratingColors.icon} rounded-full`}>

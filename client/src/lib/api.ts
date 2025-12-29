@@ -448,6 +448,41 @@ class ApiClient {
     }>('/admin/dashboard-charts');
   }
 
+  async getAllRatings() {
+    return this.request<{
+      ratings: Array<{
+        id: number;
+        raterId: number;
+        ratedId: number;
+        groupId?: number;
+        ratingType: string;
+        rating: number;
+        comment?: string;
+        createdAt: string;
+        rater: {
+          nombre: string;
+          apellido: string;
+        };
+        rated: {
+          nombre: string;
+          apellido: string;
+        };
+        group?: {
+          nombre: string;
+        };
+      }>;
+      stats: {
+        totalUsers: number;
+        averageReputation: number;
+        excellentUsers: number;
+        reliableUsers: number;
+        acceptableUsers: number;
+        underObservationUsers: number;
+        totalRatings: number;
+      };
+    }>('/admin/ratings');
+  }
+
   // Ratings endpoints
   async getUserReputation(userId: number) {
     return this.request<{

@@ -1,9 +1,10 @@
 import { Hono } from "hono";
-import { eq, count, sql, sum, and, gte, lte } from "drizzle-orm";
+import { eq, count, sql, sum, and, gte, lte, desc } from "drizzle-orm";
 import { users } from "../db/tables/users.js";
 import { groups } from "../db/tables/groups.js";
 import { products } from "../db/tables/products.js";
 import { paymentRequests } from "../db/tables/payment-requests.js";
+import { userRatings } from "../db/tables/user-ratings.js";
 import { db } from "../config/database.js";
 import { authenticate } from "../middleware/auth.js";
 
@@ -227,6 +228,99 @@ adminRoute.get("/dashboard-charts", authenticate, async (c) => {
     });
   } catch (error) {
     console.error("Error obteniendo datos de gráficas del dashboard:", error);
+    return c.json(
+      {
+        success: false,
+        message: "Error interno del servidor",
+      },
+      500,
+    );
+  }
+});
+
+// Get all ratings for admin management - Admin only
+adminRoute.get("/ratings", authenticate, async (c) => {
+  try {
+    const userPayload = c.get("user") as JWTPayload;
+
+    if (userPayload.tipo !== "ADMINISTRADOR") {
+      return c.json(
+        {
+          success: false,
+          message: "Acceso denegado",
+        },
+        403,
+      );
+    }
+
+    // Get all ratings first
+    const ratings = await db
+      .select()
+      .from(userRatings)
+      .orderBy(desc(userRatings.createdAt));
+
+    // For now, return simplified data
+    const simplifiedRatings = ratings.map(rating => ({
+      id: rating.id,
+      raterId: rating.raterId,
+      ratedId: rating.ratedId,
+      groupId: rating.groupId,
+      ratingType: rating.ratingType,
+      rating: rating.rating,
+      comment: rating.comment,
+      createdAt: rating.createdAt,
+      rater: {
+        nombre: 'Usuario', // Will be enhanced later
+        apellido: 'Desconocido'
+      },
+      rated: {
+        nombre: 'Usuario',
+        apellido: 'Desconocido'
+      },
+      group: null, // Will be enhanced later
+    }));
+
+    // Calculate reputation statistics
+    const allUsers = await db.select().from(users);
+    const totalUsers = allUsers.length;
+
+    let excellentUsers = 0;
+    let reliableUsers = 0;
+    let acceptableUsers = 0;
+    let underObservationUsers = 0;
+    let totalReputation = 0;
+
+    for (const user of allUsers) {
+      const userReputation = parseFloat(user.reputationScore || '0');
+      totalReputation += userReputation;
+
+      if (userReputation >= 9.0) excellentUsers++;
+      else if (userReputation >= 7.0) reliableUsers++;
+      else if (userReputation >= 5.0) acceptableUsers++;
+      else underObservationUsers++;
+    }
+
+    const averageReputation = totalUsers > 0 ? totalReputation / totalUsers : 0;
+
+    const stats = {
+      totalUsers,
+      averageReputation: Math.round(averageReputation * 100) / 100,
+      excellentUsers,
+      reliableUsers,
+      acceptableUsers,
+      underObservationUsers,
+      totalRatings: ratings.length,
+    };
+
+    return c.json({
+      success: true,
+      data: {
+        ratings: simplifiedRatings,
+        stats,
+      },
+    });
+  } catch (error) {
+    console.error("Error obteniendo datos de calificaciones:", error);
     return c.json(
       {
         success: false,

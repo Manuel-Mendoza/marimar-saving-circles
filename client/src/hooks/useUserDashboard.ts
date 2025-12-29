@@ -18,6 +18,14 @@ interface UserDashboardData {
       groupName: string;
     };
   };
+  reputation?: {
+    score: number;
+    status: string;
+    totalRatings: number;
+    paymentReliability: number;
+    deliveryReliability: number;
+    lastUpdate: string;
+  };
   recentActivity: ActivityItem[];
 }
 
@@ -47,13 +55,15 @@ export const useUserDashboard = (userId: number) => {
       setError(null);
 
       // Fetch all data in parallel
-      const [userGroupsResponse, contributionsResponse] = await Promise.all([
+      const [userGroupsResponse, contributionsResponse, reputationResponse] = await Promise.all([
         api.getMyGroups(),
         api.getMyContributions(),
+        api.getUserReputation(userId).catch(() => null), // Gracefully handle reputation errors
       ]);
 
       const userGroups = userGroupsResponse.success ? userGroupsResponse.data.userGroups : [];
       const contributions = contributionsResponse.success ? contributionsResponse.data.contributions : [];
+      const reputation = reputationResponse?.reputation || undefined;
 
       // Calculate real stats from user groups
       const activeGroups = userGroups.filter(ug => ug.group.estado === 'EN_MARCHA').length;
@@ -116,6 +126,7 @@ export const useUserDashboard = (userId: number) => {
           productsAcquired,
           nextPayment,
         },
+        reputation,
         recentActivity,
       };
 
