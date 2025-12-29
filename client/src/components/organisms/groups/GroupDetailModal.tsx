@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { GroupStatusBadge } from '@/components/atoms';
 import { GroupAdminDetails } from '@/lib/types';
 import { Users, DollarSign, Package, Calendar, User, CreditCard, BarChart3, X } from 'lucide-react';
@@ -35,6 +36,8 @@ export const GroupDetailModal: React.FC<GroupDetailModalProps> = ({
   onAdvanceMonth,
   actionLoading = false,
 }) => {
+  const [showAdvanceConfirm, setShowAdvanceConfirm] = useState(false);
+
   if (!isOpen) return null;
 
   if (!groupDetails && !isLoading) return null;
@@ -116,8 +119,8 @@ export const GroupDetailModal: React.FC<GroupDetailModalProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Participantes</CardTitle>
-                    <Users className="h-4 w-4 text-muted-foreground" />
+                    <CardTitle className="text-sm font-medium">Contribuciones</CardTitle>
+                    <CreditCard className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">{stats.totalMembers}</div>
@@ -129,13 +132,15 @@ export const GroupDetailModal: React.FC<GroupDetailModalProps> = ({
 
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Contribuciones</CardTitle>
-                    <DollarSign className="h-4 w-4 text-muted-foreground" />
+                    <CardTitle className="text-sm font-medium">Progreso del Grupo</CardTitle>
+                    <BarChart3 className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{stats.totalContributions}</div>
+                    <div className="text-2xl font-bold">
+                      {group.turnoActual} / {group.duracionMeses}
+                    </div>
                     <p className="text-xs text-muted-foreground">
-                      {stats.pendingContributions} pendientes • {stats.confirmedContributions} confirmadas
+                      Mes {group.turnoActual} de {group.duracionMeses} completado
                     </p>
                   </CardContent>
                 </Card>

@@ -207,6 +207,14 @@ export const GroupsManagement: React.FC<GroupsManagementProps> = ({ user }) => {
             : `Mes avanzado exitosamente. Turno ${response.data.newTurn} activado.`,
         });
         await loadGroups(); // Reload groups to show updated status
+
+        // If modal is open with this group's details, reload them
+        if (groupDetails && groupDetails.group.id === group.id) {
+          const updatedDetails = await api.getGroupAdminDetails(group.id);
+          if (updatedDetails.success) {
+            setGroupDetails(updatedDetails.data);
+          }
+        }
       } else {
         toast({
           title: 'Error',

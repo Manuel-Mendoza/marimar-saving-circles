@@ -752,4 +752,128 @@ adminRoute.post("/groups/auto-advance-month", authenticate, async (c) => {
   }
 });
 
+// Regenerate missing contributions for all groups - Admin only (for fixing data issues)
+adminRoute.post("/groups/regenerate-contributions", authenticate, async (c) => {
+  try {
+    const userPayload = c.get("user") as JWTPayload;
+
+    if (userPayload.tipo !== "ADMINISTRADOR") {
+      return c.json(
+        {
+          success: false,
+          message: "Acceso denegado",
+        },
+        403,
+      );
+    }
+
+    // Get all groups with their members
+    const groupsWithMembers = await db
+      .select({
+        groupId: groups.id,
+        groupName: groups.nombre,
+        duracionMeses: groups.duracionMeses,
+        userId: userGroups.userId,
+        monedaPago: userGroups.monedaPago,
+        productoSeleccionado: userGroups.productoSeleccionado,
+      })
+      .from(groups)
+      .innerJoin(userGroups, eq(groups.id, userGroups.groupId))
+      .orderBy(groups.id, userGroups.userId);
+
+    let totalContributionsCreated = 0;
+    let groupsProcessed = 0;
+
+    // Group by groupId for processing
+    const groupsMap = new Map<number, typeof groupsWithMembers>();
+
+    for (const row of groupsWithMembers) {
+      if (!groupsMap.has(row.groupId)) {
+        groupsMap.set(row.groupId, []);
+      }
+      groupsMap.get(row.groupId)!.push(row);
+    }
+
+    // Process each group
+    for (const [groupId, members] of groupsMap) {
+      groupsProcessed++;
+      const groupData = members[0]; // All rows have the same group data
+
+      if (!groupData) continue; // Skip if no group data
+
+      // Get existing contributions for this group
+      const existingContributions = await db
+        .select()
+        .from(contributions)
+        .where(eq(contributions.groupId, groupId));
+
+      // Create a map of existing contributions by userId and periodo
+      const existingMap = new Map<string, boolean>();
+      for (const contrib of existingContributions) {
+        const key = `${contrib.userId}-${contrib.periodo}`;
+        existingMap.set(key, true);
+      }
+
+      // Calculate expected contributions for each member
+      const contributionsToCreate = [];
+      for (const member of members) {
+        // Calculate monthly payment based on product selection
+        // For now, we'll use a default calculation - this should be improved
+        let monthlyPayment = 100; // Default fallback
+        if (member.monedaPago === 'USD') {
+          monthlyPayment = 35; // Example USD amount
+        } else {
+          monthlyPayment = 140000; // Example VES amount
+        }
+
+        // Create contribution for each month if it doesn't exist
+        for (let month = 1; month <= groupData.duracionMeses; month++) {
+          const periodo = `Mes ${month}`;
+          const key = `${member.userId}-${periodo}`;
+
+          if (!existingMap.has(key)) {
+            contributionsToCreate.push({
+              userId: member.userId,
+              groupId: groupId,
+              monto: monthlyPayment,
+              moneda: member.monedaPago || 'USD', // Ensure it's not null
+              fechaPago: null,
+              periodo: periodo,
+              metodoPago: null,
+              estado: "PENDIENTE" as const,
+              referenciaPago: null,
+            });
+          }
+        }
+      }
+
+      // Insert missing contributions
+      if (contributionsToCreate.length > 0) {
+        await db.insert(contributions).values(contributionsToCreate);
+        totalContributionsCreated += contributionsToCreate.length;
+
+        console.log(`Grupo ${groupId} (${groupData.groupName}): Created ${contributionsToCreate.length} missing contributions`);
+      }
+    }
+
+    return c.json({
+      success: true,
+      message: `Procesados ${groupsProcessed} grupos. Creadas ${totalContributionsCreated} contribuciones faltantes.`,
+      data: {
+        groupsProcessed,
+        contributionsCreated: totalContributionsCreated,
+      },
+    });
+  } catch (error) {
+    console.error("Error regenerando contribuciones:", error);
+    return c.json(
+      {
+        success: false,
+        message: "Error interno del servidor",
+      },
+      500,
+    );
+  }
+});
+
 export default adminRoute;

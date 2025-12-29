@@ -591,6 +591,15 @@ class ApiClient {
       method: 'POST',
     });
   }
+
+  async regenerateContributions() {
+    return this.request<{
+      groupsProcessed: number;
+      contributionsCreated: number;
+    }>(`/admin/groups/regenerate-contributions`, {
+      method: 'POST',
+    });
+  }
 }
 
 export const apiClient = new ApiClient(API_BASE_URL);
