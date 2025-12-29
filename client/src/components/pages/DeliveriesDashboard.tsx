@@ -136,147 +136,112 @@ export const DeliveriesDashboard: React.FC = () => {
   }
 
   return (
-    <div className="h-full flex flex-col p-6">
-      {/* Header - Compact */}
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard de Entregas</h1>
-          <p className="text-sm text-gray-600">
-            Gestión completa de entregas y envíos del sistema
-          </p>
-        </div>
-        <Button onClick={loadDashboardData} variant="outline" size="sm">
-          Actualizar
-        </Button>
+    <div className="flex-1 p-6">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+          Dashboard de Entregas
+        </h1>
+        <p className="text-gray-600 dark:text-gray-400">
+          Gestión completa de entregas y envíos del sistema
+        </p>
       </div>
 
-      {/* Main Content Grid - No Scroll Layout */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-4 min-h-0">
-        {/* Left Column - Stats & Status Distribution */}
-        <div className="space-y-4">
-          {/* Statistics Cards - Compact */}
-          <div className="grid grid-cols-2 gap-2">
-            <Card className="p-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-muted-foreground">Total</p>
-                  <p className="text-lg font-bold">{data.stats.totalDeliveries}</p>
-                </div>
-                <Package className="h-5 w-5 text-muted-foreground" />
-              </div>
-            </Card>
+      {/* Top Row - Key Metrics */}
+      <div className="grid grid-cols-4 gap-2 mb-4">
+        <div className="bg-blue-50 dark:bg-blue-950 p-3 rounded-lg text-center">
+          <div className="text-lg font-bold text-blue-600">{data.stats.totalDeliveries}</div>
+          <div className="text-xs text-blue-700 dark:text-blue-300">Total</div>
+        </div>
+        <div className="bg-yellow-50 dark:bg-yellow-950 p-3 rounded-lg text-center">
+          <div className="text-lg font-bold text-yellow-600">{data.stats.pendingDeliveries}</div>
+          <div className="text-xs text-yellow-700 dark:text-yellow-300">Pendientes</div>
+        </div>
+        <div className="bg-green-50 dark:bg-green-950 p-3 rounded-lg text-center">
+          <div className="text-lg font-bold text-green-600">{data.stats.completedDeliveries}</div>
+          <div className="text-xs text-green-700 dark:text-green-300">Completadas</div>
+        </div>
+        <div className="bg-purple-50 dark:bg-purple-950 p-3 rounded-lg text-center">
+          <div className="text-lg font-bold text-purple-600">{data.stats.completionRate}%</div>
+          <div className="text-xs text-purple-700 dark:text-purple-300">Éxito</div>
+        </div>
+      </div>
 
-            <Card className="p-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-muted-foreground">Pendientes</p>
-                  <p className="text-lg font-bold text-yellow-600">{data.stats.pendingDeliveries}</p>
+      {/* Bottom Row - Content */}
+      <div className="flex-1 grid grid-cols-2 gap-4 min-h-0">
+        {/* Left - Recent Deliveries */}
+        <div className="bg-white dark:bg-gray-900 rounded-lg border p-3">
+          <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+            <Package className="h-4 w-4" />
+            Recientes
+          </h3>
+          <div className="space-y-2 max-h-[calc(100vh-280px)] overflow-y-auto">
+            {data.recentDeliveries.length > 0 ? (
+              data.recentDeliveries.slice(0, 8).map((delivery) => (
+                <div key={delivery.id} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded text-xs">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1 mb-1">
+                      {getDeliveryStatusBadge(delivery.estado)}
+                      {delivery.direccion && <MapPin className="h-3 w-3 text-gray-400" />}
+                    </div>
+                    <div className="font-medium truncate text-xs">{delivery.productName}</div>
+                    <div className="text-muted-foreground truncate text-xs">
+                      {delivery.user.nombre} • {delivery.group.nombre}
+                    </div>
+                  </div>
+                  {delivery.estado === 'PENDIENTE' && (
+                    <Button
+                      size="sm"
+                      onClick={() => handleCompleteDelivery(delivery.id)}
+                      className="h-6 px-2 text-xs"
+                    >
+                      ✓
+                    </Button>
+                  )}
                 </div>
-                <Clock className="h-5 w-5 text-muted-foreground" />
+              ))
+            ) : (
+              <div className="text-center py-4 text-muted-foreground text-xs">
+                Sin entregas
               </div>
-            </Card>
-
-            <Card className="p-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-muted-foreground">Completadas</p>
-                  <p className="text-lg font-bold text-green-600">{data.stats.completedDeliveries}</p>
-                </div>
-                <CheckCircle className="h-5 w-5 text-muted-foreground" />
-              </div>
-            </Card>
-
-            <Card className="p-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-muted-foreground">Tasa Éxito</p>
-                  <p className="text-lg font-bold">{data.stats.completionRate}%</p>
-                </div>
-                <Truck className="h-5 w-5 text-muted-foreground" />
-              </div>
-            </Card>
+            )}
           </div>
+        </div>
 
-          {/* Status Distribution - Compact */}
-          <Card className="p-4">
-            <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
+        {/* Right - Groups Summary */}
+        <div className="space-y-3">
+          {/* Status Distribution */}
+          <div className="bg-white dark:bg-gray-900 rounded-lg border p-3">
+            <h3 className="text-sm font-semibold mb-2 flex items-center gap-2">
               <Calendar className="h-4 w-4" />
-              Distribución por Estado
+              Estados
             </h3>
             <div className="grid grid-cols-2 gap-2">
               {Object.entries(data.deliveriesByStatus).map(([estado, count]) => (
                 <div key={estado} className="text-center p-2 bg-gray-50 dark:bg-gray-800 rounded">
-                  <div className="text-lg font-bold">{count}</div>
+                  <div className="font-bold text-sm">{count}</div>
                   <div className="text-xs text-muted-foreground capitalize">
                     {estado.toLowerCase()}
                   </div>
                 </div>
               ))}
             </div>
-          </Card>
-        </div>
+          </div>
 
-        {/* Middle Column - Recent Deliveries */}
-        <Card className="flex flex-col">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Package className="h-5 w-5" />
-              Entregas Recientes
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex-1 overflow-hidden">
-            <div className="space-y-2 max-h-full overflow-y-auto">
-              {data.recentDeliveries.length > 0 ? (
-                data.recentDeliveries.slice(0, 6).map((delivery) => (
-                  <div key={delivery.id} className="flex items-center justify-between p-2 border rounded">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        {getDeliveryStatusBadge(delivery.estado)}
-                        {delivery.direccion && <MapPin className="h-3 w-3 text-gray-400" />}
-                      </div>
-                      <p className="text-xs font-medium truncate">{delivery.productName}</p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {delivery.user.nombre} • {delivery.group.nombre}
-                      </p>
-                    </div>
-                    {delivery.estado === 'PENDIENTE' && (
-                      <Button
-                        size="sm"
-                        onClick={() => handleCompleteDelivery(delivery.id)}
-                        className="text-xs h-6 ml-2"
-                      >
-                        OK
-                      </Button>
-                    )}
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-4 text-muted-foreground text-sm">
-                  No hay entregas recientes
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Right Column - Deliveries by Group */}
-        <Card className="flex flex-col">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Entregas por Grupo
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex-1 overflow-hidden">
-            <div className="space-y-2 max-h-full overflow-y-auto">
+          {/* Groups */}
+          <div className="bg-white dark:bg-gray-900 rounded-lg border p-3 flex-1">
+            <h3 className="text-sm font-semibold mb-2 flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Grupos
+            </h3>
+            <div className="space-y-2 max-h-[calc(100vh-420px)] overflow-y-auto">
               {data.deliveriesByGroup.length > 0 ? (
-                data.deliveriesByGroup.slice(0, 4).map((group) => (
-                  <div key={group.groupId} className="p-3 border rounded">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-sm font-medium truncate">{group.groupName}</h4>
-                      <Badge variant="outline" className="text-xs">
+                data.deliveriesByGroup.slice(0, 5).map((group) => (
+                  <div key={group.groupId} className="p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-medium truncate">{group.groupName}</span>
+                      <span className="text-xs bg-gray-200 dark:bg-gray-700 px-1 rounded">
                         {group.totalDeliveries}
-                      </Badge>
+                      </span>
                     </div>
                     <div className="flex items-center gap-3 text-xs text-muted-foreground">
                       <span className="flex items-center gap-1">
@@ -291,13 +256,13 @@ export const DeliveriesDashboard: React.FC = () => {
                   </div>
                 ))
               ) : (
-                <div className="text-center py-4 text-muted-foreground text-sm">
-                  No hay grupos activos
+                <div className="text-center py-2 text-muted-foreground text-xs">
+                  Sin grupos
                 </div>
               )}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );
