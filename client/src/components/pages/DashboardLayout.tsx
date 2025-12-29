@@ -9,7 +9,6 @@ import {
   PaymentsManagement,
   AdminSettings,
   RatingsManagement,
-  DeliveriesDashboard,
 } from '@/components/pages';
 import { UserGroupsManagement, UserProductsManagement } from '@/components/organisms';
 import type { User } from '@/lib/types';
@@ -202,7 +201,19 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ user, onLogout }) => 
             path="deliveries"
             element={
               user.tipo === 'ADMINISTRADOR' ? (
-                <DeliveriesDashboard />
+                <div className="flex-1 p-6">
+                  <div className="text-center py-12">
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                      Dashboard de Entregas
+                    </h2>
+                    <p className="text-gray-600 dark:text-gray-400 mb-4">
+                      Esta funcionalidad está temporalmente deshabilitada.
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Estamos trabajando en una mejor versión.
+                    </p>
+                  </div>
+                </div>
               ) : (
                 <div className="flex-1 p-6">
                   <div className="text-center py-12">
