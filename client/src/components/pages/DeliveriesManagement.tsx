@@ -25,8 +25,8 @@ export const DeliveriesManagement: React.FC<DeliveriesManagementProps> = ({ user
     mesEntrega: string;
     estado: string;
     direccion?: string;
-    user: { nombre: string; apellido: string };
-    group: { nombre: string };
+    user: { nombre: string; apellido: string } | null;
+    group: { nombre: string } | null;
   }>>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
@@ -58,8 +58,8 @@ export const DeliveriesManagement: React.FC<DeliveriesManagementProps> = ({ user
       mesEntrega: string;
       estado: string;
       direccion?: string;
-      user: { nombre: string; apellido: string };
-      group: { nombre: string };
+      user: { nombre: string; apellido: string } | null;
+      group: { nombre: string } | null;
     }>;
     deliveriesByGroup: Array<{
       groupId: number;
@@ -78,8 +78,11 @@ export const DeliveriesManagement: React.FC<DeliveriesManagementProps> = ({ user
 
       if (response.success) {
         setDashboardData(response.data);
-        // Flatten recent deliveries for table display
-        setDeliveries(response.data.recentDeliveries);
+        // Flatten recent deliveries for table display - ensure it's always an array
+        const deliveriesData = Array.isArray(response.data.recentDeliveries)
+          ? response.data.recentDeliveries
+          : [];
+        setDeliveries(deliveriesData);
       }
     } catch (error) {
       console.error('Error loading deliveries data:', error);
@@ -88,6 +91,9 @@ export const DeliveriesManagement: React.FC<DeliveriesManagementProps> = ({ user
         description: 'No se pudieron cargar los datos de entregas',
         variant: 'destructive',
       });
+      // Set empty arrays on error
+      setDeliveries([]);
+      setDashboardData(null);
     } finally {
       setLoading(false);
     }
@@ -99,6 +105,11 @@ export const DeliveriesManagement: React.FC<DeliveriesManagementProps> = ({ user
 
   // Filter deliveries based on search term and status filters
   const filterDeliveries = (deliveryList: typeof deliveries) => {
+    // Ensure we have an array
+    if (!Array.isArray(deliveryList)) {
+      return [];
+    }
+
     let filtered = deliveryList;
 
     // Filter by search term
@@ -106,9 +117,9 @@ export const DeliveriesManagement: React.FC<DeliveriesManagementProps> = ({ user
       filtered = filtered.filter(
         delivery =>
           delivery.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          delivery.user.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          delivery.user.apellido.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          delivery.group.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+          (delivery.user?.nombre || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (delivery.user?.apellido || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (delivery.group?.nombre || '').toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -235,9 +246,11 @@ export const DeliveriesManagement: React.FC<DeliveriesManagementProps> = ({ user
     );
   }
 
-  const filteredDeliveries = filterDeliveries(deliveries);
+  // Ensure deliveries is always an array before filtering
+  const safeDeliveries = Array.isArray(deliveries) ? deliveries : [];
+  const filteredDeliveries = filterDeliveries(safeDeliveries);
   const filteredPendingDeliveries = filterDeliveries(
-    deliveries.filter(d => d.estado === 'PENDIENTE')
+    safeDeliveries.filter(d => d.estado === 'PENDIENTE')
   );
 
   const stats = dashboardData ? {

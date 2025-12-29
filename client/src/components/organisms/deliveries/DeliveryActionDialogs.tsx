@@ -28,8 +28,8 @@ interface DeliveryFromAPI {
   mesEntrega: string;
   estado: string;
   direccion?: string;
-  user: { nombre: string; apellido: string };
-  group: { nombre: string };
+  user: { nombre: string; apellido: string } | null;
+  group: { nombre: string } | null;
 }
 
 interface DeliveryActionDialogsProps {

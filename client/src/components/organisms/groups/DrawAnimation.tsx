@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -47,6 +47,10 @@ export const DrawAnimation: React.FC<DrawAnimationProps> = ({
   const [currentStep, setCurrentStep] = useState(0);
   const [wsConnection, setWsConnection] = useState<WebSocket | null>(null);
 
+  // Usar ref para mantener una referencia estable a onDrawComplete
+  const onDrawCompleteRef = useRef(onDrawComplete);
+  onDrawCompleteRef.current = onDrawComplete;
+
   // Función para iniciar la animación
   const startAnimation = useCallback(
     (positions: DrawPosition[]) => {
@@ -57,7 +61,13 @@ export const DrawAnimation: React.FC<DrawAnimationProps> = ({
       // Animación secuencial con delays
       positions.forEach((position, index) => {
         setTimeout(() => {
-          setRevealedPositions(prev => [...prev, position]);
+          setRevealedPositions(prev => {
+            // Evitar duplicados verificando si ya existe una posición con el mismo position number
+            if (prev.some(p => p.position === position.position)) {
+              return prev;
+            }
+            return [...prev, position];
+          });
           setCurrentStep(index + 1);
 
           // Si es la última posición, completar la animación
@@ -65,13 +75,13 @@ export const DrawAnimation: React.FC<DrawAnimationProps> = ({
             setTimeout(() => {
               setIsAnimating(false);
               // Notificar que el sorteo se completó para mostrar modal de celebración
-              onDrawComplete?.();
+              onDrawCompleteRef.current?.();
             }, 1000); // Pequeño delay antes de mostrar el modal
           }
         }, position.delay || 0);
       });
     },
-    [onDrawComplete]
+    [] // No dependencies needed since we use refs
   );
 
   // Conectar al WebSocket cuando se activa la animación (solo si useInternalWebSocket es true)
@@ -220,7 +230,7 @@ export const DrawAnimation: React.FC<DrawAnimationProps> = ({
           <div className="grid gap-3">
             {revealedPositions.map((position, index) => (
               <Card
-                key={position.userId}
+                key={position.position}
                 className={`transition-all duration-500 transform ${
                   index === revealedPositions.length - 1 ? 'scale-105 shadow-lg' : ''
                 }`}

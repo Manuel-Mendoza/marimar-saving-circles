@@ -1100,6 +1100,7 @@ adminRoute.get("/deliveries-dashboard", authenticate, async (c) => {
     const [
       totalDeliveriesResult,
       pendingDeliveriesResult,
+      inRouteDeliveriesResult,
       completedDeliveriesResult,
       monthlyDeliveriesResult,
       deliveriesByStatusResult,
@@ -1177,8 +1178,8 @@ adminRoute.get("/deliveries-dashboard", authenticate, async (c) => {
           },
         })
         .from(deliveries)
-        .innerJoin(users, eq(deliveries.userId, users.id))
-        .innerJoin(groups, eq(deliveries.groupId, groups.id))
+        .leftJoin(users, eq(deliveries.userId, users.id))
+        .leftJoin(groups, eq(deliveries.groupId, groups.id))
         .orderBy(desc(deliveries.fechaEntrega))
         .limit(10),
 

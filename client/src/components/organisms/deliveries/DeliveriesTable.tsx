@@ -9,7 +9,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import StatusBadge from '@/components/atoms/StatusBadge';
-import { MapPin, Package, Calendar, User, Settings, CheckCircle } from 'lucide-react';
+import { MapPin, Package, Calendar, Settings, CheckCircle } from 'lucide-react';
 
 interface DeliveryFromAPI {
   id: number;
@@ -19,8 +19,8 @@ interface DeliveryFromAPI {
   mesEntrega: string;
   estado: string;
   direccion?: string;
-  user: { nombre: string; apellido: string };
-  group: { nombre: string };
+  user: { nombre: string; apellido: string } | null;
+  group: { nombre: string } | null;
 }
 
 interface DeliveriesTableProps {
@@ -85,21 +85,12 @@ const DeliveriesTable: React.FC<DeliveriesTableProps> = ({
           <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
             <Package className="h-4 w-4 text-blue-600" />
           </div>
-          <div>
-            <div className="font-medium">{delivery.productName}</div>
-            <div className="text-sm text-gray-500">{delivery.productValue}</div>
-          </div>
+          <div className="font-medium">{delivery.productName}</div>
         </div>
       </TableCell>
       <TableCell>
-        <div>
-          <div className="font-medium">
-            {delivery.user?.nombre} {delivery.user?.apellido}
-          </div>
-          <div className="text-sm text-gray-500 flex items-center">
-            <User className="h-3 w-3 mr-1" />
-            Usuario
-          </div>
+        <div className="font-medium">
+          {delivery.user?.nombre} {delivery.user?.apellido}
         </div>
       </TableCell>
       <TableCell>

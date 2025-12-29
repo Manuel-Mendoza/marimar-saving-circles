@@ -109,6 +109,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ user, onLogout }) => 
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   user={user as any}
                   onNavigate={handleNavigate}
+                  onJoinGroup={() => handleNavigate('groups')}
                   showSidebar={false}
                 />
               )
