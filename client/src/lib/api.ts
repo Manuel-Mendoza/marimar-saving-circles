@@ -319,6 +319,21 @@ class ApiClient {
   }
 
   // Payment Requests
+  async uploadReceipt(file: File) {
+    const formData = new FormData();
+    formData.append('receipt', file);
+
+    return this.request<{
+      url: string;
+    }>('/payment-requests/upload-receipt', {
+      method: 'POST',
+      body: formData,
+      headers: {
+        // No incluir Content-Type para que el navegador lo setee automáticamente con boundary
+      },
+    });
+  }
+
   async createPaymentRequest(data: {
     groupId: number;
     periodo: string;

@@ -20,6 +20,167 @@ interface JWTPayload {
 
 const paymentRequestsRoute = new Hono();
 
+// Get all payment requests - Admin only
+paymentRequestsRoute.get("/", authenticate, async (c) => {
+  try {
+    const userPayload = c.get("user") as JWTPayload;
+
+    // Check if user is admin
+    if (userPayload.tipo !== "ADMINISTRADOR") {
+      return c.json(
+        {
+          success: false,
+          message: "Acceso no autorizado",
+        },
+        403,
+      );
+    }
+
+    // Fetch all payment requests with user and group information
+    const requests = await db
+      .select({
+        id: paymentRequests.id,
+        userId: paymentRequests.userId,
+        groupId: paymentRequests.groupId,
+        periodo: paymentRequests.periodo,
+        monto: paymentRequests.monto,
+        moneda: paymentRequests.moneda,
+        metodoPago: paymentRequests.metodoPago,
+        referenciaPago: paymentRequests.referenciaPago,
+        comprobantePago: paymentRequests.comprobantePago,
+        requiereComprobante: paymentRequests.requiereComprobante,
+        estado: paymentRequests.estado,
+        fechaSolicitud: paymentRequests.fechaSolicitud,
+        fechaAprobacion: paymentRequests.fechaAprobacion,
+        aprobadoPor: paymentRequests.aprobadoPor,
+        notasAdmin: paymentRequests.notasAdmin,
+        user: {
+          id: users.id,
+          nombre: users.nombre,
+          apellido: users.apellido,
+          correoElectronico: users.correoElectronico,
+        },
+        group: {
+          id: groups.id,
+          nombre: groups.nombre,
+        },
+      })
+      .from(paymentRequests)
+      .leftJoin(users, eq(paymentRequests.userId, users.id))
+      .leftJoin(groups, eq(paymentRequests.groupId, groups.id))
+      .orderBy(desc(paymentRequests.fechaSolicitud));
+
+    return c.json({
+      success: true,
+      message: "Solicitudes de pago obtenidas exitosamente",
+      data: {
+        requests,
+      },
+    });
+  } catch (error) {
+    console.error("Error obteniendo solicitudes de pago:", error);
+    return c.json(
+      {
+        success: false,
+        message: "Error interno del servidor",
+      },
+      500,
+    );
+  }
+});
+
+// Upload image to ImgBB
+async function uploadToImgBB(imageBuffer: ArrayBuffer, filename: string): Promise<string> {
+  const IMGBB_API_KEY = process.env.IMGBB_API_KEY;
+
+  if (!IMGBB_API_KEY) {
+    throw new Error("ImgBB API key not configured");
+  }
+
+  const formData = new FormData();
+  formData.append('image', new Blob([imageBuffer]), filename);
+
+  const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error(`ImgBB upload failed: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+
+  if (!data.success) {
+    throw new Error(`ImgBB upload error: ${data.error?.message || 'Unknown error'}`);
+  }
+
+  return data.data.url;
+}
+
+// Upload receipt image - Authenticated users
+paymentRequestsRoute.post("/upload-receipt", authenticate, async (c) => {
+  try {
+    const formData = await c.req.formData();
+    const file = formData.get('receipt') as File;
+
+    if (!file) {
+      return c.json(
+        {
+          success: false,
+          message: "No se encontró el archivo",
+        },
+        400,
+      );
+    }
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      return c.json(
+        {
+          success: false,
+          message: "Solo se permiten archivos de imagen",
+        },
+        400,
+      );
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      return c.json(
+        {
+          success: false,
+          message: "El archivo no debe superar 5MB",
+        },
+        400,
+      );
+    }
+
+    // Convert file to buffer for upload
+    const arrayBuffer = await file.arrayBuffer();
+
+    // Upload to ImgBB
+    const imageUrl = await uploadToImgBB(arrayBuffer, file.name);
+
+    return c.json({
+      success: true,
+      message: "Imagen subida exitosamente",
+      data: {
+        url: imageUrl,
+      },
+    });
+  } catch (error) {
+    console.error("Error subiendo imagen:", error);
+    return c.json(
+      {
+        success: false,
+        message: error instanceof Error ? error.message : "Error interno del servidor",
+      },
+      500,
+    );
+  }
+});
+
 // Create payment request - Authenticated users
 paymentRequestsRoute.post("/", authenticate, async (c) => {
   try {
@@ -95,8 +256,7 @@ paymentRequestsRoute.post("/", authenticate, async (c) => {
       return c.json(
         {
           success: false,
-          message:
-            "Ya tienes una solicitud pendiente o confirmada para este período",
+          message: "Ya tienes una solicitud pendiente o confirmada para este período",
         },
         400,
       );
@@ -140,297 +300,6 @@ paymentRequestsRoute.post("/", authenticate, async (c) => {
     });
   } catch (error) {
     console.error("Error creando solicitud de pago:", error);
-    return c.json(
-      {
-        success: false,
-        message: "Error interno del servidor",
-      },
-      500,
-    );
-  }
-});
-
-// Get user's payment requests - Authenticated users
-paymentRequestsRoute.get("/my-requests", authenticate, async (c) => {
-  try {
-    const userPayload = c.get("user") as JWTPayload;
-
-    const requests = await db
-      .select({
-        id: paymentRequests.id,
-        groupId: paymentRequests.groupId,
-        periodo: paymentRequests.periodo,
-        monto: paymentRequests.monto,
-        moneda: paymentRequests.moneda,
-        metodoPago: paymentRequests.metodoPago,
-        referenciaPago: paymentRequests.referenciaPago,
-        comprobantePago: paymentRequests.comprobantePago,
-        estado: paymentRequests.estado,
-        fechaSolicitud: paymentRequests.fechaSolicitud,
-        fechaAprobacion: paymentRequests.fechaAprobacion,
-        notasAdmin: paymentRequests.notasAdmin,
-        group: {
-          nombre: groups.nombre,
-          duracionMeses: groups.duracionMeses,
-        },
-      })
-      .from(paymentRequests)
-      .innerJoin(groups, eq(paymentRequests.groupId, groups.id))
-      .where(eq(paymentRequests.userId, userPayload.id))
-      .orderBy(desc(paymentRequests.fechaSolicitud));
-
-    return c.json({
-      success: true,
-      data: {
-        requests,
-      },
-    });
-  } catch (error) {
-    console.error("Error obteniendo solicitudes de pago:", error);
-    return c.json(
-      {
-        success: false,
-        message: "Error interno del servidor",
-      },
-      500,
-    );
-  }
-});
-
-// Get all payment requests - Admin only
-paymentRequestsRoute.get("/", authenticate, async (c) => {
-  try {
-    const userPayload = c.get("user") as JWTPayload;
-
-    if (userPayload.tipo !== "ADMINISTRADOR") {
-      return c.json(
-        {
-          success: false,
-          message: "Acceso denegado",
-        },
-        403,
-      );
-    }
-
-    const requests = await db
-      .select({
-        id: paymentRequests.id,
-        periodo: paymentRequests.periodo,
-        monto: paymentRequests.monto,
-        moneda: paymentRequests.moneda,
-        metodoPago: paymentRequests.metodoPago,
-        referenciaPago: paymentRequests.referenciaPago,
-        comprobantePago: paymentRequests.comprobantePago,
-        estado: paymentRequests.estado,
-        fechaSolicitud: paymentRequests.fechaSolicitud,
-        fechaAprobacion: paymentRequests.fechaAprobacion,
-        notasAdmin: paymentRequests.notasAdmin,
-        user: {
-          id: users.id,
-          nombre: users.nombre,
-          apellido: users.apellido,
-          correoElectronico: users.correoElectronico,
-        },
-        group: {
-          id: groups.id,
-          nombre: groups.nombre,
-        },
-      })
-      .from(paymentRequests)
-      .innerJoin(users, eq(paymentRequests.userId, users.id))
-      .innerJoin(groups, eq(paymentRequests.groupId, groups.id))
-      .orderBy(desc(paymentRequests.fechaSolicitud));
-
-    return c.json({
-      success: true,
-      data: {
-        requests,
-      },
-    });
-  } catch (error) {
-    console.error("Error obteniendo todas las solicitudes:", error);
-    return c.json(
-      {
-        success: false,
-        message: "Error interno del servidor",
-      },
-      500,
-    );
-  }
-});
-
-// Approve payment request - Admin only
-paymentRequestsRoute.put("/:id/approve", authenticate, async (c) => {
-  try {
-    const userPayload = c.get("user") as JWTPayload;
-    const requestId = parseInt(c.req.param("id"));
-
-    if (userPayload.tipo !== "ADMINISTRADOR") {
-      return c.json(
-        {
-          success: false,
-          message: "Acceso denegado",
-        },
-        403,
-      );
-    }
-
-    const body = await c.req.json();
-    const { notasAdmin } = body;
-
-    // Get the payment request
-    const [request] = await db
-      .select()
-      .from(paymentRequests)
-      .where(eq(paymentRequests.id, requestId))
-      .limit(1);
-
-    if (!request) {
-      return c.json(
-        {
-          success: false,
-          message: "Solicitud no encontrada",
-        },
-        404,
-      );
-    }
-
-    if (request.estado !== "PENDIENTE") {
-      return c.json(
-        {
-          success: false,
-          message: "Esta solicitud ya fue procesada",
-        },
-        400,
-      );
-    }
-
-    // Update payment request
-    const updatedRequest = await db
-      .update(paymentRequests)
-      .set({
-        estado: "CONFIRMADO",
-        fechaAprobacion: new Date(),
-        aprobadoPor: userPayload.id,
-        notasAdmin: notasAdmin || null,
-      })
-      .where(eq(paymentRequests.id, requestId))
-      .returning();
-
-    // Update the existing contribution record to CONFIRMADO
-    await db
-      .update(contributions)
-      .set({
-        estado: "CONFIRMADO",
-        fechaPago: new Date(),
-        metodoPago: request.metodoPago,
-        referenciaPago: request.referenciaPago,
-      })
-      .where(
-        and(
-          eq(contributions.userId, request.userId),
-          eq(contributions.groupId, request.groupId),
-          eq(contributions.periodo, request.periodo),
-          eq(contributions.estado, "PENDIENTE"),
-        ),
-      );
-
-    return c.json({
-      success: true,
-      message: "Solicitud de pago aprobada exitosamente",
-      data: {
-        request: updatedRequest[0],
-      },
-    });
-  } catch (error) {
-    console.error("Error aprobando solicitud:", error);
-    return c.json(
-      {
-        success: false,
-        message: "Error interno del servidor",
-      },
-      500,
-    );
-  }
-});
-
-// Reject payment request - Admin only
-paymentRequestsRoute.put("/:id/reject", authenticate, async (c) => {
-  try {
-    const userPayload = c.get("user") as JWTPayload;
-    const requestId = parseInt(c.req.param("id"));
-
-    if (userPayload.tipo !== "ADMINISTRADOR") {
-      return c.json(
-        {
-          success: false,
-          message: "Acceso denegado",
-        },
-        403,
-      );
-    }
-
-    const body = await c.req.json();
-    const { notasAdmin } = body;
-
-    if (!notasAdmin || notasAdmin.trim().length === 0) {
-      return c.json(
-        {
-          success: false,
-          message: "Se requiere una razón para rechazar la solicitud",
-        },
-        400,
-      );
-    }
-
-    // Get the payment request
-    const [request] = await db
-      .select()
-      .from(paymentRequests)
-      .where(eq(paymentRequests.id, requestId))
-      .limit(1);
-
-    if (!request) {
-      return c.json(
-        {
-          success: false,
-          message: "Solicitud no encontrada",
-        },
-        404,
-      );
-    }
-
-    if (request.estado !== "PENDIENTE") {
-      return c.json(
-        {
-          success: false,
-          message: "Esta solicitud ya fue procesada",
-        },
-        400,
-      );
-    }
-
-    // Update payment request
-    const updatedRequest = await db
-      .update(paymentRequests)
-      .set({
-        estado: "RECHAZADO",
-        fechaAprobacion: new Date(),
-        aprobadoPor: userPayload.id,
-        notasAdmin,
-      })
-      .where(eq(paymentRequests.id, requestId))
-      .returning();
-
-    return c.json({
-      success: true,
-      message: "Solicitud de pago rechazada",
-      data: {
-        request: updatedRequest[0],
-      },
-    });
-  } catch (error) {
-    console.error("Error rechazando solicitud:", error);
     return c.json(
       {
         success: false,

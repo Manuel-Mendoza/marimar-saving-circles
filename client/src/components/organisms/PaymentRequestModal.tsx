@@ -183,17 +183,27 @@ export const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
     try {
       setLoading(true);
 
-      // Prepare form data for file upload if needed
+      // Upload receipt image if provided
       let comprobanteUrl = '';
 
       if (formData.comprobantePago) {
-        // In a real implementation, you would upload the file to a server
-        // For now, we'll create a data URL
-        comprobanteUrl = await new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.readAsDataURL(formData.comprobantePago);
+        toast({
+          title: 'Subiendo comprobante',
+          description: 'Subiendo imagen del comprobante de pago...',
         });
+
+        const uploadResponse = await api.uploadReceipt(formData.comprobantePago);
+
+        if (!uploadResponse.success) {
+          toast({
+            title: 'Error al subir imagen',
+            description: uploadResponse.message || 'No se pudo subir el comprobante',
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        comprobanteUrl = uploadResponse.data!.url;
       }
 
       // Submit payment request

@@ -144,59 +144,79 @@ adminRoute.get("/dashboard-charts", authenticate, async (c) => {
 
     // Get data for the last 12 months
     const now = new Date();
-    const revenueData = [];
-    const userGroupData = [];
+    const revenueData: Array<{ mes: string; ingresos: number }> = [];
+    const userGroupData: Array<{ mes: string; usuarios: number; grupos: number }> = [];
 
+    // Prepare all queries for parallel execution
+    const queries = [];
     for (let i = 11; i >= 0; i--) {
       const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59);
-
       const monthName = monthStart.toLocaleDateString('es-ES', { month: 'short' });
 
-      // Revenue for this month
-      const [revenueResult] = await db.select({
-        total: sum(paymentRequests.monto)
+      queries.push({
+        monthName,
+        revenueQuery: db.select({
+          total: sum(paymentRequests.monto)
+        })
+          .from(paymentRequests)
+          .where(
+            and(
+              eq(paymentRequests.estado, "CONFIRMADO"),
+              gte(paymentRequests.fechaAprobacion, monthStart),
+              lte(paymentRequests.fechaAprobacion, monthEnd)
+            )
+          ),
+        usersQuery: db.select({ count: count() })
+          .from(users)
+          .where(
+            and(
+              gte(users.fechaRegistro, monthStart),
+              lte(users.fechaRegistro, monthEnd)
+            )
+          ),
+        groupsQuery: db.select({ count: count() })
+          .from(groups)
+          .where(
+            and(
+              gte(groups.fechaInicio, monthStart),
+              lte(groups.fechaInicio, monthEnd)
+            )
+          ),
+      });
+    }
+
+    // Execute all queries in parallel
+    const results = await Promise.all(
+      queries.map(async (query) => {
+        const [revenueResult, usersResult, groupsResult] = await Promise.all([
+          query.revenueQuery,
+          query.usersQuery,
+          query.groupsQuery,
+        ]);
+
+        return {
+          monthName: query.monthName,
+          revenue: Number(revenueResult[0]?.total || 0),
+          users: usersResult[0]?.count || 0,
+          groups: groupsResult[0]?.count || 0,
+        };
       })
-        .from(paymentRequests)
-        .where(
-          and(
-            eq(paymentRequests.estado, "CONFIRMADO"),
-            gte(paymentRequests.fechaAprobacion, monthStart),
-            lte(paymentRequests.fechaAprobacion, monthEnd)
-          )
-        );
+    );
 
-      // New users for this month
-      const [usersResult] = await db.select({ count: count() })
-        .from(users)
-        .where(
-          and(
-            gte(users.fechaRegistro, monthStart),
-            lte(users.fechaRegistro, monthEnd)
-          )
-        );
-
-      // New groups for this month
-      const [groupsResult] = await db.select({ count: count() })
-        .from(groups)
-        .where(
-          and(
-            gte(groups.fechaInicio, monthStart),
-            lte(groups.fechaInicio, monthEnd)
-          )
-        );
-
+    // Build response data
+    results.forEach((result) => {
       revenueData.push({
-        mes: monthName,
-        ingresos: Number(revenueResult?.total || 0),
+        mes: result.monthName,
+        ingresos: result.revenue,
       });
 
       userGroupData.push({
-        mes: monthName,
-        usuarios: usersResult?.count || 0,
-        grupos: groupsResult?.count || 0,
+        mes: result.monthName,
+        usuarios: result.users,
+        grupos: result.groups,
       });
-    }
+    });
 
     return c.json({
       success: true,

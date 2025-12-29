@@ -26,10 +26,12 @@ export const useAdminDashboardCharts = () => {
     try {
       setLoading(true);
       setError(null);
+      console.log('Fetching chart data...');
 
       const response = await api.getAdminDashboardCharts();
 
       if (response.success && response.data) {
+        console.log('Chart data received:', response.data);
         setRevenueData(response.data.revenueData);
         setUserGroupData(response.data.userGroupData);
       } else {
