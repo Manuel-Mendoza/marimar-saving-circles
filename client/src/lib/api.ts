@@ -572,6 +572,15 @@ class ApiClient {
     });
   }
 
+  async updateDeliveryStatus(deliveryId: number, estado: 'PENDIENTE' | 'EN_RUTA' | 'ENTREGADO', notas?: string) {
+    return this.request<{
+      delivery: Delivery;
+    }>(`/admin/deliveries/${deliveryId}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ estado, notas }),
+    });
+  }
+
   async autoAdvanceMonth() {
     return this.request<{
       processedGroups: number;

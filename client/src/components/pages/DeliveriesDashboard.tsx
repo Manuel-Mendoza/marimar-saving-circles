@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/atoms';
-import { Package, Clock, CheckCircle, Truck, MapPin, Users, Calendar } from 'lucide-react';
+import { Package, Clock, CheckCircle, Truck, MapPin, Users, Calendar, Play } from 'lucide-react';
 import api from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 
@@ -98,10 +98,37 @@ export const DeliveriesDashboard: React.FC = () => {
     }
   };
 
+  // Handle status change to "EN RUTA"
+  const handleStartDelivery = async (deliveryId: number) => {
+    try {
+      const response = await api.updateDeliveryStatus(deliveryId, 'EN_RUTA', 'Entrega iniciada desde dashboard');
+
+      if (response.success) {
+        toast({
+          title: '¡Éxito!',
+          description: 'Entrega iniciada exitosamente',
+        });
+
+        // Reload data
+        await loadDashboardData();
+      } else {
+        throw new Error(response.message || 'Error al iniciar entrega');
+      }
+    } catch (error) {
+      console.error('Error starting delivery:', error);
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Error interno del servidor',
+        variant: 'destructive',
+      });
+    }
+  };
+
   // Get status badge for deliveries
-  const getDeliveryStatusBadge = (estado: string) => {
+  const getDeliveryStatusBadge = (id: number, estado: string) => {
     const statusConfig = {
       'PENDIENTE': { label: 'Pendiente', variant: 'secondary' as const, icon: Clock, color: 'text-yellow-600' },
+      'EN_RUTA': { label: 'En Ruta', variant: 'outline' as const, icon: Truck, color: 'text-blue-600' },
       'ENTREGADO': { label: 'Entregado', variant: 'default' as const, icon: CheckCircle, color: 'text-green-600' },
     };
 
@@ -111,10 +138,12 @@ export const DeliveriesDashboard: React.FC = () => {
     return (
       <Badge variant={config.variant} className="flex items-center gap-1">
         <IconComponent className="h-3 w-3" />
-        {config.label}
+        <span>{config.label}</span>
       </Badge>
     );
   };
+
+
 
   if (loading) {
     return (
@@ -180,23 +209,44 @@ export const DeliveriesDashboard: React.FC = () => {
                 <div key={delivery.id} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded text-xs">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1 mb-1">
-                      {getDeliveryStatusBadge(delivery.estado)}
-                      {delivery.direccion && <MapPin className="h-3 w-3 text-gray-400" />}
+                      {getDeliveryStatusBadge(delivery.id, delivery.estado)}
+                      {delivery.direccion && (
+                        <MapPin className="h-3 w-3 text-gray-400" />
+                      )}
                     </div>
                     <div className="font-medium truncate text-xs">{delivery.productName}</div>
                     <div className="text-muted-foreground truncate text-xs">
                       {delivery.user.nombre} • {delivery.group.nombre}
                     </div>
+                    {delivery.direccion && (
+                      <div className="text-muted-foreground truncate text-xs flex items-center gap-1">
+                        <MapPin className="h-3 w-3" />
+                        {delivery.direccion}
+                      </div>
+                    )}
                   </div>
-                  {delivery.estado === 'PENDIENTE' && (
-                    <Button
-                      size="sm"
-                      onClick={() => handleCompleteDelivery(delivery.id)}
-                      className="h-6 px-2 text-xs"
-                    >
-                      ✓
-                    </Button>
-                  )}
+                  <div className="flex gap-1">
+                    {delivery.estado === 'PENDIENTE' && (
+                      <Button
+                        size="sm"
+                        onClick={() => handleStartDelivery(delivery.id)}
+                        className="h-6 px-2 text-xs"
+                        title="Iniciar entrega"
+                      >
+                        <Play className="h-3 w-3" />
+                      </Button>
+                    )}
+                    {(delivery.estado === 'PENDIENTE' || delivery.estado === 'EN_RUTA') && (
+                      <Button
+                        size="sm"
+                        onClick={() => handleCompleteDelivery(delivery.id)}
+                        className="h-6 px-2 text-xs"
+                        title="Marcar como entregado"
+                      >
+                        ✓
+                      </Button>
+                    )}
+                  </div>
                 </div>
               ))
             ) : (
@@ -218,7 +268,7 @@ export const DeliveriesDashboard: React.FC = () => {
             <div className="grid grid-cols-2 gap-2">
               {Object.entries(data.deliveriesByStatus).map(([estado, count]) => (
                 <div key={estado} className="text-center p-2 bg-gray-50 dark:bg-gray-800 rounded">
-                  <div className="font-bold text-sm">{count}</div>
+                  <div className="font-bold text-sm">{Number(count) || 0}</div>
                   <div className="text-xs text-muted-foreground capitalize">
                     {estado.toLowerCase()}
                   </div>

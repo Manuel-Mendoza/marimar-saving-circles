@@ -615,6 +615,115 @@ adminRoute.put("/deliveries/:id/complete", authenticate, async (c) => {
   }
 });
 
+// Update delivery status - Admin only
+adminRoute.put("/deliveries/:id/status", authenticate, async (c) => {
+  try {
+    const userPayload = c.get("user") as JWTPayload;
+
+    if (userPayload.tipo !== "ADMINISTRADOR") {
+      return c.json(
+        {
+          success: false,
+          message: "Acceso denegado",
+        },
+        403,
+      );
+    }
+
+    const deliveryId = parseInt(c.req.param("id"));
+    const { estado, notas } = await c.req.json();
+
+    // Validate estado
+    if (!["PENDIENTE", "EN_RUTA", "ENTREGADO"].includes(estado)) {
+      return c.json(
+        {
+          success: false,
+          message: "Estado inválido. Debe ser PENDIENTE, EN_RUTA o ENTREGADO",
+        },
+        400,
+      );
+    }
+
+    const updatedDelivery = await db
+      .update(deliveries)
+      .set({
+        estado: estado,
+        notas: notas || `Estado cambiado a ${estado} por administrador`,
+      })
+      .where(eq(deliveries.id, deliveryId))
+      .returning();
+
+    if (updatedDelivery.length === 0) {
+      return c.json(
+        {
+          success: false,
+          message: "Entrega no encontrada",
+        },
+        404,
+      );
+    }
+
+    const delivery = updatedDelivery[0];
+    if (!delivery) {
+      return c.json(
+        {
+          success: false,
+          message: "Error obteniendo datos de la entrega",
+        },
+        500,
+      );
+    }
+
+    // Check if group should be completed when status changes to ENTREGADO
+    if (estado === "ENTREGADO") {
+      const allDeliveries = await db
+        .select()
+        .from(deliveries)
+        .where(eq(deliveries.groupId, delivery.groupId));
+
+      const [group] = await db
+        .select()
+        .from(groups)
+        .where(eq(groups.id, delivery.groupId))
+        .limit(1);
+
+      if (group && allDeliveries.filter(d => d.estado === "ENTREGADO").length >= group.duracionMeses) {
+        await db
+          .update(groups)
+          .set({
+            estado: "COMPLETADO",
+            fechaFinal: new Date(),
+          })
+          .where(eq(groups.id, delivery.groupId));
+
+        // Broadcast completion
+        broadcastToGroup(delivery.groupId, {
+          type: "GROUP_COMPLETED",
+          groupId: delivery.groupId,
+          completedAt: new Date(),
+        });
+      }
+    }
+
+    return c.json({
+      success: true,
+      message: `Estado de entrega cambiado a ${estado}`,
+      data: {
+        delivery,
+      },
+    });
+  } catch (error) {
+    console.error("Error actualizando estado de entrega:", error);
+    return c.json(
+      {
+        success: false,
+        message: "Error interno del servidor",
+      },
+      500,
+    );
+  }
+});
+
 // Auto-advance month for all eligible groups - Admin only (for cron jobs)
 adminRoute.post("/groups/auto-advance-month", authenticate, async (c) => {
   try {
@@ -945,6 +1054,9 @@ adminRoute.get("/deliveries-dashboard", authenticate, async (c) => {
       // Pending deliveries
       db.select({ count: count() }).from(deliveries).where(eq(deliveries.estado, "PENDIENTE")),
 
+      // In route deliveries
+      db.select({ count: count() }).from(deliveries).where(eq(deliveries.estado, "EN_RUTA")),
+
       // Completed deliveries
       db.select({ count: count() }).from(deliveries).where(eq(deliveries.estado, "ENTREGADO")),
 
@@ -958,13 +1070,16 @@ adminRoute.get("/deliveries-dashboard", authenticate, async (c) => {
           )
         ),
 
-      // Deliveries by status
-      db.select({
-        estado: deliveries.estado,
-        count: count(),
-      })
-        .from(deliveries)
-        .groupBy(deliveries.estado),
+      // Deliveries by status - separate queries for each status
+      Promise.all([
+        db.select({ count: count() }).from(deliveries).where(eq(deliveries.estado, "PENDIENTE")),
+        db.select({ count: count() }).from(deliveries).where(eq(deliveries.estado, "EN_RUTA")),
+        db.select({ count: count() }).from(deliveries).where(eq(deliveries.estado, "ENTREGADO")),
+      ]).then(([pending, inRoute, completed]) => ({
+        PENDIENTE: Number(pending[0]?.count) || 0,
+        EN_RUTA: Number(inRoute[0]?.count) || 0,
+        ENTREGADO: Number(completed[0]?.count) || 0,
+      })),
 
       // Recent deliveries (last 10)
       db.select({
@@ -1014,11 +1129,8 @@ adminRoute.get("/deliveries-dashboard", authenticate, async (c) => {
         : 0,
     };
 
-    // Transform deliveries by status for easier consumption
-    const deliveriesByStatus = deliveriesByStatusResult.reduce((acc, curr) => {
-      acc[curr.estado] = curr.count;
-      return acc;
-    }, {} as Record<string, number>);
+    // deliveriesByStatusResult is already the object we need
+    const deliveriesByStatus = deliveriesByStatusResult;
 
     return c.json({
       success: true,
