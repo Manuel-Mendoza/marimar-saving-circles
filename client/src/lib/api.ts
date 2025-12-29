@@ -407,6 +407,31 @@ class ApiClient {
       method: 'DELETE',
     });
   }
+
+  // Admin endpoints
+  async getAdminDashboardStats() {
+    return this.request<{
+      stats: {
+        totalUsers: number;
+        activeUsers: number;
+        pendingApprovals: number;
+        totalProducts: number;
+        activeProducts: number;
+        totalGroups: number;
+        activeGroups: number;
+        totalPayments: number;
+        pendingPayments: number;
+        monthlyRevenue: number;
+      };
+    }>('/admin/dashboard-stats');
+  }
+
+  async getAdminDashboardCharts() {
+    return this.request<{
+      revenueData: Array<{ mes: string; ingresos: number }>;
+      userGroupData: Array<{ mes: string; usuarios: number; grupos: number }>;
+    }>('/admin/dashboard-charts');
+  }
 }
 
 export const apiClient = new ApiClient(API_BASE_URL);

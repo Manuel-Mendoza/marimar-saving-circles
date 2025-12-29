@@ -5,6 +5,9 @@ import { NavigationSidebar } from '@/components/molecules';
 import { CurrencyDisplay, LoadingSpinner } from '@/components/atoms';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { Line, LineChart, Bar, BarChart, XAxis, YAxis } from 'recharts';
+import { useAdminRecentActivities } from '@/hooks/useAdminRecentActivities';
+import { useAdminDashboardStats } from '@/hooks/useAdminDashboardStats';
+import { useAdminDashboardCharts } from '@/hooks/useAdminDashboardCharts';
 import {
   Users,
   Package,
@@ -30,6 +33,11 @@ interface DashboardStats {
   pendingPayments: number;
   monthlyRevenue: number;
   recentActivity: ActivityItem[];
+  trends?: {
+    totalUsers: { value: number; label: string };
+    activeProducts: { value: number; label: string };
+    activeGroups: { value: number; label: string };
+  };
 }
 
 interface ActivityItem {
@@ -75,6 +83,15 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
+  // Hook para estadísticas del dashboard
+  const { stats: dashboardStats, loading: statsLoading } = useAdminDashboardStats();
+
+  // Hook para actividades recientes del admin
+  const { activities: recentActivities, loading: activitiesLoading } = useAdminRecentActivities();
+
+  // Hook para datos de gráficas
+  const { revenueData, userGroupData, loading: chartsLoading } = useAdminDashboardCharts();
+
   const handleSidebarNavigate = (itemId: string) => {
     onNavigate?.(itemId);
   };
@@ -91,9 +108,25 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     pendingPayments: 0,
     monthlyRevenue: 0,
     recentActivity: [],
+    trends: {
+      totalUsers: { value: 0, label: 'vs mes anterior' },
+      activeProducts: { value: 0, label: 'vs mes anterior' },
+      activeGroups: { value: 0, label: 'vs mes anterior' },
+    },
   };
 
   const currentStats = stats || defaultStats;
+
+  // Usar estadísticas del hook si están disponibles, sino usar props
+  const effectiveStats = statsLoading ? currentStats : {
+    ...currentStats,
+    ...dashboardStats,
+  };
+
+  // Combinar actividades del prop stats con las del hook
+  const displayActivities = currentStats.recentActivity.length > 0
+    ? currentStats.recentActivity
+    : recentActivities;
 
   const StatCard: React.FC<{
     title: string;
@@ -195,57 +228,36 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Total Usuarios"
-          value={currentStats.totalUsers}
+          value={effectiveStats.totalUsers}
           icon={Users}
-          trend={{ value: 12, label: 'vs mes anterior' }}
+          trend={effectiveStats.trends?.totalUsers}
         />
         <StatCard
           title="Productos Activos"
-          value={currentStats.activeProducts}
+          value={effectiveStats.activeProducts}
           icon={Package}
-          trend={{ value: 8, label: 'vs mes anterior' }}
+          trend={effectiveStats.trends?.activeProducts}
         />
         <StatCard
           title="Grupos Activos"
-          value={currentStats.activeGroups}
+          value={effectiveStats.activeGroups}
           icon={BarChart3}
-          trend={{ value: 15, label: 'vs mes anterior' }}
-        />
-        <StatCard
-          title="Ingresos Mensuales"
-          value={<CurrencyDisplay amount={currentStats.monthlyRevenue} currency="USD" />}
-          icon={DollarSign}
-          variant="success"
-          trend={{ value: 23, label: 'vs mes anterior' }}
-        />
-      </div>
-
-      {/* Secondary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <StatCard
-          title="Aprobaciones Pendientes"
-          value={currentStats.pendingApprovals}
-          icon={AlertCircle}
-          variant={currentStats.pendingApprovals > 0 ? 'warning' : 'default'}
+          trend={effectiveStats.trends?.activeGroups}
         />
         <StatCard
           title="Pagos Pendientes"
-          value={currentStats.pendingPayments}
+          value={effectiveStats.pendingPayments}
           icon={Clock}
-          variant={currentStats.pendingPayments > 0 ? 'danger' : 'default'}
-        />
-        <StatCard
-          title="Total Pagos"
-          value={currentStats.totalPayments}
-          icon={CreditCard}
-          trend={{ value: 18, label: 'vs mes anterior' }}
+          variant={effectiveStats.pendingPayments > 0 ? 'warning' : 'default'}
         />
       </div>
+
+
 
       {/* Activity Feed and Right Column */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <ActivityFeed activities={currentStats.recentActivity} />
+          <ActivityFeed activities={displayActivities} />
         </div>
         <div className="space-y-4 row-span-2">
           {/* Quick Actions */}
@@ -311,7 +323,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 className="h-[240px]"
               >
                 <LineChart
-                  data={[
+                  data={revenueData.length > 0 ? revenueData : [
                     { mes: 'Ene', ingresos: 2500 },
                     { mes: 'Feb', ingresos: 2800 },
                     { mes: 'Mar', ingresos: 3200 },
@@ -380,7 +392,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 className="h-[240px]"
               >
                 <BarChart
-                  data={[
+                  data={userGroupData.length > 0 ? userGroupData : [
                     { mes: 'Ene', usuarios: 45, grupos: 22 },
                     { mes: 'Feb', usuarios: 52, grupos: 22 },
                     { mes: 'Mar', usuarios: 61, grupos: 22 },
@@ -464,7 +476,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
           onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
           onNavigate={handleSidebarNavigate}
           onLogout={onLogout}
-          notificationsCount={currentStats.pendingApprovals}
+          notificationsCount={effectiveStats.pendingApprovals}
         />
 
         <div className="flex-1 flex flex-col">

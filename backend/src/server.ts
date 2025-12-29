@@ -12,6 +12,7 @@ import productRoutes from "./routes/products.js";
 import productSelectionsRoutes from "./routes/product-selections.js";
 import paymentRequestsRoutes from "./routes/payment-requests.js";
 import paymentOptionsRoutes from "./routes/payment-options.js";
+import adminRoutes from "./routes/admin.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { rateLimiter } from "./middleware/rateLimiter.js";
 
@@ -62,6 +63,7 @@ app.use("*", rateLimiter);
 
 // Routes
 app.route("/api/auth", authRoutes);
+app.route("/api/admin", adminRoutes);
 app.route("/api/groups", groupRoutes);
 app.route("/api/users", userRoutes);
 app.route("/api/products", productRoutes);
