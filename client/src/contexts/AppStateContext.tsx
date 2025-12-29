@@ -1,83 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { apiClient } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
-
-// Local type definitions for coherence with analysis
-interface Grupo {
-  id: number;
-  nombre: string;
-  duracionMeses: number;
-  estado: 'SIN_COMPLETAR' | 'LLENO' | 'EN_MARCHA' | 'COMPLETADO';
-  fechaInicio?: Date;
-  fechaFinal?: Date;
-  turnoActual: number;
-}
-
-interface Producto {
-  id: number;
-  nombre: string;
-  precioUsd: number;
-  precioVes: number;
-  tiempoDuracion: number;
-  imagen?: string;
-  descripcion: string;
-  tags?: string[];
-  activo: boolean;
-}
-
-interface User {
-  id: number;
-  nombre: string;
-  apellido: string;
-  cedula: string;
-  telefono: string;
-  direccion: string;
-  correoElectronico: string;
-  tipo: 'USUARIO' | 'ADMINISTRADOR';
-  estado?: 'PENDIENTE' | 'APROBADO' | 'RECHAZADO' | 'SUSPENDIDO' | 'REACTIVADO';
-  imagenCedula?: string;
-  fechaRegistro: Date;
-  ultimoAcceso?: Date;
-  aprobadoPor?: number;
-  fechaAprobacion?: Date;
-}
-
-interface UserGroup {
-  id: number;
-  userId: number;
-  groupId: number;
-  posicion: number;
-  fechaUnion: Date;
-  productoSeleccionado?: string;
-  monedaPago?: string;
-  user?: User;
-  group?: Grupo;
-}
-
-interface Contribution {
-  id: number;
-  userId: number;
-  groupId: number;
-  monto: number;
-  moneda: 'USD' | 'VES';
-  fechaPago: Date;
-  periodo: string;
-  metodoPago?: string;
-  estado: 'PENDIENTE' | 'CONFIRMADO' | 'RECHAZADO';
-  referenciaPago?: string;
-}
-
-interface Delivery {
-  id: number;
-  userId: number;
-  groupId: number;
-  productName: string;
-  productValue: string;
-  fechaEntrega: Date;
-  mesEntrega: string;
-  estado: 'PENDIENTE' | 'ENTREGADO';
-  notas?: string;
-}
+import type { Grupo, Producto, User, UserGroup, Contribution, Delivery } from '@/lib/types';
 
 interface AppStateContextType {
   grupos: Grupo[];
@@ -147,11 +71,8 @@ export const AppStateProvider = ({ children }: AppStateProviderProps) => {
         await new Promise(resolve => setTimeout(resolve, 100));
 
         // Fetch user groups
-        console.log('Fetching user groups...');
         const userGroupsResponse = await apiClient.getMyGroups();
-        console.log('User groups response:', userGroupsResponse);
         if (isMounted && userGroupsResponse.success && userGroupsResponse.data?.userGroups) {
-          console.log('Setting user groups:', userGroupsResponse.data.userGroups);
           setUserGroups(userGroupsResponse.data.userGroups);
         }
 

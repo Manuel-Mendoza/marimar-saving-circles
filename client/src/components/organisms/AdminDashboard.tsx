@@ -81,7 +81,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   isLoading = false,
   showSidebar = true,
 }) => {
-  console.log('AdminDashboard re-rendering');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   // Hook para estadísticas del dashboard
