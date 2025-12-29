@@ -54,9 +54,22 @@ export const UserGroupDetailsModal: React.FC<UserGroupDetailsModalProps> = ({
 
       if (response.success) {
         // Filter contributions for this specific group
-        const groupContributions = response.data.contributions.filter(
+        let groupContributions = response.data.contributions.filter(
           (contribution: Contribution) => contribution.groupId === userGroup.groupId
         );
+
+        // Remove duplicate contributions for the same periodo, keeping CONFIRMADO over PENDIENTE
+        const uniqueContributions = new Map<string, Contribution>();
+        groupContributions.forEach(contribution => {
+          const key = `${contribution.userId}-${contribution.groupId}-${contribution.periodo}`;
+          const existing = uniqueContributions.get(key);
+
+          if (!existing || (existing.estado === 'PENDIENTE' && contribution.estado === 'CONFIRMADO')) {
+            uniqueContributions.set(key, contribution);
+          }
+        });
+
+        groupContributions = Array.from(uniqueContributions.values());
         setContributions(groupContributions);
       } else {
         toast({
@@ -156,7 +169,26 @@ export const UserGroupDetailsModal: React.FC<UserGroupDetailsModalProps> = ({
     return aNum - bNum;
   });
 
-  const nextPendingContribution = sortedContributions.find(c => c.estado === 'PENDIENTE');
+  // Find the earliest pending contribution that comes after any confirmed contributions
+  const confirmedMonths = new Set(
+    contributions
+      .filter(c => c.estado === 'CONFIRMADO')
+      .map(c => {
+        const match = c.periodo.match(/Mes (\d+)/);
+        return match ? parseInt(match[1]) : 0;
+      })
+  );
+
+  const nextPendingContribution = sortedContributions.find(c => {
+    if (c.estado !== 'PENDIENTE') return false;
+    const monthMatch = c.periodo.match(/Mes (\d+)/);
+    const monthNum = monthMatch ? parseInt(monthMatch[1]) : 0;
+    // Only consider it pending if all previous months are confirmed
+    for (let i = 1; i < monthNum; i++) {
+      if (!confirmedMonths.has(i)) return false;
+    }
+    return true;
+  });
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

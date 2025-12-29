@@ -70,10 +70,14 @@ export const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
             mobile: mobileOption ? JSON.parse(mobileOption.detalles) as MobilePaymentData : undefined,
             bank: bankOption ? JSON.parse(bankOption.detalles) as BankPaymentData : undefined,
           });
-        }
 
-        // TODO: Load admin phone number - for now using a placeholder
-        setAdminPhone('+58 412-1234567');
+          // Use the mobile payment phone number for cash payments
+          const adminPhoneNumber = mobileOption ? (JSON.parse(mobileOption.detalles) as MobilePaymentData).numero : '+58 412-1234567';
+          setAdminPhone(adminPhoneNumber);
+        } else {
+          // Fallback if no payment options loaded
+          setAdminPhone('+58 412-1234567');
+        }
 
       } catch (error) {
         console.error('Error loading payment options:', error);
