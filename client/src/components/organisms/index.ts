@@ -15,6 +15,10 @@ export { default as PendingApproval } from './PendingApproval';
 export * from './users';
 export * from './products';
 export * from './groups';
+export * from './deliveries';
+
+// Estadísticas de entregas
+export { DeliveryStatsGrid } from './DeliveryStatsGrid';
 
 // Gestión de grupos para usuarios
 export { UserGroupsManagement } from './UserGroupsManagement';

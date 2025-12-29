@@ -52,15 +52,18 @@ export interface Delivery {
   userId: number;
   groupId: number;
   productName: string;
-  productValue: number;
+  productValue: string;
   fechaEntrega: string;
-  mesEntrega: number;
-  estado: 'PENDIENTE' | 'ENTREGADO';
+  mesEntrega: string;
+  estado: 'PENDIENTE' | 'EN_RUTA' | 'ENTREGADO';
   direccion?: string;
   notas?: string;
   user?: {
     nombre: string;
     apellido: string;
+  };
+  group?: {
+    nombre: string;
   };
 }
 

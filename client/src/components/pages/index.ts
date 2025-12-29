@@ -14,3 +14,4 @@ export { ProductsManagement } from './ProductsManagement.tsx';
 export { GroupsManagement } from './GroupsManagement.tsx';
 export { default as PaymentsManagement } from './PaymentsManagement.tsx';
 export { default as AdminSettings } from './AdminSettings.tsx';
+export { DeliveriesManagement } from './DeliveriesManagement.tsx';
