@@ -216,6 +216,7 @@ groupsRoute.get("/:id/admin", authenticate, async (c) => {
         fechaEntrega: deliveriesTable.fechaEntrega,
         mesEntrega: deliveriesTable.mesEntrega,
         estado: deliveriesTable.estado,
+        direccion: deliveriesTable.direccion,
         notas: deliveriesTable.notas,
         user: {
           nombre: users.nombre,

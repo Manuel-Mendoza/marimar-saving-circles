@@ -600,6 +600,24 @@ class ApiClient {
       method: 'POST',
     });
   }
+
+  async updateDeliveryAddress(deliveryId: number, direccion: string) {
+    return this.request<{
+      delivery: Delivery;
+    }>(`/users/me/deliveries/${deliveryId}/address`, {
+      method: 'PUT',
+      body: JSON.stringify({ direccion }),
+    });
+  }
+
+  async createCurrentUserDelivery(groupId: number) {
+    return this.request<{
+      delivery: Delivery;
+    }>(`/users/me/deliveries/create-current`, {
+      method: 'POST',
+      body: JSON.stringify({ groupId }),
+    });
+  }
 }
 
 export const apiClient = new ApiClient(API_BASE_URL);

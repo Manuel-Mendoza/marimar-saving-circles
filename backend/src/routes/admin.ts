@@ -417,6 +417,7 @@ adminRoute.post("/groups/:id/advance-month", authenticate, async (c) => {
         user: {
           nombre: users.nombre,
           apellido: users.apellido,
+          direccion: users.direccion, // Include user address
         },
       })
       .from(userGroups)
@@ -439,15 +440,31 @@ adminRoute.post("/groups/:id/advance-month", authenticate, async (c) => {
       );
     }
 
-    // Create delivery record
+    // Calculate monthly payment amount for this user
+    // Get the contribution amount for this user in this group
+    const userContribution = await db
+      .select({ monto: contributions.monto })
+      .from(contributions)
+      .where(
+        and(
+          eq(contributions.userId, currentTurnUser.userId),
+          eq(contributions.groupId, groupId)
+        )
+      )
+      .limit(1);
+
+    const monthlyPayment = userContribution[0]?.monto || 0;
+
+    // Create delivery record with correct logic
     await db.insert(deliveries).values({
       userId: currentTurnUser.userId,
       groupId: groupId,
       productName: currentTurnUser.productoSeleccionado || "Producto del grupo",
-      productValue: "Pendiente", // Will be updated when actual product is selected
-      mesEntrega: currentPeriod,
-      estado: "ENTREGADO",
-      notas: deliveryNotes || `Entrega automática - Mes ${currentTurn}`,
+      productValue: monthlyPayment.toString(), // Monthly payment amount
+      mesEntrega: `Mes ${currentTurn}`,
+      estado: "PENDIENTE", // Wait for admin confirmation
+      direccion: currentTurnUser.user.direccion || null, // User delivery address
+      notas: deliveryNotes || `Entrega del Mes ${currentTurn} - ${currentPeriod}`,
     });
 
     // Advance to next turn
@@ -666,6 +683,7 @@ adminRoute.post("/groups/auto-advance-month", authenticate, async (c) => {
             user: {
               nombre: users.nombre,
               apellido: users.apellido,
+              direccion: users.direccion, // Include user address
             },
           })
           .from(userGroups)
@@ -683,15 +701,30 @@ adminRoute.post("/groups/auto-advance-month", authenticate, async (c) => {
           continue;
         }
 
-        // Create delivery record
+        // Calculate monthly payment amount for this user
+        const userContribution = await db
+          .select({ monto: contributions.monto })
+          .from(contributions)
+          .where(
+            and(
+              eq(contributions.userId, currentTurnUser.userId),
+              eq(contributions.groupId, group.id)
+            )
+          )
+          .limit(1);
+
+        const monthlyPayment = userContribution[0]?.monto || 0;
+
+        // Create delivery record with correct logic
         await db.insert(deliveries).values({
           userId: currentTurnUser.userId,
           groupId: group.id,
           productName: currentTurnUser.productoSeleccionado || "Producto del grupo",
-          productValue: "Pendiente",
-          mesEntrega: currentPeriod,
-          estado: "ENTREGADO",
-          notas: `Entrega automática - Mes ${currentTurn}`,
+          productValue: monthlyPayment.toString(),
+          mesEntrega: `Mes ${currentTurn}`,
+          estado: "PENDIENTE",
+          direccion: currentTurnUser.user.direccion || null, // User delivery address
+          notas: `Entrega automática - Mes ${currentTurn} - ${currentPeriod}`,
         });
 
         // Advance to next turn
@@ -866,6 +899,140 @@ adminRoute.post("/groups/regenerate-contributions", authenticate, async (c) => {
     });
   } catch (error) {
     console.error("Error regenerando contribuciones:", error);
+    return c.json(
+      {
+        success: false,
+        message: "Error interno del servidor",
+      },
+      500,
+    );
+  }
+});
+
+});
+
+// Get deliveries dashboard data - Admin only
+adminRoute.get("/deliveries-dashboard", authenticate, async (c) => {
+  try {
+    const userPayload = c.get("user") as JWTPayload;
+
+    if (userPayload.tipo !== "ADMINISTRADOR") {
+      return c.json(
+        {
+          success: false,
+          message: "Acceso denegado",
+        },
+        403,
+      );
+    }
+
+    // Get current month dates for delivery statistics
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+
+    // Execute all delivery statistics queries in parallel for better performance
+    const [
+      totalDeliveriesResult,
+      pendingDeliveriesResult,
+      completedDeliveriesResult,
+      monthlyDeliveriesResult,
+      deliveriesByStatusResult,
+      recentDeliveriesResult,
+      deliveriesByGroupResult,
+    ] = await Promise.all([
+      // Total deliveries
+      db.select({ count: count() }).from(deliveries),
+
+      // Pending deliveries
+      db.select({ count: count() }).from(deliveries).where(eq(deliveries.estado, "PENDIENTE")),
+
+      // Completed deliveries
+      db.select({ count: count() }).from(deliveries).where(eq(deliveries.estado, "ENTREGADO")),
+
+      // Monthly deliveries (this month)
+      db.select({ count: count() })
+        .from(deliveries)
+        .where(
+          and(
+            gte(deliveries.fechaEntrega, startOfMonth),
+            lte(deliveries.fechaEntrega, endOfMonth)
+          )
+        ),
+
+      // Deliveries by status
+      db.select({
+        estado: deliveries.estado,
+        count: count(),
+      })
+        .from(deliveries)
+        .groupBy(deliveries.estado),
+
+      // Recent deliveries (last 10)
+      db.select({
+        id: deliveries.id,
+        productName: deliveries.productName,
+        productValue: deliveries.productValue,
+        fechaEntrega: deliveries.fechaEntrega,
+        mesEntrega: deliveries.mesEntrega,
+        estado: deliveries.estado,
+        direccion: deliveries.direccion,
+        user: {
+          nombre: users.nombre,
+          apellido: users.apellido,
+        },
+        group: {
+          nombre: groups.nombre,
+        },
+      })
+        .from(deliveries)
+        .innerJoin(users, eq(deliveries.userId, users.id))
+        .innerJoin(groups, eq(deliveries.groupId, groups.id))
+        .orderBy(desc(deliveries.fechaEntrega))
+        .limit(10),
+
+      // Deliveries by group (active groups)
+      db.select({
+        groupId: groups.id,
+        groupName: groups.nombre,
+        totalDeliveries: count(deliveries.id),
+        pendingDeliveries: sql<number>`count(case when ${deliveries.estado} = 'PENDIENTE' then 1 end)`,
+        completedDeliveries: sql<number>`count(case when ${deliveries.estado} = 'ENTREGADO' then 1 end)`,
+      })
+        .from(groups)
+        .leftJoin(deliveries, eq(groups.id, deliveries.groupId))
+        .where(eq(groups.estado, "EN_MARCHA"))
+        .groupBy(groups.id, groups.nombre)
+        .orderBy(desc(count(deliveries.id))),
+    ]);
+
+    const stats = {
+      totalDeliveries: totalDeliveriesResult[0]?.count || 0,
+      pendingDeliveries: pendingDeliveriesResult[0]?.count || 0,
+      completedDeliveries: completedDeliveriesResult[0]?.count || 0,
+      monthlyDeliveries: monthlyDeliveriesResult[0]?.count || 0,
+      completionRate: totalDeliveriesResult[0]?.count > 0
+        ? Math.round((completedDeliveriesResult[0]?.count || 0) / totalDeliveriesResult[0].count * 100)
+        : 0,
+    };
+
+    // Transform deliveries by status for easier consumption
+    const deliveriesByStatus = deliveriesByStatusResult.reduce((acc, curr) => {
+      acc[curr.estado] = curr.count;
+      return acc;
+    }, {} as Record<string, number>);
+
+    return c.json({
+      success: true,
+      data: {
+        stats,
+        deliveriesByStatus,
+        recentDeliveries: recentDeliveriesResult,
+        deliveriesByGroup: deliveriesByGroupResult,
+      },
+    });
+  } catch (error) {
+    console.error("Error obteniendo datos del dashboard de deliveries:", error);
     return c.json(
       {
         success: false,

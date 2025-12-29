@@ -38,23 +38,28 @@ export const UserGroupDetailsModal: React.FC<UserGroupDetailsModalProps> = ({
   user,
 }) => {
   const [contributions, setContributions] = useState<Contribution[]>([]);
+  const [deliveries, setDeliveries] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [showPaymentRequestModal, setShowPaymentRequestModal] = useState(false);
   const [selectedContribution, setSelectedContribution] = useState<Contribution | null>(null);
+  const [deliveryAddress, setDeliveryAddress] = useState('');
+  const [isSubmittingAddress, setIsSubmittingAddress] = useState(false);
+  const [isEditingAddress, setIsEditingAddress] = useState(false);
 
   const { toast } = useToast();
 
-  // Load contributions for this group
-  const loadContributions = async () => {
+  // Load contributions and deliveries for this group
+  const loadData = async () => {
     if (!userGroup) return;
 
     try {
       setLoading(true);
-      const response = await api.getMyContributions();
 
-      if (response.success) {
+      // Load contributions
+      const contributionsResponse = await api.getMyContributions();
+      if (contributionsResponse.success) {
         // Filter contributions for this specific group
-        let groupContributions = response.data.contributions.filter(
+        let groupContributions = contributionsResponse.data.contributions.filter(
           (contribution: Contribution) => contribution.groupId === userGroup.groupId
         );
 
@@ -71,15 +76,16 @@ export const UserGroupDetailsModal: React.FC<UserGroupDetailsModalProps> = ({
 
         groupContributions = Array.from(uniqueContributions.values());
         setContributions(groupContributions);
-      } else {
-        toast({
-          title: 'Error',
-          description: 'No se pudieron cargar las contribuciones',
-          variant: 'destructive',
-        });
       }
+
+      // Load deliveries
+      const deliveriesResponse = await api.getMyDeliveries();
+      if (deliveriesResponse.success) {
+        setDeliveries(deliveriesResponse.data.deliveries);
+      }
+
     } catch (error) {
-      console.error('Error loading contributions:', error);
+      console.error('Error loading data:', error);
       toast({
         title: 'Error',
         description: 'Error interno del servidor',
@@ -92,7 +98,7 @@ export const UserGroupDetailsModal: React.FC<UserGroupDetailsModalProps> = ({
 
   useEffect(() => {
     if (isOpen && userGroup) {
-      loadContributions();
+      loadData();
     }
   }, [isOpen, userGroup]);
 
@@ -105,7 +111,83 @@ export const UserGroupDetailsModal: React.FC<UserGroupDetailsModalProps> = ({
   // Handle payment request success
   const handlePaymentRequestSuccess = () => {
     // Reload contributions to show updated status
-    loadContributions();
+    loadData();
+  };
+
+  // Handle delivery address submission
+  const handleSubmitDeliveryAddress = async () => {
+    if (!userGroup) return;
+
+    try {
+      setIsSubmittingAddress(true);
+
+      console.log('🔍 Buscando delivery para grupo:', userGroup.groupId, 'usuario:', user.id);
+
+      // Find the user's current delivery for this group (pending or with address)
+      let currentDelivery = deliveries.find(
+        delivery => delivery.groupId === userGroup.groupId
+      );
+
+      console.log('🎯 Delivery encontrada:', currentDelivery);
+
+      // If no delivery exists, create one automatically
+      if (!currentDelivery) {
+        console.log('⚠️ No hay delivery, creando una automáticamente...');
+
+        // Create delivery automatically for the current user turn
+        const createResponse = await api.createCurrentUserDelivery(userGroup.groupId);
+
+        if (!createResponse.success) {
+          throw new Error(createResponse.message || 'Error al crear la entrega automáticamente.');
+        }
+
+        console.log('✅ Delivery creada automáticamente:', createResponse.data);
+
+        // Use the newly created delivery
+        currentDelivery = createResponse.data.delivery;
+
+        console.log('🎯 Nueva delivery encontrada:', currentDelivery);
+      }
+
+      if (!currentDelivery) {
+        throw new Error('No se pudo encontrar o crear la entrega.');
+      }
+
+      console.log('📤 Actualizando dirección para delivery ID:', currentDelivery.id);
+
+      // Update the delivery address
+      const response = await api.updateDeliveryAddress(currentDelivery.id, deliveryAddress);
+
+      if (response.success) {
+        toast({
+          title: '¡Éxito!',
+          description: isEditingAddress
+            ? 'Dirección de entrega actualizada exitosamente.'
+            : 'Dirección de entrega enviada exitosamente. Los administradores procesarán tu pedido.',
+        });
+
+        // Reload data and reset form
+        await loadData();
+        setDeliveryAddress('');
+        setIsEditingAddress(false);
+
+        // Close modal if it's not editing
+        if (!isEditingAddress) {
+          onClose();
+        }
+      } else {
+        throw new Error(response.message || 'Error al actualizar la dirección');
+      }
+    } catch (error) {
+      console.error('Error submitting delivery address:', error);
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Error interno del servidor',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmittingAddress(false);
+    }
   };
 
   // Format currency
@@ -235,6 +317,13 @@ export const UserGroupDetailsModal: React.FC<UserGroupDetailsModalProps> = ({
                     <span className="text-gray-600 dark:text-gray-400">Moneda:</span>
                     <span className="font-semibold">{userGroup.monedaPago}</span>
                   </div>
+                  {userGroup.group?.turnoActual && userGroup.group.estado === 'EN_MARCHA' && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Clock className="h-4 w-4 text-gray-500" />
+                      <span className="text-gray-600 dark:text-gray-400">Turno Actual:</span>
+                      <span className="font-semibold">{userGroup.group.turnoActual}</span>
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-sm">
@@ -257,6 +346,151 @@ export const UserGroupDetailsModal: React.FC<UserGroupDetailsModalProps> = ({
               </div>
             </CardContent>
           </Card>
+
+          {/* Delivery Status - Only show when it's the user's turn */}
+          {userGroup.group?.turnoActual === userGroup.posicion && userGroup.group.estado === 'EN_MARCHA' && (
+            <Card className="border-purple-200 dark:border-purple-800">
+              <CardHeader>
+                <CardTitle className="text-lg text-purple-700 dark:text-purple-300 flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5" />
+                  ¡Es tu turno para recibir el producto!
+                </CardTitle>
+                <CardDescription>
+                  Ingresa tu dirección de entrega para procesar tu pedido
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="bg-purple-50 dark:bg-purple-950 p-4 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center">
+                      <DollarSign className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-purple-900 dark:text-purple-100">
+                        {userGroup.productoSeleccionado}
+                      </h3>
+                      <p className="text-sm text-purple-700 dark:text-purple-300">
+                        Mes {userGroup.group.turnoActual} - Tu turno ha llegado
+                      </p>
+                    </div>
+                    <Badge variant="default" className="bg-purple-600">
+                      Procesando
+                    </Badge>
+                  </div>
+                </div>
+
+                {/* Address Input Form - Show different UI based on whether address exists */}
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Dirección de Entrega
+                    </label>
+                    {(() => {
+                      // Find existing delivery with address for this user/group
+                      const existingDeliveryWithAddress = deliveries.find(
+                        delivery =>
+                          delivery.groupId === userGroup.groupId &&
+                          delivery.direccion &&
+                          delivery.direccion.trim().length > 0
+                      );
+
+                      const hasAddress = !!existingDeliveryWithAddress;
+
+                      if (isEditingAddress || !hasAddress) {
+                        return (
+                          <textarea
+                            className="mt-1 w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white resize-none"
+                            rows={3}
+                            placeholder="Ingresa tu dirección completa para la entrega..."
+                            value={isEditingAddress && existingDeliveryWithAddress ? existingDeliveryWithAddress.direccion : deliveryAddress}
+                            onChange={(e) => setDeliveryAddress(e.target.value)}
+                          />
+                        );
+                      } else {
+                        return (
+                          <div className="mt-1 p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-md">
+                            <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                              {existingDeliveryWithAddress?.direccion}
+                            </p>
+                            <div className="flex gap-2 mt-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setIsEditingAddress(true);
+                                  setDeliveryAddress(existingDeliveryWithAddress?.direccion || '');
+                                }}
+                                className="text-xs"
+                              >
+                                Editar
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  if (confirm('¿Estás seguro de que quieres eliminar la dirección?')) {
+                                    // Clear the address
+                                    if (existingDeliveryWithAddress) {
+                                      api.updateDeliveryAddress(existingDeliveryWithAddress.id, '').then(response => {
+                                        if (response.success) {
+                                          loadData(); // Reload data
+                                          toast({
+                                            title: 'Dirección eliminada',
+                                            description: 'La dirección de entrega ha sido eliminada.',
+                                          });
+                                        }
+                                      });
+                                    }
+                                  }
+                                }}
+                                className="text-xs text-red-600 hover:text-red-700"
+                              >
+                                Eliminar
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      }
+                    })()}
+                  </div>
+                  <Button
+                    onClick={handleSubmitDeliveryAddress}
+                    disabled={!deliveryAddress.trim() || isSubmittingAddress}
+                    className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                  >
+                    {isSubmittingAddress ? 'Enviando...' : isEditingAddress ? 'Actualizar Dirección' : 'Enviar Dirección y Confirmar Entrega'}
+                  </Button>
+                  {isEditingAddress && (
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setIsEditingAddress(false);
+                        setDeliveryAddress('');
+                      }}
+                      className="w-full"
+                    >
+                      Cancelar Edición
+                    </Button>
+                  )}
+                </div>
+
+                <div className="text-sm text-gray-600 dark:text-gray-400 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    <span>Una vez enviada la dirección, los administradores procesarán tu entrega</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4" />
+                    <span>Recibirás confirmación cuando tu producto esté en camino</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4" />
+                    <span>Todos tus pagos han sido verificados</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Payment Summary */}
           <Card>

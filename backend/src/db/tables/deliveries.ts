@@ -16,6 +16,7 @@ export const deliveries = pgTable("deliveries", {
   fechaEntrega: timestamp("fecha_entrega").notNull().defaultNow(),
   mesEntrega: text("mes_entrega").notNull(), // Mes en que se entregó (ej: "2025-01")
   estado: text("estado").notNull().default("ENTREGADO"), // ENTREGADO, PENDIENTE
+  direccion: text("direccion"), // Dirección de entrega del usuario
   notas: text("notas"), // Notas adicionales sobre la entrega
 });
 

@@ -56,6 +56,7 @@ export interface Delivery {
   fechaEntrega: string;
   mesEntrega: number;
   estado: 'PENDIENTE' | 'ENTREGADO';
+  direccion?: string;
   notas?: string;
   user?: {
     nombre: string;

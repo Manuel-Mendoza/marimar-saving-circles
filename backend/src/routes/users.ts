@@ -845,6 +845,7 @@ usersRoute.get("/me/deliveries", authenticate, async (c) => {
         fechaEntrega: deliveries.fechaEntrega,
         mesEntrega: deliveries.mesEntrega,
         estado: deliveries.estado,
+        direccion: deliveries.direccion,
         notas: deliveries.notas,
       })
       .from(deliveries)
@@ -859,6 +860,264 @@ usersRoute.get("/me/deliveries", authenticate, async (c) => {
     });
   } catch (error) {
     console.error("Error obteniendo entregas del usuario:", error);
+    return c.json(
+      {
+        success: false,
+        message: "Error interno del servidor",
+      },
+      500,
+    );
+  }
+});
+
+// Update delivery address for user's current delivery
+usersRoute.put("/me/deliveries/:deliveryId/address", authenticate, async (c) => {
+  try {
+    const userPayload = c.get("user") as JWTPayload;
+    const deliveryId = parseInt(c.req.param("deliveryId"));
+    const { direccion } = await c.req.json();
+
+    if (!direccion || direccion.trim().length === 0) {
+      return c.json(
+        {
+          success: false,
+          message: "La dirección es requerida",
+        },
+        400,
+      );
+    }
+
+    // Verify the delivery belongs to the user and is in PENDIENTE state
+    const [delivery] = await db
+      .select()
+      .from(deliveries)
+      .where(
+        and(
+          eq(deliveries.id, deliveryId),
+          eq(deliveries.userId, userPayload.id),
+          eq(deliveries.estado, "PENDIENTE")
+        )
+      )
+      .limit(1);
+
+    if (!delivery) {
+      return c.json(
+        {
+          success: false,
+          message: "Entrega no encontrada o ya procesada",
+        },
+        404,
+      );
+    }
+
+    // Update the delivery address
+    const updatedDelivery = await db
+      .update(deliveries)
+      .set({
+        direccion: direccion.trim(),
+      })
+      .where(eq(deliveries.id, deliveryId))
+      .returning();
+
+    if (updatedDelivery.length === 0) {
+      return c.json(
+        {
+          success: false,
+          message: "Error al actualizar la dirección",
+        },
+        500,
+      );
+    }
+
+    return c.json({
+      success: true,
+      message: "Dirección de entrega actualizada exitosamente",
+      data: {
+        delivery: updatedDelivery[0],
+      },
+    });
+  } catch (error) {
+    console.error("Error actualizando dirección de entrega:", error);
+    return c.json(
+      {
+        success: false,
+        message: "Error interno del servidor",
+      },
+      500,
+    );
+  }
+});
+
+// Create delivery for current user turn (when it's their turn)
+usersRoute.post("/me/deliveries/create-current", authenticate, async (c) => {
+  try {
+    const userPayload = c.get("user") as JWTPayload;
+    const { groupId } = await c.req.json();
+
+    if (!groupId) {
+      return c.json(
+        {
+          success: false,
+          message: "ID del grupo es requerido",
+        },
+        400,
+      );
+    }
+
+    // Verify user is in this group and it's their turn
+    const [userGroup] = await db
+      .select({
+        posicion: userGroups.posicion,
+        productoSeleccionado: userGroups.productoSeleccionado,
+        group: {
+          turnoActual: groups.turnoActual,
+          estado: groups.estado,
+          duracionMeses: groups.duracionMeses,
+        },
+      })
+      .from(userGroups)
+      .innerJoin(groups, eq(userGroups.groupId, groups.id))
+      .where(
+        and(
+          eq(userGroups.userId, userPayload.id),
+          eq(userGroups.groupId, groupId)
+        )
+      )
+      .limit(1);
+
+    if (!userGroup) {
+      return c.json(
+        {
+          success: false,
+          message: "No perteneces a este grupo",
+        },
+        403,
+      );
+    }
+
+    if (!userGroup.group) {
+      return c.json(
+        {
+          success: false,
+          message: "Grupo no encontrado",
+        },
+        404,
+      );
+    }
+
+    // Check if it's the user's turn
+    if (userGroup.group.turnoActual !== userGroup.posicion) {
+      return c.json(
+        {
+          success: false,
+          message: "No es tu turno para recibir el producto",
+        },
+        403,
+      );
+    }
+
+    if (userGroup.group.estado !== "EN_MARCHA") {
+      return c.json(
+        {
+          success: false,
+          message: "El grupo no está activo",
+        },
+        400,
+      );
+    }
+
+    // Check if user already has a pending delivery for this group
+    const [existingDelivery] = await db
+      .select()
+      .from(deliveries)
+      .where(
+        and(
+          eq(deliveries.userId, userPayload.id),
+          eq(deliveries.groupId, groupId),
+          eq(deliveries.estado, "PENDIENTE")
+        )
+      )
+      .limit(1);
+
+    if (existingDelivery) {
+      return c.json(
+        {
+          success: false,
+          message: "Ya tienes una entrega pendiente para este grupo",
+        },
+        400,
+      );
+    }
+
+    // Get user details for delivery creation
+    const [userDetails] = await db
+      .select({
+        nombre: users.nombre,
+        apellido: users.apellido,
+        direccion: users.direccion,
+      })
+      .from(users)
+      .where(eq(users.id, userPayload.id))
+      .limit(1);
+
+    if (!userDetails) {
+      return c.json(
+        {
+          success: false,
+          message: "Usuario no encontrado",
+        },
+        404,
+      );
+    }
+
+    // Calculate monthly payment amount
+    const userContribution = await db
+      .select({ monto: contributions.monto })
+      .from(contributions)
+      .where(
+        and(
+          eq(contributions.userId, userPayload.id),
+          eq(contributions.groupId, groupId)
+        )
+      )
+      .limit(1);
+
+    const monthlyPayment = userContribution[0]?.monto || 0;
+
+    // Create delivery for current user turn
+    const newDelivery = await db
+      .insert(deliveries)
+      .values({
+        userId: userPayload.id,
+        groupId: groupId,
+        productName: userGroup.productoSeleccionado || "Producto del grupo",
+        productValue: monthlyPayment.toString(),
+        mesEntrega: `Mes ${userGroup.group.turnoActual}`,
+        estado: "PENDIENTE",
+        direccion: userDetails.direccion || null,
+        notas: `Entrega creada por usuario - Mes ${userGroup.group.turnoActual}`,
+      })
+      .returning();
+
+    if (newDelivery.length === 0) {
+      return c.json(
+        {
+          success: false,
+          message: "Error al crear la entrega",
+        },
+        500,
+      );
+    }
+
+    return c.json({
+      success: true,
+      message: "Entrega creada exitosamente",
+      data: {
+        delivery: newDelivery[0],
+      },
+    });
+  } catch (error) {
+    console.error("Error creando entrega para usuario:", error);
     return c.json(
       {
         success: false,
