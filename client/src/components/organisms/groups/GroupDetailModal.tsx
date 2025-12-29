@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
 import { GroupStatusBadge } from '@/components/atoms';
 import { GroupAdminDetails } from '@/lib/types';
 import { Users, DollarSign, Package, Calendar, User, CreditCard, BarChart3, X } from 'lucide-react';
@@ -216,7 +216,10 @@ export const GroupDetailModal: React.FC<GroupDetailModalProps> = ({
                           </p>
                         </div>
                         <button
-                          onClick={() => onAdvanceMonth({ id: group.id, nombre: group.nombre, estado: group.estado })}
+                          onClick={() => {
+                            console.log('🔘 Botón "Avanzar Mes" presionado - abriendo diálogo');
+                            setShowAdvanceConfirm(true);
+                          }}
                           disabled={actionLoading}
                           className="px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-purple-900 dark:text-purple-300 dark:hover:bg-purple-800 transition-colors"
                         >
@@ -457,6 +460,67 @@ export const GroupDetailModal: React.FC<GroupDetailModalProps> = ({
           </TabsContent>
         </Tabs>
       </DialogContent>
+
+      {/* Confirmation Dialog for Advance Month */}
+      <Dialog open={showAdvanceConfirm} onOpenChange={(open) => {
+        console.log('🔄 Confirmation Dialog onOpenChange:', open);
+        setShowAdvanceConfirm(open);
+      }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirmar Avance de Mes</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              ¿Estás seguro de que deseas avanzar al siguiente mes del grupo "{group.nombre}"?
+            </p>
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Esta acción:</p>
+              <div className="text-sm text-muted-foreground space-y-1 ml-4">
+                <div>• Verificará que todos los pagos estén confirmados</div>
+                <div>• Creará automáticamente una entrega para el usuario correspondiente</div>
+                <div>• Avanzará el turno del grupo al siguiente mes</div>
+                <div>• Completará el grupo si llega al último mes</div>
+              </div>
+            </div>
+            <p className="text-sm font-semibold text-red-600 dark:text-red-400">
+              Esta acción no se puede deshacer.
+            </p>
+          </div>
+          <div className="flex justify-end space-x-2 mt-6">
+            <Button
+              variant="outline"
+              disabled={actionLoading}
+              onClick={() => {
+                console.log('❌ Cancelar presionado');
+                setShowAdvanceConfirm(false);
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => {
+                console.log('🎯 Confirmar Avance presionado');
+                console.log('📤 onAdvanceMonth disponible:', !!onAdvanceMonth);
+                console.log('📊 group data:', { id: group.id, nombre: group.nombre, estado: group.estado });
+                console.log('🔄 Cerrando diálogo de confirmación...');
+                setShowAdvanceConfirm(false);
+                try {
+                  console.log('📞 Llamando onAdvanceMonth...');
+                  onAdvanceMonth?.({ id: group.id, nombre: group.nombre, estado: group.estado });
+                  console.log('✅ onAdvanceMonth llamado exitosamente');
+                } catch (error) {
+                  console.error('❌ Error llamando onAdvanceMonth:', error);
+                }
+              }}
+              disabled={actionLoading}
+              className="bg-purple-600 hover:bg-purple-700 text-white"
+            >
+              {actionLoading ? 'Avanzando...' : 'Confirmar Avance'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 };
