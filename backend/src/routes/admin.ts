@@ -909,8 +909,6 @@ adminRoute.post("/groups/regenerate-contributions", authenticate, async (c) => {
   }
 });
 
-});
-
 // Get deliveries dashboard data - Admin only
 adminRoute.get("/deliveries-dashboard", authenticate, async (c) => {
   try {
@@ -1011,8 +1009,8 @@ adminRoute.get("/deliveries-dashboard", authenticate, async (c) => {
       pendingDeliveries: pendingDeliveriesResult[0]?.count || 0,
       completedDeliveries: completedDeliveriesResult[0]?.count || 0,
       monthlyDeliveries: monthlyDeliveriesResult[0]?.count || 0,
-      completionRate: totalDeliveriesResult[0]?.count > 0
-        ? Math.round((completedDeliveriesResult[0]?.count || 0) / totalDeliveriesResult[0].count * 100)
+      completionRate: (totalDeliveriesResult[0]?.count || 0) > 0
+        ? Math.round(((completedDeliveriesResult[0]?.count || 0) / (totalDeliveriesResult[0]?.count || 1)) * 100)
         : 0,
     };
 

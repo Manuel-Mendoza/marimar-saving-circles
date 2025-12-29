@@ -618,6 +618,37 @@ class ApiClient {
       body: JSON.stringify({ groupId }),
     });
   }
+
+  async getDeliveriesDashboard() {
+    return this.request<{
+      stats: {
+        totalDeliveries: number;
+        pendingDeliveries: number;
+        completedDeliveries: number;
+        monthlyDeliveries: number;
+        completionRate: number;
+      };
+      deliveriesByStatus: Record<string, number>;
+      recentDeliveries: Array<{
+        id: number;
+        productName: string;
+        productValue: string;
+        fechaEntrega: string;
+        mesEntrega: string;
+        estado: string;
+        direccion?: string;
+        user: { nombre: string; apellido: string };
+        group: { nombre: string };
+      }>;
+      deliveriesByGroup: Array<{
+        groupId: number;
+        groupName: string;
+        totalDeliveries: number;
+        pendingDeliveries: number;
+        completedDeliveries: number;
+      }>;
+    }>('/admin/deliveries-dashboard');
+  }
 }
 
 export const apiClient = new ApiClient(API_BASE_URL);

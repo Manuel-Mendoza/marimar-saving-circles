@@ -17,6 +17,7 @@ import {
   Bell,
   User,
   Star,
+  Truck,
 } from 'lucide-react';
 
 interface NavigationItem {
@@ -82,6 +83,7 @@ const NavigationSidebar: React.FC<NavigationSidebarProps> = ({
           { id: 'ratings', label: 'Calificaciones', icon: Star, href: '/dashboard/ratings' },
           { id: 'products', label: 'Productos', icon: Package, href: '/dashboard/products' },
           { id: 'groups', label: 'Grupos', icon: BarChart3, href: '/dashboard/groups' },
+          { id: 'deliveries', label: 'Entregas', icon: Truck, href: '/dashboard/deliveries' },
           { id: 'payments', label: 'Pagos', icon: CreditCard, href: '/dashboard/payments' },
           { id: 'settings', label: 'Configuración', icon: Settings, href: '/dashboard/settings' },
         ]

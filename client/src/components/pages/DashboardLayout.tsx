@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { NavigationSidebar } from '@/components/molecules';
 import { AdminDashboard, UserDashboard, UserProfile } from '@/components/organisms';
-import { UsersManagement, ProductsManagement, GroupsManagement, PaymentsManagement, AdminSettings, RatingsManagement } from '@/components/pages';
+import { UsersManagement, ProductsManagement, GroupsManagement, PaymentsManagement, AdminSettings, RatingsManagement, DeliveriesDashboard } from '@/components/pages';
 import { UserGroupsManagement, UserProductsManagement } from '@/components/organisms';
 
 interface DashboardLayoutProps {
@@ -31,6 +31,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ user, onLogout }) => 
     if (path.includes('/dashboard/products')) return 'products';
     if (path.includes('/dashboard/groups')) return 'groups';
     if (path.includes('/dashboard/payments')) return 'payments';
+    if (path.includes('/dashboard/deliveries')) return 'deliveries';
     if (path.includes('/dashboard/profile')) return 'profile';
     if (path.includes('/dashboard/settings')) return 'settings';
     return 'dashboard';
@@ -55,6 +56,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ user, onLogout }) => 
         break;
       case 'payments':
         navigate('/dashboard/payments');
+        break;
+      case 'deliveries':
+        navigate('/dashboard/deliveries');
         break;
       case 'profile':
         navigate('/dashboard/profile');
@@ -169,6 +173,25 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ user, onLogout }) => 
             element={
               user.tipo === 'ADMINISTRADOR' ? (
                 <PaymentsManagement user={user as any} />
+              ) : (
+                <div className="flex-1 p-6">
+                  <div className="text-center py-12">
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                      Acceso Denegado
+                    </h2>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      No tienes permisos para acceder a esta sección.
+                    </p>
+                  </div>
+                </div>
+              )
+            }
+          />
+          <Route
+            path="deliveries"
+            element={
+              user.tipo === 'ADMINISTRADOR' ? (
+                <DeliveriesDashboard />
               ) : (
                 <div className="flex-1 p-6">
                   <div className="text-center py-12">
