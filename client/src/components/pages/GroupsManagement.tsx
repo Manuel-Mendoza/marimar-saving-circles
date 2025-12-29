@@ -200,15 +200,11 @@ export const GroupsManagement: React.FC<GroupsManagementProps> = ({ user }) => {
   };
 
   const handleAdvanceMonth = async (group: Grupo) => {
-    console.log('🚀 Iniciando handleAdvanceMonth para grupo:', group.id);
     try {
       setActionLoading(group.id);
-      console.log('📡 Llamando API advanceGroupMonth...');
       const response = await api.advanceGroupMonth(group.id);
-      console.log('📡 Respuesta API:', response);
 
       if (response.success) {
-        console.log('✅ Acción exitosa, mostrando toast...');
         toast({
           title: 'Éxito',
           description: response.data.completed
@@ -216,29 +212,23 @@ export const GroupsManagement: React.FC<GroupsManagementProps> = ({ user }) => {
             : `Mes avanzado exitosamente. Turno ${response.data.newTurn} activado.`,
         });
 
-        console.log('🔄 Refrescando datos...');
-
         // Refresh groups list more efficiently
         const refreshedGroupsResponse = await api.getGroups();
         if (refreshedGroupsResponse.success) {
           setGroups(refreshedGroupsResponse.data.groups);
           setFilteredGroups(refreshedGroupsResponse.data.groups);
-          console.log('✅ Lista de grupos refrescada');
         }
 
         // Refresh modal details if it's open for this group
         if (groupDetails && groupDetails.group.id === group.id) {
-          console.log('🔄 Refrescando detalles del grupo...');
           const updatedDetails = await api.getGroupAdminDetails(group.id);
           if (updatedDetails.success) {
-            console.log('✅ Detalles del grupo refrescados');
             setGroupDetails(updatedDetails.data);
           } else {
             console.error('❌ Error refrescando detalles:', updatedDetails);
           }
         }
       } else {
-        console.log('❌ Respuesta no exitosa:', response);
         toast({
           title: 'Error',
           description: 'No se pudo avanzar el mes del grupo',
@@ -253,7 +243,6 @@ export const GroupsManagement: React.FC<GroupsManagementProps> = ({ user }) => {
         variant: 'destructive',
       });
     } finally {
-      console.log('🔚 Reseteando actionLoading a null');
       setActionLoading(null);
     }
   };

@@ -215,7 +215,6 @@ export const GroupDetailModal: React.FC<GroupDetailModalProps> = ({
                         </div>
                         <button
                           onClick={() => {
-                            console.log('🔘 Botón "Avanzar Mes" presionado - abriendo diálogo');
                             setShowAdvanceConfirm(true);
                           }}
                           disabled={actionLoading}
@@ -474,7 +473,7 @@ export const GroupDetailModal: React.FC<GroupDetailModalProps> = ({
                           </div>
                           <div className="text-right">
                             <p className="font-semibold text-lg">
-                              {formatCurrency(delivery.productValue, 'USD')}
+                              {formatCurrency(Number(delivery.productValue), 'USD')}
                             </p>
                             <Badge
                               variant={delivery.estado === 'ENTREGADO' ? 'default' : 'secondary'}
@@ -536,19 +535,9 @@ export const GroupDetailModal: React.FC<GroupDetailModalProps> = ({
             </Button>
             <Button
               onClick={() => {
-                console.log('🎯 Confirmar Avance presionado');
-                console.log('📤 onAdvanceMonth disponible:', !!onAdvanceMonth);
-                console.log('📊 group data:', {
-                  id: group.id,
-                  nombre: group.nombre,
-                  estado: group.estado,
-                });
-                console.log('🔄 Cerrando diálogo de confirmación...');
                 setShowAdvanceConfirm(false);
                 try {
-                  console.log('📞 Llamando onAdvanceMonth...');
                   onAdvanceMonth?.({ id: group.id, nombre: group.nombre, estado: group.estado });
-                  console.log('✅ onAdvanceMonth llamado exitosamente');
                 } catch (error) {
                   console.error('❌ Error llamando onAdvanceMonth:', error);
                 }
