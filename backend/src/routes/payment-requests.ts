@@ -190,6 +190,58 @@ paymentRequestsRoute.post("/upload-receipt", authenticate, async (c) => {
   }
 });
 
+// Get current user's payment requests - Authenticated users
+paymentRequestsRoute.get("/my-requests", authenticate, async (c) => {
+  try {
+    const userPayload = c.get("user") as JWTPayload;
+
+    // Fetch user's payment requests with group information
+    const requests = await db
+      .select({
+        id: paymentRequests.id,
+        userId: paymentRequests.userId,
+        groupId: paymentRequests.groupId,
+        periodo: paymentRequests.periodo,
+        monto: paymentRequests.monto,
+        moneda: paymentRequests.moneda,
+        metodoPago: paymentRequests.metodoPago,
+        referenciaPago: paymentRequests.referenciaPago,
+        comprobantePago: paymentRequests.comprobantePago,
+        requiereComprobante: paymentRequests.requiereComprobante,
+        estado: paymentRequests.estado,
+        fechaSolicitud: paymentRequests.fechaSolicitud,
+        fechaAprobacion: paymentRequests.fechaAprobacion,
+        aprobadoPor: paymentRequests.aprobadoPor,
+        notasAdmin: paymentRequests.notasAdmin,
+        group: {
+          id: groups.id,
+          nombre: groups.nombre,
+        },
+      })
+      .from(paymentRequests)
+      .leftJoin(groups, eq(paymentRequests.groupId, groups.id))
+      .where(eq(paymentRequests.userId, userPayload.id))
+      .orderBy(desc(paymentRequests.fechaSolicitud));
+
+    return c.json({
+      success: true,
+      message: "Solicitudes de pago obtenidas exitosamente",
+      data: {
+        requests,
+      },
+    });
+  } catch (error) {
+    console.error("Error obteniendo solicitudes de pago del usuario:", error);
+    return c.json(
+      {
+        success: false,
+        message: "Error interno del servidor",
+      },
+      500,
+    );
+  }
+});
+
 // Create payment request - Authenticated users
 paymentRequestsRoute.post("/", authenticate, async (c) => {
   try {
