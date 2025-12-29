@@ -23,7 +23,7 @@ interface UserDashboardData {
 
 interface ActivityItem {
   id: string;
-  type: 'payment_made' | 'payment_approved' | 'group_joined' | 'draw_completed' | 'product_delivered';
+  type: 'payment_made' | 'payment_approved' | 'payment_rejected' | 'group_joined' | 'draw_completed' | 'product_delivered';
   message: string;
   timestamp: Date;
   groupId?: number;
@@ -61,17 +61,44 @@ export const useUserDashboard = (userId: number) => {
       const productsAcquired = completedGroups;
       const pendingPayments = contributions.filter(contribution => contribution.estado === 'PENDIENTE').length;
 
-      // Find next payment from actual pending contributions
+      // Find next payment from actual pending contributions with proper chronological logic
       const nextPayment = pendingPayments > 0 ? (() => {
-        const pendingContribution = contributions
-          .filter(contribution => contribution.estado === 'PENDIENTE')
-          .sort((a, b) => a.periodo.localeCompare(b.periodo))[0];
+        // Sort contributions by period to find the next chronological pending contribution
+        const sortedContributions = [...contributions].sort((a, b) => {
+          // Extract month number from periodo (e.g., "Mes 1" -> 1, "Mes 10" -> 10)
+          const aMatch = a.periodo.match(/Mes (\d+)/);
+          const bMatch = b.periodo.match(/Mes (\d+)/);
+          const aNum = aMatch ? parseInt(aMatch[1]) : 0;
+          const bNum = bMatch ? parseInt(bMatch[1]) : 0;
+          return aNum - bNum;
+        });
 
-        if (pendingContribution) {
-          const groupInfo = userGroups.find(ug => ug.groupId === pendingContribution.groupId);
+        // Find the earliest pending contribution that comes after any confirmed contributions
+        const confirmedMonths = new Set(
+          contributions
+            .filter(c => c.estado === 'CONFIRMADO')
+            .map(c => {
+              const match = c.periodo.match(/Mes (\d+)/);
+              return match ? parseInt(match[1]) : 0;
+            })
+        );
+
+        const nextPendingContribution = sortedContributions.find(c => {
+          if (c.estado !== 'PENDIENTE') return false;
+          const monthMatch = c.periodo.match(/Mes (\d+)/);
+          const monthNum = monthMatch ? parseInt(monthMatch[1]) : 0;
+          // Only consider it pending if all previous months are confirmed
+          for (let i = 1; i < monthNum; i++) {
+            if (!confirmedMonths.has(i)) return false;
+          }
+          return true;
+        });
+
+        if (nextPendingContribution) {
+          const groupInfo = userGroups.find(ug => ug.groupId === nextPendingContribution.groupId);
           return {
-            amount: pendingContribution.monto,
-            currency: pendingContribution.moneda,
+            amount: nextPendingContribution.monto,
+            currency: nextPendingContribution.moneda,
             dueDate: new Date(Date.now() + (Math.floor(Math.random() * 14) + 1) * 24 * 60 * 60 * 1000),
             groupName: groupInfo?.group.nombre || 'Grupo Activo',
           };
