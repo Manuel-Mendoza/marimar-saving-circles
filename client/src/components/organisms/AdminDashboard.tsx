@@ -8,6 +8,7 @@ import { Line, LineChart, Bar, BarChart, XAxis, YAxis } from 'recharts';
 import { useAdminRecentActivities } from '@/hooks/useAdminRecentActivities';
 import { useAdminDashboardStats } from '@/hooks/useAdminDashboardStats';
 import { useAdminDashboardCharts } from '@/hooks/useAdminDashboardCharts';
+import { useExchangeRate } from '@/hooks/useCurrencyConversion';
 import {
   Users,
   Package,
@@ -92,6 +93,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   // Hook para datos de gráficas
   const { revenueData, userGroupData, loading: chartsLoading } = useAdminDashboardCharts();
 
+  // Hook para obtener el precio del dólar
+  const { exchangeRate, isLoading: exchangeRateLoading } = useExchangeRate();
+
   // Memoize chart data to prevent unnecessary re-renders
   const memoizedRevenueData = useMemo(() => revenueData, [revenueData?.length]);
   const memoizedUserGroupData = useMemo(() => userGroupData, [userGroupData?.length]);
@@ -152,7 +156,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{title}</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
+              <div className="text-2xl font-bold text-gray-900 dark:text-white">{value}</div>
               {trend && (
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   {trend.value > 0 ? '+' : ''}
@@ -388,10 +392,21 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
           trend={effectiveStats.trends?.activeGroups}
         />
         <StatCard
-          title="Pagos Pendientes"
-          value={effectiveStats.pendingPayments}
-          icon={Clock}
-          variant={effectiveStats.pendingPayments > 0 ? 'warning' : 'default'}
+          title="Precio del dólar hoy"
+          value={
+            exchangeRateLoading ? (
+              <LoadingSpinner size="sm" />
+            ) : (
+              <CurrencyDisplay
+                amount={exchangeRate}
+                currency="VES"
+                showSymbol={true}
+                size="lg"
+              />
+            )
+          }
+          icon={DollarSign}
+          variant="success"
         />
       </div>
 

@@ -447,6 +447,72 @@ class ApiClient {
       userGroupData: Array<{ mes: string; usuarios: number; grupos: number }>;
     }>('/admin/dashboard-charts');
   }
+
+  // Ratings endpoints
+  async getUserReputation(userId: number) {
+    return this.request<{
+      reputation: {
+        score: number;
+        status: string;
+        totalRatings: number;
+        paymentReliability: number;
+        deliveryReliability: number;
+        lastUpdate: string;
+        user: {
+          id: number;
+          nombre: string;
+          apellido: string;
+        };
+      };
+    }>(`/ratings/users/${userId}/reputation`);
+  }
+
+  async getUserRatings(userId: number) {
+    return this.request<{
+      ratings: Array<{
+        id: number;
+        raterId: number;
+        ratingType: string;
+        rating: number;
+        comment?: string;
+        createdAt: string;
+        rater: {
+          nombre: string;
+          apellido: string;
+        };
+      }>;
+    }>(`/ratings/users/${userId}/ratings`);
+  }
+
+  async createRating(userId: number, ratingData: {
+    ratedId: number;
+    groupId?: number;
+    ratingType: 'PAYMENT' | 'DELIVERY' | 'COMMUNICATION';
+    rating: number;
+    comment?: string;
+  }) {
+    return this.request<{
+      rating: {
+        id: number;
+        raterId: number;
+        ratedId: number;
+        groupId?: number;
+        ratingType: string;
+        rating: number;
+        comment?: string;
+        createdAt: string;
+      };
+    }>(`/ratings/users/${userId}/rate`, {
+      method: 'POST',
+      body: JSON.stringify(ratingData),
+    });
+  }
+
+  async deleteRating(ratingId: number) {
+    return this.request(`/ratings/ratings/${ratingId}`, {
+      method: 'DELETE',
+    });
+  }
 }
 
 export const apiClient = new ApiClient(API_BASE_URL);

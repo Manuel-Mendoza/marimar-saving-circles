@@ -13,6 +13,7 @@ import productSelectionsRoutes from "./routes/product-selections.js";
 import paymentRequestsRoutes from "./routes/payment-requests.js";
 import paymentOptionsRoutes from "./routes/payment-options.js";
 import adminRoutes from "./routes/admin.js";
+import ratingsRoutes from "./routes/ratings.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { rateLimiter } from "./middleware/rateLimiter.js";
 
@@ -70,6 +71,7 @@ app.route("/api/products", productRoutes);
 app.route("/api/product-selections", productSelectionsRoutes);
 app.route("/api/payment-requests", paymentRequestsRoutes);
 app.route("/api/payment-options", paymentOptionsRoutes);
+app.route("/api/ratings", ratingsRoutes);
 
 // WebSocket message type
 interface WebSocketMessage {

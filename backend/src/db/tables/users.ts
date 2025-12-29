@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, serial, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, serial, integer, decimal } from "drizzle-orm/pg-core";
 
 // Users table with numeric auto-increment ID
 export const users = pgTable("users", {
@@ -19,6 +19,12 @@ export const users = pgTable("users", {
   aprobadoPor: integer("aprobado_por"), // ID del admin que aprobó
   fechaAprobacion: timestamp("fecha_aprobacion"),
   motivo: text("motivo"), // Razón del rechazo o eliminación
+  // Campos del sistema de reputación
+  reputationScore: decimal("reputation_score", { precision: 4, scale: 2 }).default("10.00"),
+  totalRatings: integer("total_ratings").default(0),
+  paymentReliability: decimal("payment_reliability", { precision: 4, scale: 2 }).default("10.00"),
+  deliveryReliability: decimal("delivery_reliability", { precision: 4, scale: 2 }).default("10.00"),
+  lastRatingUpdate: timestamp("last_rating_update").defaultNow(),
 });
 
 // Types
