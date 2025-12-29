@@ -1,11 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
-import {
-  LoginForm,
-  RegistrationForm,
-  PendingApproval,
-} from '@/components/organisms';
+import { LoginForm, RegistrationForm, PendingApproval } from '@/components/organisms';
 import { LandingPage } from '@/components/pages';
 
 const AppContent = () => {

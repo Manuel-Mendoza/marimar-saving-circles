@@ -20,7 +20,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Grupo } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
@@ -46,7 +52,10 @@ interface GroupActionDialogsProps {
   onDeleteDialogChange: (open: boolean) => void;
   /** Functions to handle actions */
   onCreateGroup: (groupData: { nombre: string; duracionMeses: number }) => void;
-  onUpdateGroup: (groupId: number, groupData: { nombre?: string; duracionMeses?: number; estado?: string }) => void;
+  onUpdateGroup: (
+    groupId: number,
+    groupData: { nombre?: string; duracionMeses?: number; estado?: string }
+  ) => void;
   onDeleteGroup: (groupId: number, reason?: string) => void;
   /** Function to update delete reason */
   onDeleteReasonChange: (reason: string) => void;
@@ -69,7 +78,11 @@ export const GroupActionDialogs: React.FC<GroupActionDialogsProps> = ({
 }) => {
   // Form states
   const [createForm, setCreateForm] = useState({ nombre: '', duracionMeses: 1 });
-  const [editForm, setEditForm] = useState({ nombre: '', duracionMeses: 1, estado: 'SIN_COMPLETAR' });
+  const [editForm, setEditForm] = useState({
+    nombre: '',
+    duracionMeses: 1,
+    estado: 'SIN_COMPLETAR',
+  });
 
   // Reset forms when dialogs open
   useEffect(() => {
@@ -140,7 +153,7 @@ export const GroupActionDialogs: React.FC<GroupActionDialogsProps> = ({
               <Input
                 id="create-nombre"
                 value={createForm.nombre}
-                onChange={(e) => setCreateForm(prev => ({ ...prev, nombre: e.target.value }))}
+                onChange={e => setCreateForm(prev => ({ ...prev, nombre: e.target.value }))}
                 placeholder="Ej: Grupo Primavera"
                 required
                 disabled={isLoading}
@@ -155,7 +168,9 @@ export const GroupActionDialogs: React.FC<GroupActionDialogsProps> = ({
                 min="1"
                 max="24"
                 value={createForm.duracionMeses}
-                onChange={(e) => setCreateForm(prev => ({ ...prev, duracionMeses: parseInt(e.target.value) || 1 }))}
+                onChange={e =>
+                  setCreateForm(prev => ({ ...prev, duracionMeses: parseInt(e.target.value) || 1 }))
+                }
                 required
                 disabled={isLoading}
               />
@@ -184,9 +199,7 @@ export const GroupActionDialogs: React.FC<GroupActionDialogsProps> = ({
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Editar Grupo</DialogTitle>
-            <DialogDescription>
-              Modifica la información del grupo seleccionado.
-            </DialogDescription>
+            <DialogDescription>Modifica la información del grupo seleccionado.</DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleEditSubmit} className="space-y-4">
@@ -195,7 +208,7 @@ export const GroupActionDialogs: React.FC<GroupActionDialogsProps> = ({
               <Input
                 id="edit-nombre"
                 value={editForm.nombre}
-                onChange={(e) => setEditForm(prev => ({ ...prev, nombre: e.target.value }))}
+                onChange={e => setEditForm(prev => ({ ...prev, nombre: e.target.value }))}
                 placeholder="Ej: Grupo Primavera"
                 required
                 disabled={isLoading}
@@ -210,7 +223,9 @@ export const GroupActionDialogs: React.FC<GroupActionDialogsProps> = ({
                 min="1"
                 max="24"
                 value={editForm.duracionMeses}
-                onChange={(e) => setEditForm(prev => ({ ...prev, duracionMeses: parseInt(e.target.value) || 1 }))}
+                onChange={e =>
+                  setEditForm(prev => ({ ...prev, duracionMeses: parseInt(e.target.value) || 1 }))
+                }
                 required
                 disabled={isLoading}
               />
@@ -220,7 +235,7 @@ export const GroupActionDialogs: React.FC<GroupActionDialogsProps> = ({
               <Label htmlFor="edit-estado">Estado</Label>
               <Select
                 value={editForm.estado}
-                onValueChange={(value) => setEditForm(prev => ({ ...prev, estado: value }))}
+                onValueChange={value => setEditForm(prev => ({ ...prev, estado: value }))}
                 disabled={isLoading}
               >
                 <SelectTrigger>
@@ -273,16 +288,14 @@ export const GroupActionDialogs: React.FC<GroupActionDialogsProps> = ({
             <Textarea
               id="delete-reason"
               value={deleteReason}
-              onChange={(e) => onDeleteReasonChange(e.target.value)}
+              onChange={e => onDeleteReasonChange(e.target.value)}
               placeholder="Ej: Grupo cancelado por falta de participantes..."
               disabled={isLoading}
             />
           </div>
 
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isLoading}>
-              Cancelar
-            </AlertDialogCancel>
+            <AlertDialogCancel disabled={isLoading}>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
               disabled={isLoading}

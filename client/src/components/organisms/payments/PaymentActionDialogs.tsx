@@ -89,8 +89,8 @@ const PaymentActionDialogs: React.FC<PaymentActionDialogsProps> = ({
               <span>Aprobar Solicitud de Pago</span>
             </DialogTitle>
             <DialogDescription>
-              ¿Estás seguro de que quieres aprobar esta solicitud de pago?
-              Esta acción no se puede deshacer.
+              ¿Estás seguro de que quieres aprobar esta solicitud de pago? Esta acción no se puede
+              deshacer.
             </DialogDescription>
           </DialogHeader>
 
@@ -169,8 +169,8 @@ const PaymentActionDialogs: React.FC<PaymentActionDialogsProps> = ({
               <span>Rechazar Solicitud de Pago</span>
             </DialogTitle>
             <DialogDescription>
-              Proporciona una razón detallada para el rechazo de esta solicitud.
-              Esta acción no se puede deshacer.
+              Proporciona una razón detallada para el rechazo de esta solicitud. Esta acción no se
+              puede deshacer.
             </DialogDescription>
           </DialogHeader>
 
@@ -211,7 +211,7 @@ const PaymentActionDialogs: React.FC<PaymentActionDialogsProps> = ({
                   id="reject-notes"
                   placeholder="Explica por qué se rechaza esta solicitud de pago..."
                   value={rejectNotes}
-                  onChange={(e) => onRejectNotesChange(e.target.value)}
+                  onChange={e => onRejectNotesChange(e.target.value)}
                   rows={3}
                   className="resize-none"
                 />

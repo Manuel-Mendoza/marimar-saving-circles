@@ -16,11 +16,7 @@ interface GroupCardProps {
   className?: string;
 }
 
-export const GroupCard: React.FC<GroupCardProps> = ({
-  group,
-  onClick,
-  className = '',
-}) => {
+export const GroupCard: React.FC<GroupCardProps> = ({ group, onClick, className = '' }) => {
   return (
     <Card
       className={`cursor-pointer transition-all hover:shadow-md ${onClick ? 'hover:border-blue-300' : ''} ${className}`}

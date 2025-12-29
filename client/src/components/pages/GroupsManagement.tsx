@@ -1,7 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { LoadingSpinner } from '@/components/atoms';
 import { GroupSearchFilter } from '@/components/molecules/groups';
-import { GroupStatsGrid, GroupsTable, GroupActionDialogs, GroupDetailModal, DrawAnimation } from '@/components/organisms/groups';
+import {
+  GroupStatsGrid,
+  GroupsTable,
+  GroupActionDialogs,
+  GroupDetailModal,
+  DrawAnimation,
+} from '@/components/organisms/groups';
 import { DrawCompletionModal } from '@/components/organisms';
 import { useToast } from '@/hooks/use-toast';
 import api from '@/lib/api';
@@ -48,17 +54,17 @@ export const GroupsManagement: React.FC<GroupsManagementProps> = ({ user }) => {
   // Draw animation state
   const [showDrawAnimation, setShowDrawAnimation] = useState(false);
   const [currentDrawGroup, setCurrentDrawGroup] = useState<Grupo | null>(null);
-  const [drawPositions, setDrawPositions] = useState<{ position: number; userId: number; name: string }[]>([]);
+  const [drawPositions, setDrawPositions] = useState<
+    { position: number; userId: number; name: string }[]
+  >([]);
 
   // Draw completion modal state
   const [showDrawCompletionModal, setShowDrawCompletionModal] = useState(false);
 
-
-
   const { toast } = useToast();
 
   // Load groups data
-  const loadGroups = async () => {
+  const loadGroups = useCallback(async () => {
     try {
       setLoading(true);
       const response = await api.getGroups();
@@ -83,11 +89,11 @@ export const GroupsManagement: React.FC<GroupsManagementProps> = ({ user }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   useEffect(() => {
     loadGroups();
-  }, []);
+  }, [loadGroups]);
 
   // Filter groups based on search term and status filters
   useEffect(() => {
@@ -95,9 +101,8 @@ export const GroupsManagement: React.FC<GroupsManagementProps> = ({ user }) => {
 
     // Filter by search term
     if (searchTerm) {
-      filtered = filtered.filter(
-        group =>
-          group.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+      filtered = filtered.filter(group =>
+        group.nombre.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -291,7 +296,10 @@ export const GroupsManagement: React.FC<GroupsManagementProps> = ({ user }) => {
   };
 
   // Handle update group
-  const handleUpdateGroup = async (groupId: number, groupData: { nombre?: string; duracionMeses?: number; estado?: string }) => {
+  const handleUpdateGroup = async (
+    groupId: number,
+    groupData: { nombre?: string; duracionMeses?: number; estado?: string }
+  ) => {
     try {
       setActionLoading(groupId);
       const response = await api.updateGroup(groupId, groupData);
@@ -398,9 +406,7 @@ export const GroupsManagement: React.FC<GroupsManagementProps> = ({ user }) => {
   return (
     <div className="flex-1 p-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-          Gestión de Grupos
-        </h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Gestión de Grupos</h1>
         <p className="text-gray-600 dark:text-gray-400">
           Administra todos los grupos de ahorro del sistema
         </p>
@@ -417,8 +423,6 @@ export const GroupsManagement: React.FC<GroupsManagementProps> = ({ user }) => {
 
       {/* Stats Grid */}
       <GroupStatsGrid stats={stats} />
-
-
 
       {/* Groups Table */}
       <GroupsTable

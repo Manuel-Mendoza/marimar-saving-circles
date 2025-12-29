@@ -169,7 +169,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
   const handleFormChange = (field: string, value: string) => {
     setEditForm(prev => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
@@ -376,7 +376,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
                     <Input
                       id="edit-nombre"
                       value={editForm.nombre}
-                      onChange={(e) => handleFormChange('nombre', e.target.value)}
+                      onChange={e => handleFormChange('nombre', e.target.value)}
                       placeholder="Tu nombre"
                     />
                   </div>
@@ -385,7 +385,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
                     <Input
                       id="edit-apellido"
                       value={editForm.apellido}
-                      onChange={(e) => handleFormChange('apellido', e.target.value)}
+                      onChange={e => handleFormChange('apellido', e.target.value)}
                       placeholder="Tu apellido"
                     />
                   </div>
@@ -394,7 +394,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
                     <Input
                       id="edit-telefono"
                       value={editForm.telefono}
-                      onChange={(e) => handleFormChange('telefono', e.target.value)}
+                      onChange={e => handleFormChange('telefono', e.target.value)}
                       placeholder="Tu teléfono"
                     />
                   </div>
@@ -404,7 +404,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
                       id="edit-correo"
                       type="email"
                       value={editForm.correoElectronico}
-                      onChange={(e) => handleFormChange('correoElectronico', e.target.value)}
+                      onChange={e => handleFormChange('correoElectronico', e.target.value)}
                       placeholder="tu@email.com"
                     />
                   </div>
@@ -419,11 +419,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
                     {isLoading && <LoadingSpinner size="sm" className="mr-2" />}
                     Guardar cambios
                   </Button>
-                  <Button
-                    onClick={handleCancelEdit}
-                    disabled={isLoading}
-                    variant="outline"
-                  >
+                  <Button onClick={handleCancelEdit} disabled={isLoading} variant="outline">
                     Cancelar
                   </Button>
                 </div>
@@ -440,7 +436,9 @@ const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
                 </div>
 
                 <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Cédula</span>
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Cédula
+                  </span>
                   <span className="font-semibold text-gray-900 dark:text-white">{user.cedula}</span>
                 </div>
 
@@ -448,7 +446,9 @@ const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
                   <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
                     Teléfono
                   </span>
-                  <span className="font-semibold text-gray-900 dark:text-white">{user.telefono}</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">
+                    {user.telefono}
+                  </span>
                 </div>
 
                 <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">

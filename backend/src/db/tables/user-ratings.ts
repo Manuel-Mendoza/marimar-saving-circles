@@ -36,16 +36,16 @@ export type NewUserRating = typeof userRatings.$inferInsert;
 
 // Enums para tipos de calificación
 export const RatingType = {
-  PAYMENT: 'PAYMENT',
-  DELIVERY: 'DELIVERY',
-  COMMUNICATION: 'COMMUNICATION'
+  PAYMENT: "PAYMENT",
+  DELIVERY: "DELIVERY",
+  COMMUNICATION: "COMMUNICATION",
 } as const;
 
-export type RatingType = typeof RatingType[keyof typeof RatingType];
+export type RatingType = (typeof RatingType)[keyof typeof RatingType];
 
 // Pesos para el cálculo de reputación
 export const RATING_WEIGHTS = {
-  [RatingType.PAYMENT]: 0.6,      // 60% - más crítico
-  [RatingType.DELIVERY]: 0.3,     // 30% - importante
-  [RatingType.COMMUNICATION]: 0.1 // 10% - menos crítico
+  [RatingType.PAYMENT]: 0.6, // 60% - más crítico
+  [RatingType.DELIVERY]: 0.3, // 30% - importante
+  [RatingType.COMMUNICATION]: 0.1, // 10% - menos crítico
 } as const;

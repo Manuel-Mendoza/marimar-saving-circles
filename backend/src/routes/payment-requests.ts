@@ -90,7 +90,10 @@ paymentRequestsRoute.get("/", authenticate, async (c) => {
 });
 
 // Upload image to ImgBB
-async function uploadToImgBB(imageBuffer: ArrayBuffer, filename: string): Promise<string> {
+async function uploadToImgBB(
+  imageBuffer: ArrayBuffer,
+  filename: string,
+): Promise<string> {
   const IMGBB_API_KEY = process.env.IMGBB_API_KEY;
 
   if (!IMGBB_API_KEY) {
@@ -98,12 +101,15 @@ async function uploadToImgBB(imageBuffer: ArrayBuffer, filename: string): Promis
   }
 
   const formData = new FormData();
-  formData.append('image', new Blob([imageBuffer]), filename);
+  formData.append("image", new Blob([imageBuffer]), filename);
 
-  const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
-    method: 'POST',
-    body: formData,
-  });
+  const response = await fetch(
+    `https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`,
+    {
+      method: "POST",
+      body: formData,
+    },
+  );
 
   if (!response.ok) {
     throw new Error(`ImgBB upload failed: ${response.statusText}`);
@@ -112,7 +118,9 @@ async function uploadToImgBB(imageBuffer: ArrayBuffer, filename: string): Promis
   const data = await response.json();
 
   if (!data.success) {
-    throw new Error(`ImgBB upload error: ${data.error?.message || 'Unknown error'}`);
+    throw new Error(
+      `ImgBB upload error: ${data.error?.message || "Unknown error"}`,
+    );
   }
 
   return data.data.url;
@@ -122,7 +130,7 @@ async function uploadToImgBB(imageBuffer: ArrayBuffer, filename: string): Promis
 paymentRequestsRoute.post("/upload-receipt", authenticate, async (c) => {
   try {
     const formData = await c.req.formData();
-    const file = formData.get('receipt') as File;
+    const file = formData.get("receipt") as File;
 
     if (!file) {
       return c.json(
@@ -135,7 +143,7 @@ paymentRequestsRoute.post("/upload-receipt", authenticate, async (c) => {
     }
 
     // Validate file type
-    if (!file.type.startsWith('image/')) {
+    if (!file.type.startsWith("image/")) {
       return c.json(
         {
           success: false,
@@ -174,7 +182,8 @@ paymentRequestsRoute.post("/upload-receipt", authenticate, async (c) => {
     return c.json(
       {
         success: false,
-        message: error instanceof Error ? error.message : "Error interno del servidor",
+        message:
+          error instanceof Error ? error.message : "Error interno del servidor",
       },
       500,
     );
@@ -256,7 +265,8 @@ paymentRequestsRoute.post("/", authenticate, async (c) => {
       return c.json(
         {
           success: false,
-          message: "Ya tienes una solicitud pendiente o confirmada para este período",
+          message:
+            "Ya tienes una solicitud pendiente o confirmada para este período",
         },
         400,
       );

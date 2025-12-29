@@ -28,27 +28,17 @@ const PaymentInfo: React.FC<PaymentInfoProps> = ({
   return (
     <div className={cn('space-y-1', className)}>
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-gray-900 dark:text-white">
-          Monto:
-        </span>
+        <span className="text-sm font-medium text-gray-900 dark:text-white">Monto:</span>
         <CurrencyDisplay amount={amount} currency={currency} />
       </div>
       <div className="flex items-center justify-between">
-        <span className="text-sm text-gray-600 dark:text-gray-400">
-          Método:
-        </span>
-        <span className="text-sm font-medium text-gray-900 dark:text-white">
-          {paymentMethod}
-        </span>
+        <span className="text-sm text-gray-600 dark:text-gray-400">Método:</span>
+        <span className="text-sm font-medium text-gray-900 dark:text-white">{paymentMethod}</span>
       </div>
       {reference && (
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-600 dark:text-gray-400">
-            Referencia:
-          </span>
-          <span className="text-sm font-mono text-gray-900 dark:text-white">
-            {reference}
-          </span>
+          <span className="text-sm text-gray-600 dark:text-gray-400">Referencia:</span>
+          <span className="text-sm font-mono text-gray-900 dark:text-white">{reference}</span>
         </div>
       )}
     </div>

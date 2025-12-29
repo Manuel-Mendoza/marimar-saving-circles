@@ -184,14 +184,17 @@ class ApiClient {
     });
   }
 
-  async updateProfile(userId: number, profileData: {
-    nombre?: string;
-    apellido?: string;
-    telefono?: string;
-    direccion?: string;
-    correoElectronico?: string;
-    imagenPerfil?: string;
-  }) {
+  async updateProfile(
+    userId: number,
+    profileData: {
+      nombre?: string;
+      apellido?: string;
+      telefono?: string;
+      direccion?: string;
+      correoElectronico?: string;
+      imagenPerfil?: string;
+    }
+  ) {
     return this.request<{ user: User }>(`/users/${userId}/profile`, {
       method: 'PUT',
       body: JSON.stringify(profileData),
@@ -305,7 +308,10 @@ class ApiClient {
     });
   }
 
-  async updateGroup(groupId: number, groupData: { nombre?: string; duracionMeses?: number; estado?: string }) {
+  async updateGroup(
+    groupId: number,
+    groupData: { nombre?: string; duracionMeses?: number; estado?: string }
+  ) {
     return this.request<{ group: Grupo }>(`/groups/${groupId}`, {
       method: 'PUT',
       body: JSON.stringify(groupData),
@@ -519,13 +525,16 @@ class ApiClient {
     }>(`/ratings/users/${userId}/ratings`);
   }
 
-  async createRating(userId: number, ratingData: {
-    ratedId: number;
-    groupId?: number;
-    ratingType: 'PAYMENT' | 'DELIVERY' | 'COMMUNICATION';
-    rating: number;
-    comment?: string;
-  }) {
+  async createRating(
+    userId: number,
+    ratingData: {
+      ratedId: number;
+      groupId?: number;
+      ratingType: 'PAYMENT' | 'DELIVERY' | 'COMMUNICATION';
+      rating: number;
+      comment?: string;
+    }
+  ) {
     return this.request<{
       rating: {
         id: number;
@@ -572,7 +581,11 @@ class ApiClient {
     });
   }
 
-  async updateDeliveryStatus(deliveryId: number, estado: 'PENDIENTE' | 'EN_RUTA' | 'ENTREGADO', notas?: string) {
+  async updateDeliveryStatus(
+    deliveryId: number,
+    estado: 'PENDIENTE' | 'EN_RUTA' | 'ENTREGADO',
+    notas?: string
+  ) {
     return this.request<{
       delivery: Delivery;
     }>(`/admin/deliveries/${deliveryId}/status`, {

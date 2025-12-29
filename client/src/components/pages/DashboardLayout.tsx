@@ -2,18 +2,20 @@ import React, { useState } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { NavigationSidebar } from '@/components/molecules';
 import { AdminDashboard, UserDashboard, UserProfile } from '@/components/organisms';
-import { UsersManagement, ProductsManagement, GroupsManagement, PaymentsManagement, AdminSettings, RatingsManagement, DeliveriesDashboard } from '@/components/pages';
+import {
+  UsersManagement,
+  ProductsManagement,
+  GroupsManagement,
+  PaymentsManagement,
+  AdminSettings,
+  RatingsManagement,
+  DeliveriesDashboard,
+} from '@/components/pages';
 import { UserGroupsManagement, UserProductsManagement } from '@/components/organisms';
+import type { User } from '@/lib/types';
 
 interface DashboardLayoutProps {
-  user: {
-    id: number;
-    nombre: string;
-    apellido?: string;
-    tipo: 'USUARIO' | 'ADMINISTRADOR';
-    imagenCedula?: string;
-    estado?: 'APROBADO' | 'PENDIENTE' | 'RECHAZADO' | 'SUSPENDIDO' | 'REACTIVADO';
-  };
+  user: User;
   onLogout: () => void;
 }
 
@@ -97,12 +99,14 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ user, onLogout }) => 
             element={
               user.tipo === 'ADMINISTRADOR' ? (
                 <AdminDashboard
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   user={user as any}
                   onNavigate={handleNavigate}
                   showSidebar={false}
                 />
               ) : (
                 <UserDashboard
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   user={user as any}
                   onNavigate={handleNavigate}
                   showSidebar={false}
@@ -114,6 +118,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ user, onLogout }) => 
             path="users"
             element={
               user.tipo === 'ADMINISTRADOR' ? (
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 <UsersManagement user={user as any} />
               ) : (
                 <div className="flex-1 p-6">
@@ -133,6 +138,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ user, onLogout }) => 
             path="ratings"
             element={
               user.tipo === 'ADMINISTRADOR' ? (
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 <RatingsManagement user={user as any} />
               ) : (
                 <div className="flex-1 p-6">
@@ -152,8 +158,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ user, onLogout }) => 
             path="products"
             element={
               user.tipo === 'ADMINISTRADOR' ? (
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 <ProductsManagement user={user as any} />
               ) : (
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 <UserProductsManagement user={user as any} />
               )
             }
@@ -162,8 +170,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ user, onLogout }) => 
             path="groups"
             element={
               user.tipo === 'ADMINISTRADOR' ? (
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 <GroupsManagement user={user as any} />
               ) : (
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 <UserGroupsManagement user={user as any} />
               )
             }
@@ -172,6 +182,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ user, onLogout }) => 
             path="payments"
             element={
               user.tipo === 'ADMINISTRADOR' ? (
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 <PaymentsManagement user={user as any} />
               ) : (
                 <div className="flex-1 p-6">
@@ -208,12 +219,14 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ user, onLogout }) => 
           />
           <Route
             path="profile"
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             element={<UserProfile user={user as any} />}
           />
           <Route
             path="settings"
             element={
               user.tipo === 'ADMINISTRADOR' ? (
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 <AdminSettings user={user as any} />
               ) : (
                 <div className="flex-1 p-6">

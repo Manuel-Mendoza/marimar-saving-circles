@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -46,7 +46,7 @@ export const DeliveriesDashboard: React.FC = () => {
   const { toast } = useToast();
 
   // Load dashboard data
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     try {
       setLoading(true);
       const response = await api.getDeliveriesDashboard();
@@ -66,11 +66,11 @@ export const DeliveriesDashboard: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   useEffect(() => {
     loadDashboardData();
-  }, []);
+  }, [loadDashboardData]);
 
   // Handle complete delivery
   const handleCompleteDelivery = async (deliveryId: number) => {
@@ -101,7 +101,11 @@ export const DeliveriesDashboard: React.FC = () => {
   // Handle status change to "EN RUTA"
   const handleStartDelivery = async (deliveryId: number) => {
     try {
-      const response = await api.updateDeliveryStatus(deliveryId, 'EN_RUTA', 'Entrega iniciada desde dashboard');
+      const response = await api.updateDeliveryStatus(
+        deliveryId,
+        'EN_RUTA',
+        'Entrega iniciada desde dashboard'
+      );
 
       if (response.success) {
         toast({
@@ -127,9 +131,24 @@ export const DeliveriesDashboard: React.FC = () => {
   // Get status badge for deliveries
   const getDeliveryStatusBadge = (id: number, estado: string) => {
     const statusConfig = {
-      'PENDIENTE': { label: 'Pendiente', variant: 'secondary' as const, icon: Clock, color: 'text-yellow-600' },
-      'EN_RUTA': { label: 'En Ruta', variant: 'outline' as const, icon: Truck, color: 'text-blue-600' },
-      'ENTREGADO': { label: 'Entregado', variant: 'default' as const, icon: CheckCircle, color: 'text-green-600' },
+      PENDIENTE: {
+        label: 'Pendiente',
+        variant: 'secondary' as const,
+        icon: Clock,
+        color: 'text-yellow-600',
+      },
+      EN_RUTA: {
+        label: 'En Ruta',
+        variant: 'outline' as const,
+        icon: Truck,
+        color: 'text-blue-600',
+      },
+      ENTREGADO: {
+        label: 'Entregado',
+        variant: 'default' as const,
+        icon: CheckCircle,
+        color: 'text-green-600',
+      },
     };
 
     const config = statusConfig[estado as keyof typeof statusConfig] || statusConfig['PENDIENTE'];
@@ -142,8 +161,6 @@ export const DeliveriesDashboard: React.FC = () => {
       </Badge>
     );
   };
-
-
 
   if (loading) {
     return (
@@ -205,14 +222,15 @@ export const DeliveriesDashboard: React.FC = () => {
           </h3>
           <div className="space-y-2 max-h-[calc(100vh-280px)] overflow-y-auto">
             {data.recentDeliveries.length > 0 ? (
-              data.recentDeliveries.slice(0, 8).map((delivery) => (
-                <div key={delivery.id} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded text-xs">
+              data.recentDeliveries.slice(0, 8).map(delivery => (
+                <div
+                  key={delivery.id}
+                  className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded text-xs"
+                >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1 mb-1">
                       {getDeliveryStatusBadge(delivery.id, delivery.estado)}
-                      {delivery.direccion && (
-                        <MapPin className="h-3 w-3 text-gray-400" />
-                      )}
+                      {delivery.direccion && <MapPin className="h-3 w-3 text-gray-400" />}
                     </div>
                     <div className="font-medium truncate text-xs">{delivery.productName}</div>
                     <div className="text-muted-foreground truncate text-xs">
@@ -250,9 +268,7 @@ export const DeliveriesDashboard: React.FC = () => {
                 </div>
               ))
             ) : (
-              <div className="text-center py-4 text-muted-foreground text-xs">
-                Sin entregas
-              </div>
+              <div className="text-center py-4 text-muted-foreground text-xs">Sin entregas</div>
             )}
           </div>
         </div>
@@ -285,7 +301,7 @@ export const DeliveriesDashboard: React.FC = () => {
             </h3>
             <div className="space-y-2 max-h-[calc(100vh-420px)] overflow-y-auto">
               {data.deliveriesByGroup.length > 0 ? (
-                data.deliveriesByGroup.slice(0, 5).map((group) => (
+                data.deliveriesByGroup.slice(0, 5).map(group => (
                   <div key={group.groupId} className="p-2 bg-gray-50 dark:bg-gray-800 rounded">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs font-medium truncate">{group.groupName}</span>
@@ -306,9 +322,7 @@ export const DeliveriesDashboard: React.FC = () => {
                   </div>
                 ))
               ) : (
-                <div className="text-center py-2 text-muted-foreground text-xs">
-                  Sin grupos
-                </div>
+                <div className="text-center py-2 text-muted-foreground text-xs">Sin grupos</div>
               )}
             </div>
           </div>

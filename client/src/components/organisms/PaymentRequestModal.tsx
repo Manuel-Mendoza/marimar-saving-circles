@@ -1,13 +1,35 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { LoadingSpinner } from '@/components/atoms';
-import { CreditCard, Upload, X, AlertCircle, Smartphone, Building2, Phone, Copy, Check } from 'lucide-react';
+import {
+  CreditCard,
+  Upload,
+  X,
+  AlertCircle,
+  Smartphone,
+  Building2,
+  Phone,
+  Copy,
+  Check,
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import api from '@/lib/api';
 import { Contribution, MobilePaymentData, BankPaymentData } from '@/lib/types';
@@ -67,18 +89,21 @@ export const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
           const bankOption = response.data.options.find(opt => opt.tipo === 'banco');
 
           setPaymentOptions({
-            mobile: mobileOption ? JSON.parse(mobileOption.detalles) as MobilePaymentData : undefined,
-            bank: bankOption ? JSON.parse(bankOption.detalles) as BankPaymentData : undefined,
+            mobile: mobileOption
+              ? (JSON.parse(mobileOption.detalles) as MobilePaymentData)
+              : undefined,
+            bank: bankOption ? (JSON.parse(bankOption.detalles) as BankPaymentData) : undefined,
           });
 
           // Use the mobile payment phone number for cash payments
-          const adminPhoneNumber = mobileOption ? (JSON.parse(mobileOption.detalles) as MobilePaymentData).numero : '+58 412-1234567';
+          const adminPhoneNumber = mobileOption
+            ? (JSON.parse(mobileOption.detalles) as MobilePaymentData).numero
+            : '+58 412-1234567';
           setAdminPhone(adminPhoneNumber);
         } else {
           // Fallback if no payment options loaded
           setAdminPhone('+58 412-1234567');
         }
-
       } catch (error) {
         console.error('Error loading payment options:', error);
       } finally {
@@ -220,7 +245,8 @@ export const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
       if (response.success) {
         toast({
           title: 'Solicitud enviada',
-          description: 'Tu solicitud de pago ha sido enviada exitosamente y está pendiente de aprobación',
+          description:
+            'Tu solicitud de pago ha sido enviada exitosamente y está pendiente de aprobación',
         });
 
         // Call success callback
@@ -276,7 +302,9 @@ export const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
       style: 'currency',
       currency: currency === 'USD' ? 'USD' : 'VES',
       minimumFractionDigits: 2,
-    }).format(amount).replace('Bs.S', 'BcV');
+    })
+      .format(amount)
+      .replace('Bs.S', 'BcV');
   };
 
   if (!contribution) return null;
@@ -310,7 +338,9 @@ export const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600 dark:text-gray-400">Monto:</span>
-                  <span className="font-semibold">{formatCurrency(contribution.monto, contribution.moneda)}</span>
+                  <span className="font-semibold">
+                    {formatCurrency(contribution.monto, contribution.moneda)}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600 dark:text-gray-400">Moneda:</span>
@@ -322,10 +352,7 @@ export const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
             {/* Payment Method */}
             <div className="space-y-2">
               <Label htmlFor="metodoPago">Método de Pago *</Label>
-              <Select
-                value={formData.metodoPago}
-                onValueChange={handlePaymentMethodChange}
-              >
+              <Select value={formData.metodoPago} onValueChange={handlePaymentMethodChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecciona un método de pago" />
                 </SelectTrigger>
@@ -466,9 +493,7 @@ export const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
               <Smartphone className="h-5 w-5" />
               Información de Pago Móvil
             </DialogTitle>
-            <DialogDescription>
-              Datos necesarios para realizar el pago móvil
-            </DialogDescription>
+            <DialogDescription>Datos necesarios para realizar el pago móvil</DialogDescription>
           </DialogHeader>
 
           {paymentOptions.mobile ? (
@@ -477,14 +502,20 @@ export const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
                 <div className="p-4 bg-green-50 dark:bg-green-950 rounded-lg border border-green-200 dark:border-green-800">
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-900 dark:text-white">Número de teléfono:</span>
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">
+                        Número de teléfono:
+                      </span>
                       <div className="flex items-center gap-2">
-                        <span className="text-lg font-bold text-green-600 dark:text-green-400">{paymentOptions.mobile.numero}</span>
+                        <span className="text-lg font-bold text-green-600 dark:text-green-400">
+                          {paymentOptions.mobile.numero}
+                        </span>
                         <Button
                           type="button"
                           variant="ghost"
                           size="sm"
-                          onClick={() => copyToClipboard(paymentOptions.mobile.numero, 'mobile-numero')}
+                          onClick={() =>
+                            copyToClipboard(paymentOptions.mobile.numero, 'mobile-numero')
+                          }
                           className="h-6 w-6 p-0"
                         >
                           {copiedField === 'mobile-numero' ? (
@@ -496,14 +527,20 @@ export const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
                       </div>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-900 dark:text-white">Titular:</span>
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">
+                        Titular:
+                      </span>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-600 dark:text-gray-400">{paymentOptions.mobile.titular}</span>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          {paymentOptions.mobile.titular}
+                        </span>
                         <Button
                           type="button"
                           variant="ghost"
                           size="sm"
-                          onClick={() => copyToClipboard(paymentOptions.mobile.titular, 'mobile-titular')}
+                          onClick={() =>
+                            copyToClipboard(paymentOptions.mobile.titular, 'mobile-titular')
+                          }
                           className="h-6 w-6 p-0"
                         >
                           {copiedField === 'mobile-titular' ? (
@@ -515,14 +552,20 @@ export const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
                       </div>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-900 dark:text-white">Cédula:</span>
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">
+                        Cédula:
+                      </span>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-600 dark:text-gray-400">{paymentOptions.mobile.cedula}</span>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          {paymentOptions.mobile.cedula}
+                        </span>
                         <Button
                           type="button"
                           variant="ghost"
                           size="sm"
-                          onClick={() => copyToClipboard(paymentOptions.mobile.cedula, 'mobile-cedula')}
+                          onClick={() =>
+                            copyToClipboard(paymentOptions.mobile.cedula, 'mobile-cedula')
+                          }
                           className="h-6 w-6 p-0"
                         >
                           {copiedField === 'mobile-cedula' ? (
@@ -534,14 +577,20 @@ export const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
                       </div>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-900 dark:text-white">Cuenta bancaria:</span>
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">
+                        Cuenta bancaria:
+                      </span>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-600 dark:text-gray-400">{paymentOptions.mobile.cuentaBancaria}XXXX</span>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          {paymentOptions.mobile.cuentaBancaria}XXXX
+                        </span>
                         <Button
                           type="button"
                           variant="ghost"
                           size="sm"
-                          onClick={() => copyToClipboard(paymentOptions.mobile.cuentaBancaria, 'mobile-cuenta')}
+                          onClick={() =>
+                            copyToClipboard(paymentOptions.mobile.cuentaBancaria, 'mobile-cuenta')
+                          }
                           className="h-6 w-6 p-0"
                         >
                           {copiedField === 'mobile-cuenta' ? (
@@ -556,15 +605,14 @@ export const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
                 </div>
                 <div className="bg-blue-50 dark:bg-blue-950 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
                   <p className="text-sm text-blue-800 dark:text-blue-200">
-                    <strong>Instrucciones:</strong> Realiza el pago móvil al número indicado. Una vez realizado, regresa al formulario y sube el comprobante de pago.
+                    <strong>Instrucciones:</strong> Realiza el pago móvil al número indicado. Una
+                    vez realizado, regresa al formulario y sube el comprobante de pago.
                   </p>
                 </div>
               </div>
 
               <div className="flex justify-end">
-                <Button onClick={() => setShowMobileDialog(false)}>
-                  Entendido
-                </Button>
+                <Button onClick={() => setShowMobileDialog(false)}>Entendido</Button>
               </div>
             </div>
           ) : (
@@ -580,9 +628,7 @@ export const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
               </div>
 
               <div className="flex justify-end">
-                <Button onClick={() => setShowMobileDialog(false)}>
-                  Cerrar
-                </Button>
+                <Button onClick={() => setShowMobileDialog(false)}>Cerrar</Button>
               </div>
             </div>
           )}
@@ -608,14 +654,20 @@ export const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
                 <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-900 dark:text-white">Número de cuenta:</span>
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">
+                        Número de cuenta:
+                      </span>
                       <div className="flex items-center gap-2">
-                        <span className="text-lg font-bold text-blue-600 dark:text-blue-400 font-mono">{paymentOptions.bank.numeroCuenta}</span>
+                        <span className="text-lg font-bold text-blue-600 dark:text-blue-400 font-mono">
+                          {paymentOptions.bank.numeroCuenta}
+                        </span>
                         <Button
                           type="button"
                           variant="ghost"
                           size="sm"
-                          onClick={() => copyToClipboard(paymentOptions.bank.numeroCuenta, 'bank-numeroCuenta')}
+                          onClick={() =>
+                            copyToClipboard(paymentOptions.bank.numeroCuenta, 'bank-numeroCuenta')
+                          }
                           className="h-6 w-6 p-0"
                         >
                           {copiedField === 'bank-numeroCuenta' ? (
@@ -627,14 +679,20 @@ export const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
                       </div>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-900 dark:text-white">Tipo de documento:</span>
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">
+                        Tipo de documento:
+                      </span>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-600 dark:text-gray-400">{paymentOptions.bank.tipoDocumento}</span>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          {paymentOptions.bank.tipoDocumento}
+                        </span>
                         <Button
                           type="button"
                           variant="ghost"
                           size="sm"
-                          onClick={() => copyToClipboard(paymentOptions.bank.tipoDocumento, 'bank-tipoDocumento')}
+                          onClick={() =>
+                            copyToClipboard(paymentOptions.bank.tipoDocumento, 'bank-tipoDocumento')
+                          }
                           className="h-6 w-6 p-0"
                         >
                           {copiedField === 'bank-tipoDocumento' ? (
@@ -646,9 +704,13 @@ export const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
                       </div>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-900 dark:text-white">Documento:</span>
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">
+                        Documento:
+                      </span>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-600 dark:text-gray-400">{paymentOptions.bank.cedula}</span>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          {paymentOptions.bank.cedula}
+                        </span>
                         <Button
                           type="button"
                           variant="ghost"
@@ -665,14 +727,20 @@ export const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
                       </div>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-900 dark:text-white">Propietario:</span>
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">
+                        Propietario:
+                      </span>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-600 dark:text-gray-400">{paymentOptions.bank.titular}</span>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          {paymentOptions.bank.titular}
+                        </span>
                         <Button
                           type="button"
                           variant="ghost"
                           size="sm"
-                          onClick={() => copyToClipboard(paymentOptions.bank.titular, 'bank-titular')}
+                          onClick={() =>
+                            copyToClipboard(paymentOptions.bank.titular, 'bank-titular')
+                          }
                           className="h-6 w-6 p-0"
                         >
                           {copiedField === 'bank-titular' ? (
@@ -684,9 +752,13 @@ export const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
                       </div>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-900 dark:text-white">Banco:</span>
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">
+                        Banco:
+                      </span>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-600 dark:text-gray-400">{paymentOptions.bank.banco}</span>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          {paymentOptions.bank.banco}
+                        </span>
                         <Button
                           type="button"
                           variant="ghost"
@@ -703,14 +775,20 @@ export const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
                       </div>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-900 dark:text-white">Tipo de cuenta:</span>
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">
+                        Tipo de cuenta:
+                      </span>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-600 dark:text-gray-400">{paymentOptions.bank.tipoCuenta}</span>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          {paymentOptions.bank.tipoCuenta}
+                        </span>
                         <Button
                           type="button"
                           variant="ghost"
                           size="sm"
-                          onClick={() => copyToClipboard(paymentOptions.bank.tipoCuenta, 'bank-tipoCuenta')}
+                          onClick={() =>
+                            copyToClipboard(paymentOptions.bank.tipoCuenta, 'bank-tipoCuenta')
+                          }
                           className="h-6 w-6 p-0"
                         >
                           {copiedField === 'bank-tipoCuenta' ? (
@@ -725,15 +803,14 @@ export const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
                 </div>
                 <div className="bg-green-50 dark:bg-green-950 p-3 rounded-lg border border-green-200 dark:border-green-800">
                   <p className="text-sm text-green-800 dark:text-green-200">
-                    <strong>Instrucciones:</strong> Realiza la transferencia a la cuenta indicada. Una vez realizada, regresa al formulario y sube el comprobante de pago.
+                    <strong>Instrucciones:</strong> Realiza la transferencia a la cuenta indicada.
+                    Una vez realizada, regresa al formulario y sube el comprobante de pago.
                   </p>
                 </div>
               </div>
 
               <div className="flex justify-end">
-                <Button onClick={() => setShowBankDialog(false)}>
-                  Entendido
-                </Button>
+                <Button onClick={() => setShowBankDialog(false)}>Entendido</Button>
               </div>
             </div>
           ) : (
@@ -749,9 +826,7 @@ export const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
               </div>
 
               <div className="flex justify-end">
-                <Button onClick={() => setShowBankDialog(false)}>
-                  Cerrar
-                </Button>
+                <Button onClick={() => setShowBankDialog(false)}>Cerrar</Button>
               </div>
             </div>
           )}
@@ -766,9 +841,7 @@ export const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
               <Phone className="h-5 w-5" />
               Pago en Efectivo
             </DialogTitle>
-            <DialogDescription>
-              Coordinación requerida para pago en efectivo
-            </DialogDescription>
+            <DialogDescription>Coordinación requerida para pago en efectivo</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
@@ -780,7 +853,8 @@ export const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
                     Para pagos en efectivo debes coordinar directamente con el administrador
                   </h3>
                   <p className="text-sm text-orange-700 dark:text-orange-300 mb-3">
-                    No puedes enviar una solicitud automática para pagos en efectivo. Debes contactar al administrador para coordinar la entrega del dinero.
+                    No puedes enviar una solicitud automática para pagos en efectivo. Debes
+                    contactar al administrador para coordinar la entrega del dinero.
                   </p>
                   <div className="bg-white dark:bg-gray-800 p-3 rounded border">
                     <p className="text-sm font-medium text-gray-900 dark:text-white mb-1">
@@ -804,9 +878,7 @@ export const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
               >
                 Cambiar Método
               </Button>
-              <Button onClick={() => setShowCashDialog(false)}>
-                Entendido
-              </Button>
+              <Button onClick={() => setShowCashDialog(false)}>Entendido</Button>
             </div>
           </div>
         </DialogContent>

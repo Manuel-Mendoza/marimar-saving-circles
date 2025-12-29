@@ -71,8 +71,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     onNavigate?.(itemId);
   };
 
-
-
   return (
     <div className={cn('min-h-screen bg-gray-50 dark:bg-gray-900 flex', className)}>
       {/* Sidebar */}

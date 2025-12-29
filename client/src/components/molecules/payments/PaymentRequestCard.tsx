@@ -73,13 +73,7 @@ const PaymentRequestCard: React.FC<PaymentRequestCardProps> = ({
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center space-x-3">
-            {user && (
-              <UserAvatar
-                name={user.nombre}
-                lastname={user.apellido}
-                size="sm"
-              />
-            )}
+            {user && <UserAvatar name={user.nombre} lastname={user.apellido} size="sm" />}
             <div>
               <CardTitle className="text-lg">
                 {user ? `${user.nombre} ${user.apellido}` : 'Usuario desconocido'}

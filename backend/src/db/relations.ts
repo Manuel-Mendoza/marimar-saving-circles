@@ -59,12 +59,12 @@ export const userRatingsRelations = relations(userRatings, ({ one }) => ({
   rater: one(users, {
     fields: [userRatings.raterId],
     references: [users.id],
-    relationName: "rater"
+    relationName: "rater",
   }),
   rated: one(users, {
     fields: [userRatings.ratedId],
     references: [users.id],
-    relationName: "rated"
+    relationName: "rated",
   }),
   group: one(groups, {
     fields: [userRatings.groupId],

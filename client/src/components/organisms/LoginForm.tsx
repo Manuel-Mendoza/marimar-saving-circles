@@ -28,8 +28,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ onNewUser, onLoginSuccess }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [fieldErrors, setFieldErrors] = useState<{[key: string]: string}>({});
-  const [touched, setTouched] = useState<{[key: string]: boolean}>({});
+  const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
+  const [touched, setTouched] = useState<{ [key: string]: boolean }>({});
 
   // Email validation
   const validateEmail = (email: string) => {
@@ -72,7 +72,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onNewUser, onLoginSuccess }) => {
   };
 
   const validateForm = () => {
-    const errors: {[key: string]: string} = {};
+    const errors: { [key: string]: string } = {};
     errors.email = validateEmail(formData.email);
     errors.password = validatePassword(formData.password);
 
@@ -98,16 +98,21 @@ const LoginForm: React.FC<LoginFormProps> = ({ onNewUser, onLoginSuccess }) => {
 
       // Login successful - the AuthContext will handle the state update
       onLoginSuccess?.();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Login error:', err);
-      setError(err.message || 'Credenciales inválidas. Verifica tu correo y contraseña.');
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : 'Credenciales inválidas. Verifica tu correo y contraseña.';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
   const getFieldClassName = (field: string) => {
-    const baseClasses = "w-full pl-12 pr-4 py-3 border rounded-lg transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500";
+    const baseClasses =
+      'w-full pl-12 pr-4 py-3 border rounded-lg transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500';
     const hasError = fieldErrors[field] && touched[field];
 
     if (hasError) {
@@ -118,10 +123,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onNewUser, onLoginSuccess }) => {
   };
 
   return (
-    <AuthTemplate
-      title="Bienvenido de vuelta"
-      subtitle="Accede a tu cuenta de San Marimar"
-    >
+    <AuthTemplate title="Bienvenido de vuelta" subtitle="Accede a tu cuenta de San Marimar">
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Iniciar Sesión</h2>
         <p className="text-gray-600">Ingresa tus credenciales para continuar</p>
@@ -142,7 +144,9 @@ const LoginForm: React.FC<LoginFormProps> = ({ onNewUser, onLoginSuccess }) => {
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Mail className={`h-5 w-5 ${fieldErrors.email && touched.email ? 'text-red-400' : 'text-gray-400'}`} />
+              <Mail
+                className={`h-5 w-5 ${fieldErrors.email && touched.email ? 'text-red-400' : 'text-gray-400'}`}
+              />
             </div>
             <input
               id="email"
@@ -150,11 +154,11 @@ const LoginForm: React.FC<LoginFormProps> = ({ onNewUser, onLoginSuccess }) => {
               autoComplete="email"
               placeholder="tu@email.com"
               value={formData.email}
-              onChange={(e) => handleInputChange('email', e.target.value)}
+              onChange={e => handleInputChange('email', e.target.value)}
               onBlur={() => handleBlur('email')}
               className={getFieldClassName('email')}
-              aria-describedby={fieldErrors.email ? "email-error" : undefined}
-              aria-invalid={fieldErrors.email ? "true" : "false"}
+              aria-describedby={fieldErrors.email ? 'email-error' : undefined}
+              aria-invalid={fieldErrors.email ? 'true' : 'false'}
             />
             {formData.email && !fieldErrors.email && touched.email && (
               <div className="absolute inset-y-0 right-0 pr-4 flex items-center">
@@ -177,7 +181,9 @@ const LoginForm: React.FC<LoginFormProps> = ({ onNewUser, onLoginSuccess }) => {
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Lock className={`h-5 w-5 ${fieldErrors.password && touched.password ? 'text-red-400' : 'text-gray-400'}`} />
+              <Lock
+                className={`h-5 w-5 ${fieldErrors.password && touched.password ? 'text-red-400' : 'text-gray-400'}`}
+              />
             </div>
             <input
               id="password"
@@ -185,11 +191,11 @@ const LoginForm: React.FC<LoginFormProps> = ({ onNewUser, onLoginSuccess }) => {
               autoComplete="current-password"
               placeholder="Tu contraseña"
               value={formData.password}
-              onChange={(e) => handleInputChange('password', e.target.value)}
+              onChange={e => handleInputChange('password', e.target.value)}
               onBlur={() => handleBlur('password')}
               className={`${getFieldClassName('password')} pr-12`}
-              aria-describedby={fieldErrors.password ? "password-error" : undefined}
-              aria-invalid={fieldErrors.password ? "true" : "false"}
+              aria-describedby={fieldErrors.password ? 'password-error' : undefined}
+              aria-invalid={fieldErrors.password ? 'true' : 'false'}
             />
             <button
               type="button"
@@ -214,7 +220,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onNewUser, onLoginSuccess }) => {
             <input
               type="checkbox"
               checked={formData.rememberMe}
-              onChange={(e) => handleInputChange('rememberMe', e.target.checked)}
+              onChange={e => handleInputChange('rememberMe', e.target.checked)}
               className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
             />
             <span className="text-sm text-gray-600">Recordarme</span>
@@ -222,7 +228,9 @@ const LoginForm: React.FC<LoginFormProps> = ({ onNewUser, onLoginSuccess }) => {
           <button
             type="button"
             className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
-            onClick={() => {/* TODO: Implement forgot password */}}
+            onClick={() => {
+              /* TODO: Implement forgot password */
+            }}
           >
             ¿Olvidaste tu contraseña?
           </button>
@@ -262,9 +270,13 @@ const LoginForm: React.FC<LoginFormProps> = ({ onNewUser, onLoginSuccess }) => {
       <div className="bg-gray-50 px-8 py-4 text-center border-t mt-8">
         <p className="text-xs text-gray-500">
           Al iniciar sesión, aceptas nuestros{' '}
-          <a href="#" className="text-blue-600 hover:underline">Términos de servicio</a>
-          {' '}y{' '}
-          <a href="#" className="text-blue-600 hover:underline">Política de privacidad</a>
+          <a href="#" className="text-blue-600 hover:underline">
+            Términos de servicio
+          </a>{' '}
+          y{' '}
+          <a href="#" className="text-blue-600 hover:underline">
+            Política de privacidad
+          </a>
         </p>
       </div>
     </AuthTemplate>

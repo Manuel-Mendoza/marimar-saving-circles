@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -47,6 +47,33 @@ export const DrawAnimation: React.FC<DrawAnimationProps> = ({
   const [currentStep, setCurrentStep] = useState(0);
   const [wsConnection, setWsConnection] = useState<WebSocket | null>(null);
 
+  // Función para iniciar la animación
+  const startAnimation = useCallback(
+    (positions: DrawPosition[]) => {
+      setIsAnimating(true);
+      setRevealedPositions([]);
+      setCurrentStep(0);
+
+      // Animación secuencial con delays
+      positions.forEach((position, index) => {
+        setTimeout(() => {
+          setRevealedPositions(prev => [...prev, position]);
+          setCurrentStep(index + 1);
+
+          // Si es la última posición, completar la animación
+          if (index === positions.length - 1) {
+            setTimeout(() => {
+              setIsAnimating(false);
+              // Notificar que el sorteo se completó para mostrar modal de celebración
+              onDrawComplete?.();
+            }, 1000); // Pequeño delay antes de mostrar el modal
+          }
+        }, position.delay || 0);
+      });
+    },
+    [onDrawComplete]
+  );
+
   // Conectar al WebSocket cuando se activa la animación (solo si useInternalWebSocket es true)
   useEffect(() => {
     if (isActive && groupId && useInternalWebSocket) {
@@ -57,7 +84,7 @@ export const DrawAnimation: React.FC<DrawAnimationProps> = ({
         setWsConnection(ws);
       };
 
-      ws.onmessage = (event) => {
+      ws.onmessage = event => {
         try {
           const data = JSON.parse(event.data);
           console.log('Mensaje WebSocket recibido:', data);
@@ -70,7 +97,7 @@ export const DrawAnimation: React.FC<DrawAnimationProps> = ({
         }
       };
 
-      ws.onerror = (error) => {
+      ws.onerror = error => {
         console.error('Error en WebSocket:', error);
       };
 
@@ -86,7 +113,7 @@ export const DrawAnimation: React.FC<DrawAnimationProps> = ({
         }
       };
     }
-  }, [isActive, groupId, useInternalWebSocket]);
+  }, [isActive, groupId, useInternalWebSocket, startAnimation]);
 
   // Iniciar animación automáticamente cuando no usa WebSocket interno (modo usuario)
   useEffect(() => {
@@ -101,31 +128,7 @@ export const DrawAnimation: React.FC<DrawAnimationProps> = ({
       }));
       startAnimation(positionsWithDelays);
     }
-  }, [isActive, useInternalWebSocket, finalPositions]);
-
-  // Función para iniciar la animación
-  const startAnimation = (positions: DrawPosition[]) => {
-    setIsAnimating(true);
-    setRevealedPositions([]);
-    setCurrentStep(0);
-
-    // Animación secuencial con delays
-    positions.forEach((position, index) => {
-      setTimeout(() => {
-        setRevealedPositions(prev => [...prev, position]);
-        setCurrentStep(index + 1);
-
-        // Si es la última posición, completar la animación
-        if (index === positions.length - 1) {
-          setTimeout(() => {
-            setIsAnimating(false);
-            // Notificar que el sorteo se completó para mostrar modal de celebración
-            onDrawComplete?.();
-          }, 1000); // Pequeño delay antes de mostrar el modal
-        }
-      }, (position.delay || 0));
-    });
-  };
+  }, [isActive, useInternalWebSocket, finalPositions, startAnimation]);
 
   // Función para mostrar posiciones simuladas (para testing sin WebSocket)
   const simulateDraw = () => {
@@ -168,20 +171,21 @@ export const DrawAnimation: React.FC<DrawAnimationProps> = ({
           {/* Estado de conexión WebSocket */}
           <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
             <div className="flex items-center space-x-2">
-              <div className={`w-3 h-3 rounded-full ${
-                wsConnection?.readyState === WebSocket.OPEN
-                  ? 'bg-green-500'
-                  : wsConnection?.readyState === WebSocket.CONNECTING
-                    ? 'bg-yellow-500'
-                    : 'bg-red-500'
-              }`} />
+              <div
+                className={`w-3 h-3 rounded-full ${
+                  wsConnection?.readyState === WebSocket.OPEN
+                    ? 'bg-green-500'
+                    : wsConnection?.readyState === WebSocket.CONNECTING
+                      ? 'bg-yellow-500'
+                      : 'bg-red-500'
+                }`}
+              />
               <span className="text-sm font-medium">
                 {wsConnection?.readyState === WebSocket.OPEN
                   ? 'Conectado en tiempo real'
                   : wsConnection?.readyState === WebSocket.CONNECTING
                     ? 'Conectando...'
-                    : 'Desconectado'
-                }
+                    : 'Desconectado'}
               </span>
             </div>
 
@@ -192,12 +196,7 @@ export const DrawAnimation: React.FC<DrawAnimationProps> = ({
               </Badge>
 
               {!wsConnection && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={simulateDraw}
-                  disabled={isAnimating}
-                >
+                <Button size="sm" variant="outline" onClick={simulateDraw} disabled={isAnimating}>
                   <Trophy className="h-4 w-4 mr-1" />
                   Simular Sorteo
                 </Button>
@@ -229,7 +228,9 @@ export const DrawAnimation: React.FC<DrawAnimationProps> = ({
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold border-2 ${getPositionColor(position.position, finalPositions.length)}`}>
+                      <div
+                        className={`w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold border-2 ${getPositionColor(position.position, finalPositions.length)}`}
+                      >
                         {getPositionIcon(position.position)}
                       </div>
 
@@ -254,8 +255,6 @@ export const DrawAnimation: React.FC<DrawAnimationProps> = ({
               </Card>
             ))}
           </div>
-
-
 
           {/* Botones de acción */}
           <div className="flex justify-end space-x-3 pt-4 border-t">

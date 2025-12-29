@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,7 +13,7 @@ import {
   CreditCard,
   Package,
   Users,
-  AlertTriangle
+  AlertTriangle,
 } from 'lucide-react';
 import ReputationBadge from '@/components/atoms/ReputationBadge';
 import RatingStars from '@/components/atoms/RatingStars';
@@ -32,6 +32,33 @@ interface UserReputationCardProps {
   className?: string;
 }
 
+interface ReputationData {
+  score: number;
+  status: string;
+  totalRatings: number;
+  paymentReliability: number;
+  deliveryReliability: number;
+  lastUpdate: string;
+  user: {
+    id: number;
+    nombre: string;
+    apellido: string;
+  };
+}
+
+interface RatingData {
+  id: number;
+  raterId: number;
+  ratingType: string;
+  rating: number;
+  comment?: string;
+  createdAt: string;
+  rater: {
+    nombre: string;
+    apellido: string;
+  };
+}
+
 /**
  * Componente Organism para mostrar reputación completa de usuario
  * Incluye estadísticas detalladas y opciones de calificación
@@ -42,8 +69,8 @@ const UserReputationCard: React.FC<UserReputationCardProps> = ({
   currentGroupId,
   className,
 }) => {
-  const [reputation, setReputation] = useState<any>(null);
-  const [ratings, setRatings] = useState<any[]>([]);
+  const [reputation, setReputation] = useState<ReputationData | null>(null);
+  const [ratings, setRatings] = useState<RatingData[]>([]);
   const [loading, setLoading] = useState(true);
   const [ratingModal, setRatingModal] = useState<{
     open: boolean;
@@ -53,7 +80,7 @@ const UserReputationCard: React.FC<UserReputationCardProps> = ({
   const { toast } = useToast();
 
   // Cargar datos de reputación
-  const loadReputationData = async () => {
+  const loadReputationData = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -69,7 +96,6 @@ const UserReputationCard: React.FC<UserReputationCardProps> = ({
         // Las calificaciones pueden ser privadas
         console.log('Ratings not available');
       }
-
     } catch (error) {
       console.error('Error loading reputation data:', error);
       toast({
@@ -80,11 +106,11 @@ const UserReputationCard: React.FC<UserReputationCardProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId, toast]);
 
   useEffect(() => {
     loadReputationData();
-  }, [userId]);
+  }, [loadReputationData]);
 
   // Manejar envío de calificación
   const handleRatingSubmit = async (rating: number, comment?: string) => {
@@ -144,9 +170,7 @@ const UserReputationCard: React.FC<UserReputationCardProps> = ({
         <CardContent className="p-6">
           <Alert>
             <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>
-              No se pudo cargar la información de reputación.
-            </AlertDescription>
+            <AlertDescription>No se pudo cargar la información de reputación.</AlertDescription>
           </Alert>
         </CardContent>
       </Card>
@@ -163,15 +187,10 @@ const UserReputationCard: React.FC<UserReputationCardProps> = ({
                 <Star className="w-5 h-5 text-yellow-500" />
                 Reputación
               </CardTitle>
-              <CardDescription>
-                Información de confianza y comportamiento
-              </CardDescription>
+              <CardDescription>Información de confianza y comportamiento</CardDescription>
             </div>
 
-            <ReputationBadge
-              score={reputation.score}
-              showDetails={true}
-            />
+            <ReputationBadge score={reputation.score} showDetails={true} />
           </div>
         </CardHeader>
 
@@ -189,18 +208,14 @@ const UserReputationCard: React.FC<UserReputationCardProps> = ({
                   <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                     {reputation.score.toFixed(1)}
                   </div>
-                  <div className="text-sm text-blue-600 dark:text-blue-400">
-                    Puntuación Total
-                  </div>
+                  <div className="text-sm text-blue-600 dark:text-blue-400">Puntuación Total</div>
                 </div>
 
                 <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
                   <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                     {reputation.totalRatings}
                   </div>
-                  <div className="text-sm text-green-600 dark:text-green-400">
-                    Calificaciones
-                  </div>
+                  <div className="text-sm text-green-600 dark:text-green-400">Calificaciones</div>
                 </div>
 
                 <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
@@ -257,9 +272,7 @@ const UserReputationCard: React.FC<UserReputationCardProps> = ({
               {/* Opciones de calificación */}
               {showRatingOptions && (
                 <div className="space-y-3">
-                  <h4 className="font-medium text-gray-900 dark:text-white">
-                    Calificar Usuario
-                  </h4>
+                  <h4 className="font-medium text-gray-900 dark:text-white">Calificar Usuario</h4>
 
                   <div className="flex flex-wrap gap-2">
                     <Button
@@ -311,11 +324,8 @@ const UserReputationCard: React.FC<UserReputationCardProps> = ({
                   </h4>
 
                   <div className="space-y-3 max-h-60 overflow-y-auto">
-                    {ratings.slice(0, 10).map((rating: any) => (
-                      <div
-                        key={rating.id}
-                        className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
-                      >
+                    {ratings.slice(0, 10).map((rating: RatingData) => (
+                      <div key={rating.id} className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-medium">
@@ -354,9 +364,7 @@ const UserReputationCard: React.FC<UserReputationCardProps> = ({
               ) : (
                 <Alert>
                   <MessageSquare className="h-4 w-4" />
-                  <AlertDescription>
-                    Este usuario aún no tiene calificaciones.
-                  </AlertDescription>
+                  <AlertDescription>Este usuario aún no tiene calificaciones.</AlertDescription>
                 </Alert>
               )}
             </TabsContent>
@@ -367,7 +375,7 @@ const UserReputationCard: React.FC<UserReputationCardProps> = ({
       {/* Modal de calificación */}
       <RatingModal
         open={ratingModal.open}
-        onOpenChange={(open) => setRatingModal(prev => ({ ...prev, open }))}
+        onOpenChange={open => setRatingModal(prev => ({ ...prev, open }))}
         targetUser={{
           id: userId,
           nombre: reputation.user.nombre,

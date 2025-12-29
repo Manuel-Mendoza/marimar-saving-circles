@@ -17,10 +17,7 @@ interface GroupDetailViewProps {
   onClose: () => void;
 }
 
-export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
-  groupDetails,
-  onClose,
-}) => {
+export const GroupDetailView: React.FC<GroupDetailViewProps> = ({ groupDetails, onClose }) => {
   const { group, members, contributions, deliveries, stats } = groupDetails;
 
   const formatCurrency = (amount: number, currency: 'VES' | 'USD') => {
@@ -44,9 +41,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            {group.nombre}
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{group.nombre}</h2>
           <p className="text-gray-600 dark:text-gray-400">
             Grupo #{group.id} • {group.duracionMeses} meses
           </p>
@@ -63,9 +58,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalMembers}</div>
-            <p className="text-xs text-muted-foreground">
-              de {group.duracionMeses} requeridos
-            </p>
+            <p className="text-xs text-muted-foreground">de {group.duracionMeses} requeridos</p>
           </CardContent>
         </Card>
 
@@ -89,9 +82,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalDeliveries}</div>
-            <p className="text-xs text-muted-foreground">
-              {stats.completedDeliveries} completadas
-            </p>
+            <p className="text-xs text-muted-foreground">{stats.completedDeliveries} completadas</p>
           </CardContent>
         </Card>
       </div>
@@ -131,9 +122,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
               </p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Estado
-              </label>
+              <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Estado</label>
               <div className="mt-1">
                 <GroupStatusBadge status={group.estado} />
               </div>
@@ -157,8 +146,11 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
             </p>
           ) : (
             <div className="space-y-3">
-              {members.map((member) => (
-                <div key={member.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              {members.map(member => (
+                <div
+                  key={member.id}
+                  className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                >
                   <div className="flex items-center space-x-3">
                     <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
                       <User className="h-4 w-4 text-blue-600 dark:text-blue-400" />
@@ -173,9 +165,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
                     </div>
                   </div>
                   <div className="text-right">
-                    <Badge variant="outline">
-                      Posición {member.posicion || 'No asignada'}
-                    </Badge>
+                    <Badge variant="outline">Posición {member.posicion || 'No asignada'}</Badge>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                       {member.monedaPago}
                     </p>
@@ -202,8 +192,11 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
             </p>
           ) : (
             <div className="space-y-3 max-h-96 overflow-y-auto">
-              {contributions.map((contribution) => (
-                <div key={contribution.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              {contributions.map(contribution => (
+                <div
+                  key={contribution.id}
+                  className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                >
                   <div className="flex items-center space-x-3">
                     <div className="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
                       <DollarSign className="h-4 w-4 text-green-600 dark:text-green-400" />
@@ -250,8 +243,11 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
             </p>
           ) : (
             <div className="space-y-3 max-h-96 overflow-y-auto">
-              {deliveries.map((delivery) => (
-                <div key={delivery.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              {deliveries.map(delivery => (
+                <div
+                  key={delivery.id}
+                  className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                >
                   <div className="flex items-center space-x-3">
                     <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center">
                       <Package className="h-4 w-4 text-purple-600 dark:text-purple-400" />
@@ -266,9 +262,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-semibold">
-                      {formatCurrency(delivery.productValue, 'USD')}
-                    </p>
+                    <p className="font-semibold">{formatCurrency(delivery.productValue, 'USD')}</p>
                     <Badge
                       variant={delivery.estado === 'ENTREGADO' ? 'default' : 'secondary'}
                       className="mt-1"

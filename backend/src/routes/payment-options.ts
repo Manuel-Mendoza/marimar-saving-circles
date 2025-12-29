@@ -209,9 +209,10 @@ paymentOptionsRoute.put("/:tipo", authenticate, async (c) => {
 
     return c.json({
       success: true,
-      message: existingOption.length > 0
-        ? "Opción de pago actualizada exitosamente"
-        : "Opción de pago creada exitosamente",
+      message:
+        existingOption.length > 0
+          ? "Opción de pago actualizada exitosamente"
+          : "Opción de pago creada exitosamente",
       data: {
         option,
       },
@@ -294,7 +295,7 @@ paymentOptionsRoute.put("/:id/toggle", authenticate, async (c) => {
 
     return c.json({
       success: true,
-      message: `Opción de pago ${updatedOption.activo ? 'activada' : 'desactivada'} exitosamente`,
+      message: `Opción de pago ${updatedOption.activo ? "activada" : "desactivada"} exitosamente`,
       data: {
         option: updatedOption,
       },
@@ -355,9 +356,7 @@ paymentOptionsRoute.delete("/:id", authenticate, async (c) => {
     }
 
     // Delete the option
-    await db
-      .delete(paymentOptions)
-      .where(eq(paymentOptions.id, optionId));
+    await db.delete(paymentOptions).where(eq(paymentOptions.id, optionId));
 
     return c.json({
       success: true,

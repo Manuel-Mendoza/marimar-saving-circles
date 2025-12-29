@@ -11,12 +11,7 @@ import {
 import { CurrencyDisplay } from '@/components/atoms';
 import StatusBadge from '@/components/atoms/StatusBadge';
 import ProductActionButtons from '@/components/molecules/products/ProductActionButtons';
-import {
-  Edit,
-  Trash2,
-  Package,
-  DollarSign,
-} from 'lucide-react';
+import { Edit, Trash2, Package, DollarSign } from 'lucide-react';
 
 interface Producto {
   id: number;
@@ -98,7 +93,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
           actions={getAvailableActions(product)}
           productId={product.id}
           isLoading={actionLoadingId === product.id}
-          onAction={(action) => onProductAction(product, action)}
+          onAction={action => onProductAction(product, action)}
         />
       </TableCell>
     </TableRow>

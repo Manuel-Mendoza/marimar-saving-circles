@@ -1,14 +1,12 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { LoadingSpinner } from '@/components/atoms';
-import {
-  PaymentRequestCard
-} from '@/components/molecules/payments';
+import { PaymentRequestCard } from '@/components/molecules/payments';
 import {
   PaymentStatsGrid,
   PaymentRequestsTable,
-  PaymentActionDialogs
+  PaymentActionDialogs,
 } from '@/components/organisms/payments';
 import { useToast } from '@/hooks/use-toast';
 import api from '@/lib/api';
@@ -34,8 +32,6 @@ const PaymentsManagement: React.FC<PaymentsManagementProps> = ({ user }) => {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
 
-
-
   // Estados de diálogos
   const [selectedRequest, setSelectedRequest] = useState<PaymentRequest | null>(null);
   const [showApproveDialog, setShowApproveDialog] = useState(false);
@@ -47,7 +43,7 @@ const PaymentsManagement: React.FC<PaymentsManagementProps> = ({ user }) => {
   const { toast } = useToast();
 
   // Load payment requests
-  const loadPaymentRequests = async () => {
+  const loadPaymentRequests = useCallback(async () => {
     try {
       setLoading(true);
       const response = await api.getAllPaymentRequests();
@@ -64,11 +60,11 @@ const PaymentsManagement: React.FC<PaymentsManagementProps> = ({ user }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   useEffect(() => {
     loadPaymentRequests();
-  }, []);
+  }, [loadPaymentRequests]);
 
   // Separate requests by status
   const pendingRequests = paymentRequests.filter(r => r.estado === 'PENDIENTE');
@@ -97,8 +93,6 @@ const PaymentsManagement: React.FC<PaymentsManagementProps> = ({ user }) => {
       totalPendingAmount,
     };
   }, [paymentRequests]);
-
-
 
   // Handle payment actions
   const handleApprove = (requestId: number) => {
@@ -201,9 +195,7 @@ const PaymentsManagement: React.FC<PaymentsManagementProps> = ({ user }) => {
   return (
     <div className="flex-1 p-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-          Gestión de Pagos
-        </h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Gestión de Pagos</h1>
         <p className="text-gray-600 dark:text-gray-400">
           Administra todas las solicitudes de pago de los usuarios
         </p>
@@ -215,26 +207,28 @@ const PaymentsManagement: React.FC<PaymentsManagementProps> = ({ user }) => {
       {/* Payment Requests Tabs */}
       <Tabs defaultValue="pending" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="pending">
-            Pendientes ({pendingRequests.length})
-          </TabsTrigger>
-          <TabsTrigger value="confirmed">
-            Confirmadas ({confirmedRequests.length})
-          </TabsTrigger>
-          <TabsTrigger value="rejected">
-            Rechazadas ({rejectedRequests.length})
-          </TabsTrigger>
-          <TabsTrigger value="all">
-            Todas ({paymentRequests.length})
-          </TabsTrigger>
+          <TabsTrigger value="pending">Pendientes ({pendingRequests.length})</TabsTrigger>
+          <TabsTrigger value="confirmed">Confirmadas ({confirmedRequests.length})</TabsTrigger>
+          <TabsTrigger value="rejected">Rechazadas ({rejectedRequests.length})</TabsTrigger>
+          <TabsTrigger value="all">Todas ({paymentRequests.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="pending" className="space-y-4">
           {pendingRequests.length === 0 ? (
             <div className="text-center py-12">
               <div className="text-gray-400 dark:text-gray-600 mb-4">
-                <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                <svg
+                  className="mx-auto h-12 w-12"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
                 </svg>
               </div>
               <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
@@ -324,7 +318,7 @@ const PaymentsManagement: React.FC<PaymentsManagementProps> = ({ user }) => {
                 src={comprobanteUrl}
                 alt="Comprobante de pago"
                 className="max-w-full max-h-full object-contain rounded-lg shadow-lg"
-                onError={(e) => {
+                onError={e => {
                   console.error('Error loading comprobante image:', e);
                   toast({
                     title: 'Error',

@@ -159,9 +159,10 @@ export const ProductsManagement: React.FC<ProductsManagementProps> = ({ user }) 
     totalProducts: allProducts.length,
     activeProducts: allProducts.filter(p => p.activo).length,
     inactiveProducts: allProducts.filter(p => !p.activo).length,
-    averagePrice: allProducts.length > 0
-      ? allProducts.reduce((sum, p) => sum + p.precioUsd, 0) / allProducts.length
-      : 0,
+    averagePrice:
+      allProducts.length > 0
+        ? allProducts.reduce((sum, p) => sum + p.precioUsd, 0) / allProducts.length
+        : 0,
   };
 
   return (

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LoadingSpinner } from '@/components/atoms';
 import { UserSearchFilter } from '@/components/molecules';
@@ -42,12 +42,14 @@ export const UsersManagement: React.FC<UsersManagementProps> = ({ user }) => {
 
   const [showActionDialog, setShowActionDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [actionType, setActionType] = useState<'approve' | 'reject' | 'suspend' | 'reactivate' | 'delete'>('approve');
+  const [actionType, setActionType] = useState<
+    'approve' | 'reject' | 'suspend' | 'reactivate' | 'delete'
+  >('approve');
   const [reason, setReason] = useState('');
   const { toast } = useToast();
 
   // Load users data
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     try {
       setLoading(true);
       const [allUsersResponse, pendingUsersResponse] = await Promise.all([
@@ -72,11 +74,11 @@ export const UsersManagement: React.FC<UsersManagementProps> = ({ user }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   useEffect(() => {
     loadUsers();
-  }, []);
+  }, [loadUsers]);
 
   // Filter users based on search term and status filters
   const filterUsers = (userList: User[]) => {
@@ -119,14 +121,17 @@ export const UsersManagement: React.FC<UsersManagementProps> = ({ user }) => {
   };
 
   // Handle user actions
-  const handleUserAction = async (user: User, action: string) => {
+  const handleUserAction = async (
+    user: User,
+    action: 'approve' | 'reject' | 'suspend' | 'reactivate' | 'delete'
+  ) => {
     if (action === 'delete') {
       setSelectedUser(user);
       setActionType('delete');
       setShowDeleteDialog(true);
     } else {
       setSelectedUser(user);
-      setActionType(action as any);
+      setActionType(action);
       setShowActionDialog(true);
     }
   };

@@ -82,11 +82,7 @@ const ReputationBadge: React.FC<ReputationBadgeProps> = ({
     >
       <span className="text-lg leading-none">{status.icon}</span>
       <span>{status.label}</span>
-      {showDetails && (
-        <span className="text-xs opacity-75">
-          ({score.toFixed(1)})
-        </span>
-      )}
+      {showDetails && <span className="text-xs opacity-75">({score.toFixed(1)})</span>}
     </Badge>
   );
 };

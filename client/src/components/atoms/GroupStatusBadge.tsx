@@ -13,10 +13,7 @@ interface GroupStatusBadgeProps {
   className?: string;
 }
 
-export const GroupStatusBadge: React.FC<GroupStatusBadgeProps> = ({
-  status,
-  className = '',
-}) => {
+export const GroupStatusBadge: React.FC<GroupStatusBadgeProps> = ({ status, className = '' }) => {
   const getStatusConfig = (status: Grupo['estado']) => {
     switch (status) {
       case 'SIN_COMPLETAR':
@@ -55,10 +52,7 @@ export const GroupStatusBadge: React.FC<GroupStatusBadgeProps> = ({
   const config = getStatusConfig(status);
 
   return (
-    <Badge
-      variant={config.variant}
-      className={`${config.className} ${className}`}
-    >
+    <Badge variant={config.variant} className={`${config.className} ${className}`}>
       {config.label}
     </Badge>
   );

@@ -21,25 +21,28 @@ interface DrawData {
 export const useGroupWebSocket = (userGroups: UserGroup[]) => {
   const [wsConnections, setWsConnections] = useState<Map<number, WebSocket>>(new Map());
   const [activeDraw, setActiveDraw] = useState<DrawData | null>(null);
-  const [connectionStatus, setConnectionStatus] = useState<Map<number, 'connecting' | 'connected' | 'disconnected'>>(new Map());
+  const [connectionStatus, setConnectionStatus] = useState<
+    Map<number, 'connecting' | 'connected' | 'disconnected'>
+  >(new Map());
 
   // Connect to a specific group
-  const connectToGroup = useCallback((groupId: number) => {
-    if (wsConnections.has(groupId)) {
-      return; // Already connected
-    }
+  const connectToGroup = useCallback(
+    (groupId: number) => {
+      if (wsConnections.has(groupId)) {
+        return; // Already connected
+      }
 
-    setConnectionStatus(prev => new Map(prev).set(groupId, 'connecting'));
+      setConnectionStatus(prev => new Map(prev).set(groupId, 'connecting'));
 
-    const ws = new WebSocket(`ws://localhost:6001/groups/${groupId}`);
+      const ws = new WebSocket(`ws://localhost:6001/groups/${groupId}`);
 
-    ws.onopen = () => {
-      console.log(`Conectado al WebSocket del grupo ${groupId}`);
-      setConnectionStatus(prev => new Map(prev).set(groupId, 'connected'));
-      setWsConnections(prev => new Map(prev).set(groupId, ws));
-    };
+      ws.onopen = () => {
+        console.log(`Conectado al WebSocket del grupo ${groupId}`);
+        setConnectionStatus(prev => new Map(prev).set(groupId, 'connected'));
+        setWsConnections(prev => new Map(prev).set(groupId, ws));
+      };
 
-      ws.onmessage = (event) => {
+      ws.onmessage = event => {
         try {
           const data = JSON.parse(event.data);
           console.log(`Mensaje WebSocket recibido para grupo ${groupId}:`, data);
@@ -60,39 +63,44 @@ export const useGroupWebSocket = (userGroups: UserGroup[]) => {
         }
       };
 
-    ws.onerror = (error) => {
-      console.error(`Error en WebSocket del grupo ${groupId}:`, error);
-      setConnectionStatus(prev => new Map(prev).set(groupId, 'disconnected'));
-    };
+      ws.onerror = error => {
+        console.error(`Error en WebSocket del grupo ${groupId}:`, error);
+        setConnectionStatus(prev => new Map(prev).set(groupId, 'disconnected'));
+      };
 
-    ws.onclose = () => {
-      console.log(`WebSocket desconectado del grupo ${groupId}`);
-      setConnectionStatus(prev => new Map(prev).set(groupId, 'disconnected'));
+      ws.onclose = () => {
+        console.log(`WebSocket desconectado del grupo ${groupId}`);
+        setConnectionStatus(prev => new Map(prev).set(groupId, 'disconnected'));
+        setWsConnections(prev => {
+          const newMap = new Map(prev);
+          newMap.delete(groupId);
+          return newMap;
+        });
+      };
+    },
+    [wsConnections]
+  );
+
+  // Disconnect from a specific group
+  const disconnectFromGroup = useCallback(
+    (groupId: number) => {
+      const ws = wsConnections.get(groupId);
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.close();
+      }
       setWsConnections(prev => {
         const newMap = new Map(prev);
         newMap.delete(groupId);
         return newMap;
       });
-    };
-  }, [wsConnections]);
-
-  // Disconnect from a specific group
-  const disconnectFromGroup = useCallback((groupId: number) => {
-    const ws = wsConnections.get(groupId);
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.close();
-    }
-    setWsConnections(prev => {
-      const newMap = new Map(prev);
-      newMap.delete(groupId);
-      return newMap;
-    });
-    setConnectionStatus(prev => {
-      const newMap = new Map(prev);
-      newMap.delete(groupId);
-      return newMap;
-    });
-  }, [wsConnections]);
+      setConnectionStatus(prev => {
+        const newMap = new Map(prev);
+        newMap.delete(groupId);
+        return newMap;
+      });
+    },
+    [wsConnections]
+  );
 
   // Connect to all user's groups when userGroups changes
   useEffect(() => {

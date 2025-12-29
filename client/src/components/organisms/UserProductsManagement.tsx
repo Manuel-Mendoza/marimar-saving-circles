@@ -1,9 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { LoadingSpinner } from '@/components/atoms';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { DollarSign, Calendar, Users } from 'lucide-react';
@@ -39,7 +46,7 @@ export const UserProductsManagement: React.FC<UserProductsManagementProps> = ({ 
   const { toast } = useToast();
 
   // Load products data
-  const loadProducts = async () => {
+  const loadProducts = useCallback(async () => {
     try {
       setLoading(true);
       const response = await api.getProducts();
@@ -63,11 +70,11 @@ export const UserProductsManagement: React.FC<UserProductsManagementProps> = ({ 
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   useEffect(() => {
     loadProducts();
-  }, []);
+  }, [loadProducts]);
 
   // Handle product selection
   const handleSelectProduct = (product: Producto) => {
@@ -133,9 +140,7 @@ export const UserProductsManagement: React.FC<UserProductsManagementProps> = ({ 
   return (
     <div className="flex-1 p-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-          Planes de Ahorro
-        </h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Planes de Ahorro</h1>
         <p className="text-gray-600 dark:text-gray-400">
           Elige el plan de ahorro que mejor se adapte a tus necesidades
         </p>
@@ -143,20 +148,20 @@ export const UserProductsManagement: React.FC<UserProductsManagementProps> = ({ 
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {products.length > 0 ? (
-          products.map((product) => (
+          products.map(product => (
             <Card key={product.id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <CardTitle className="text-xl">{product.nombre}</CardTitle>
-                <CardDescription className="text-base">
-                  {product.descripcion}
-                </CardDescription>
+                <CardDescription className="text-base">{product.descripcion}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {/* Pricing */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">Precio mensual:</span>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                        Precio mensual:
+                      </span>
                       <div className="text-right">
                         <div className="font-semibold text-green-600 text-lg">
                           {formatCurrency(product.precioUsd, 'USD')}
@@ -231,8 +236,8 @@ export const UserProductsManagement: React.FC<UserProductsManagementProps> = ({ 
           <DialogHeader>
             <DialogTitle>Seleccionar Plan de Ahorro</DialogTitle>
             <DialogDescription>
-              Has seleccionado el plan <strong>{selectedProduct?.nombre}</strong>.
-              Elige la moneda en la que deseas realizar tus pagos mensuales.
+              Has seleccionado el plan <strong>{selectedProduct?.nombre}</strong>. Elige la moneda
+              en la que deseas realizar tus pagos mensuales.
             </DialogDescription>
           </DialogHeader>
 
@@ -241,7 +246,7 @@ export const UserProductsManagement: React.FC<UserProductsManagementProps> = ({ 
               <Label className="text-base font-medium">Moneda de pago</Label>
               <RadioGroup
                 value={selectedCurrency}
-                onValueChange={(value) => setSelectedCurrency(value as 'VES' | 'USD')}
+                onValueChange={value => setSelectedCurrency(value as 'VES' | 'USD')}
                 className="space-y-3"
               >
                 <div className="flex items-center space-x-3">
@@ -250,7 +255,9 @@ export const UserProductsManagement: React.FC<UserProductsManagementProps> = ({ 
                     <div className="flex justify-between items-center">
                       <span>BcV (Bolívares)</span>
                       <span className="font-semibold text-gray-600">
-                        {selectedProduct ? formatCurrency(selectedProduct.precioVes, 'VES').replace('Bs.S', 'BcV') : ''}
+                        {selectedProduct
+                          ? formatCurrency(selectedProduct.precioVes, 'VES').replace('Bs.S', 'BcV')
+                          : ''}
                       </span>
                     </div>
                   </Label>
@@ -271,8 +278,9 @@ export const UserProductsManagement: React.FC<UserProductsManagementProps> = ({ 
 
             <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg">
               <p className="text-sm text-blue-800 dark:text-blue-200">
-                <strong>Nota:</strong> Al seleccionar este plan, serás asignado automáticamente a un grupo disponible
-                o se creará uno nuevo si es necesario. Los pagos se realizarán mensualmente durante {selectedProduct?.tiempoDuracion} meses.
+                <strong>Nota:</strong> Al seleccionar este plan, serás asignado automáticamente a un
+                grupo disponible o se creará uno nuevo si es necesario. Los pagos se realizarán
+                mensualmente durante {selectedProduct?.tiempoDuracion} meses.
               </p>
             </div>
           </div>
@@ -281,10 +289,7 @@ export const UserProductsManagement: React.FC<UserProductsManagementProps> = ({ 
             <Button variant="outline" onClick={() => setShowSelectDialog(false)}>
               Cancelar
             </Button>
-            <Button
-              onClick={handleJoinGroup}
-              disabled={selectingProduct !== null}
-            >
+            <Button onClick={handleJoinGroup} disabled={selectingProduct !== null}>
               {selectingProduct !== null ? 'Uniendo...' : 'Confirmar selección'}
             </Button>
           </DialogFooter>

@@ -74,7 +74,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onBack, onRegistrat
 
   const validatePhone = (phone: string) => {
     // Remove all spaces, dashes, and dots for validation
-    const cleanPhone = phone.replace(/[\s\-\.]/g, '');
+    const cleanPhone = phone.replace(/[\s\-.]/g, '');
     const phoneRegex = /^(\+58)?0?4\d{2}\d{7}$/;
     if (!phone) return 'El teléfono es requerido';
     if (!phoneRegex.test(cleanPhone)) return 'Ingresa un número de teléfono venezolano válido';
@@ -234,7 +234,9 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onBack, onRegistrat
       if (response.success) {
         setShowSuccessDialog(true);
       } else {
-        setDialogErrorMessage(response.message || 'Error al registrar usuario. Inténtalo de nuevo.');
+        setDialogErrorMessage(
+          response.message || 'Error al registrar usuario. Inténtalo de nuevo.'
+        );
         setShowErrorDialog(true);
       }
     } catch (err) {
@@ -267,7 +269,16 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onBack, onRegistrat
 
   // Calculate completion percentage
   const getCompletionPercentage = () => {
-    const fields = ['nombre', 'apellido', 'cedula', 'telefono', 'direccion', 'email', 'password', 'confirmPassword'];
+    const fields = [
+      'nombre',
+      'apellido',
+      'cedula',
+      'telefono',
+      'direccion',
+      'email',
+      'password',
+      'confirmPassword',
+    ];
     const completedFields = fields.filter(
       field => formData[field as keyof typeof formData] && !fieldErrors[field]
     );
@@ -764,7 +775,8 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onBack, onRegistrat
               <span>¡Registro exitoso!</span>
             </DialogTitle>
             <DialogDescription>
-              Tu cuenta ha sido creada exitosamente. Ahora puedes iniciar sesión y comenzar a ahorrar con San Marimar.
+              Tu cuenta ha sido creada exitosamente. Ahora puedes iniciar sesión y comenzar a
+              ahorrar con San Marimar.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex-col sm:flex-row gap-2">
@@ -798,15 +810,10 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onBack, onRegistrat
               <XCircle className="h-6 w-6" />
               <span>Error en el registro</span>
             </DialogTitle>
-            <DialogDescription>
-              {dialogErrorMessage}
-            </DialogDescription>
+            <DialogDescription>{dialogErrorMessage}</DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowErrorDialog(false)}
-            >
+            <Button variant="outline" onClick={() => setShowErrorDialog(false)}>
               Cerrar
             </Button>
             <Button

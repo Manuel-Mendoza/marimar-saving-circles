@@ -57,13 +57,14 @@ export const GroupStatsCard: React.FC<GroupStatsCardProps> = ({
         </div>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold text-gray-900 dark:text-white">
-          {value}
-        </div>
+        <div className="text-2xl font-bold text-gray-900 dark:text-white">{value}</div>
         {trend && (
           <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-            <span className={trend.value > 0 ? 'text-green-600' : trend.value < 0 ? 'text-red-600' : ''}>
-              {trend.value > 0 ? '+' : ''}{trend.value}
+            <span
+              className={trend.value > 0 ? 'text-green-600' : trend.value < 0 ? 'text-red-600' : ''}
+            >
+              {trend.value > 0 ? '+' : ''}
+              {trend.value}
             </span>{' '}
             {trend.label}
           </p>

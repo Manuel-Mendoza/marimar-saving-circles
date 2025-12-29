@@ -25,6 +25,17 @@ import {
   Play,
 } from 'lucide-react';
 
+interface RevenueData {
+  mes: string;
+  ingresos: number;
+}
+
+interface UserGroupData {
+  mes: string;
+  usuarios: number;
+  grupos: number;
+}
+
 interface DashboardStats {
   totalUsers: number;
   activeUsers: number;
@@ -101,14 +112,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const { exchangeRate, isLoading: exchangeRateLoading } = useExchangeRate();
 
   // Memoize chart data to prevent unnecessary re-renders
-  const memoizedRevenueData = useMemo(() => revenueData, [revenueData?.length]);
-  const memoizedUserGroupData = useMemo(() => userGroupData, [userGroupData?.length]);
+  const memoizedRevenueData = useMemo(() => revenueData, [revenueData]);
+  const memoizedUserGroupData = useMemo(() => userGroupData, [userGroupData]);
 
   const handleSidebarNavigate = (itemId: string) => {
     onNavigate?.(itemId);
   };
-
-
 
   const defaultStats: DashboardStats = {
     totalUsers: 0,
@@ -132,15 +141,16 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const currentStats = stats || defaultStats;
 
   // Usar estadísticas del hook si están disponibles, sino usar props
-  const effectiveStats = statsLoading ? currentStats : {
-    ...currentStats,
-    ...dashboardStats,
-  };
+  const effectiveStats = statsLoading
+    ? currentStats
+    : {
+        ...currentStats,
+        ...dashboardStats,
+      };
 
   // Combinar actividades del prop stats con las del hook
-  const displayActivities = currentStats.recentActivity.length > 0
-    ? currentStats.recentActivity
-    : recentActivities;
+  const displayActivities =
+    currentStats.recentActivity.length > 0 ? currentStats.recentActivity : recentActivities;
 
   const StatCard: React.FC<{
     title: string;
@@ -237,7 +247,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   );
 
   // Revenue Chart Component
-  const RevenueChart: React.FC<{ revenueData: any[] }> = ({ revenueData }) => {
+  const RevenueChart: React.FC<{ revenueData: RevenueData[] }> = ({ revenueData }) => {
     // Don't show fallback data when loading, only show when we have real data
     const chartData = chartsLoading ? [] : revenueData;
 
@@ -304,7 +314,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   };
 
   // Activity Chart Component
-  const ActivityChart: React.FC<{ userGroupData: any[] }> = ({ userGroupData }) => {
+  const ActivityChart: React.FC<{ userGroupData: UserGroupData[] }> = ({ userGroupData }) => {
     // Don't show fallback data when loading, only show when we have real data
     const chartData = chartsLoading ? [] : userGroupData;
 
@@ -347,26 +357,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   tickLine={false}
                   axisLine={false}
                 />
-                <YAxis
-                  stroke="#888888"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                />
+                <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
                 <ChartTooltip
                   content={<ChartTooltipContent />}
                   cursor={{ fill: 'rgba(0, 0, 0, 0.1)' }}
                 />
-                <Bar
-                  dataKey="usuarios"
-                  fill="var(--color-usuarios)"
-                  radius={[4, 4, 0, 0]}
-                />
-                <Bar
-                  dataKey="grupos"
-                  fill="var(--color-grupos)"
-                  radius={[4, 4, 0, 0]}
-                />
+                <Bar dataKey="usuarios" fill="var(--color-usuarios)" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="grupos" fill="var(--color-grupos)" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ChartContainer>
           )}
@@ -403,20 +400,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
             exchangeRateLoading ? (
               <LoadingSpinner size="sm" />
             ) : (
-              <CurrencyDisplay
-                amount={exchangeRate}
-                currency="VES"
-                showSymbol={true}
-                size="lg"
-              />
+              <CurrencyDisplay amount={exchangeRate} currency="VES" showSymbol={true} size="lg" />
             )
           }
           icon={DollarSign}
           variant="success"
         />
       </div>
-
-
 
       {/* Activity Feed and Right Column */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -425,7 +415,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
         </div>
         <div className="space-y-4 row-span-2">
           {/* Quick Actions */}
-          <Card className='h-full'>
+          <Card className="h-full">
             <CardHeader>
               <CardTitle>Acciones Rápidas</CardTitle>
             </CardHeader>
@@ -462,7 +452,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <CreditCard className="h-4 w-4 mr-2" />
                 Editar Metodo de Pago
               </Button>
-
             </CardContent>
           </Card>
         </div>

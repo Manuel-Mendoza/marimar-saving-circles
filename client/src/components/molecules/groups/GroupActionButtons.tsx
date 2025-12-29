@@ -1,6 +1,11 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Grupo } from '@/lib/types';
 import { MoreHorizontal, Eye, Edit, Play, Trash2 } from 'lucide-react';
 
@@ -34,8 +39,6 @@ export const GroupActionButtons: React.FC<GroupActionButtonsProps> = ({
   // Only disable for actual operations, not for viewing details
   const isLoading = actionLoadingId === group.id && actionLoadingId !== null;
 
-
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -43,7 +46,7 @@ export const GroupActionButtons: React.FC<GroupActionButtonsProps> = ({
           variant="ghost"
           className="h-8 w-8 p-0"
           disabled={isLoading}
-          onClick={(e) => {
+          onClick={e => {
             // Prevent event bubbling and ensure button works
             e.preventDefault();
             e.stopPropagation();

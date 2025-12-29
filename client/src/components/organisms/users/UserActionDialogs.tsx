@@ -142,12 +142,8 @@ const UserActionDialogs: React.FC<UserActionDialogsProps> = ({
       <Dialog open={showActionDialog} onOpenChange={onActionDialogChange}>
         <DialogContent className={actionType === 'approve' ? 'sm:max-w-md' : ''}>
           <DialogHeader>
-            <DialogTitle>
-              {getDialogTitle(actionType)}
-            </DialogTitle>
-            <DialogDescription>
-              {getDialogDescription(actionType)}
-            </DialogDescription>
+            <DialogTitle>{getDialogTitle(actionType)}</DialogTitle>
+            <DialogDescription>{getDialogDescription(actionType)}</DialogDescription>
           </DialogHeader>
 
           {actionType === 'approve' && selectedUser && (

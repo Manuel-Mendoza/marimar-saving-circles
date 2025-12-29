@@ -1,5 +1,12 @@
 import React from 'react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PaymentStatusBadge, PaymentInfo, UserAvatar } from '@/components/atoms';
@@ -70,8 +77,7 @@ const PaymentRequestsTable: React.FC<PaymentRequestsTableProps> = ({
         <p className="text-gray-600 dark:text-gray-400">
           {mode === 'admin'
             ? 'No se encontraron solicitudes de pago que coincidan con los filtros.'
-            : 'No tienes solicitudes de pago registradas.'
-          }
+            : 'No tienes solicitudes de pago registradas.'}
         </p>
       </div>
     );
@@ -81,11 +87,10 @@ const PaymentRequestsTable: React.FC<PaymentRequestsTableProps> = ({
     <div className={cn('', className)}>
       {title && (
         <div className="mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            {title}
-          </h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{title}</h3>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            {paymentRequests.length} solicitud{paymentRequests.length !== 1 ? 'es' : ''} encontrada{paymentRequests.length !== 1 ? 's' : ''}
+            {paymentRequests.length} solicitud{paymentRequests.length !== 1 ? 'es' : ''} encontrada
+            {paymentRequests.length !== 1 ? 's' : ''}
           </p>
         </div>
       )}

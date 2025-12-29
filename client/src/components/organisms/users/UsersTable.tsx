@@ -11,13 +11,7 @@ import {
 import { UserAvatar } from '@/components/atoms';
 import StatusBadge from '@/components/atoms/StatusBadge';
 import UserActionButtons from '@/components/molecules/users/UserActionButtons';
-import {
-  CheckCircle,
-  XCircle,
-  Ban,
-  RotateCcw,
-  Trash2,
-} from 'lucide-react';
+import { CheckCircle, XCircle, Ban, RotateCcw, Trash2 } from 'lucide-react';
 
 interface User {
   id: number;
@@ -49,12 +43,7 @@ interface UsersTableProps {
  * Componente Organism para mostrar tabla de usuarios
  * Combina tabla, filas de usuario y botones de acción
  */
-const UsersTable: React.FC<UsersTableProps> = ({
-  users,
-  title,
-  actionLoadingId,
-  onUserAction,
-}) => {
+const UsersTable: React.FC<UsersTableProps> = ({ users, title, actionLoadingId, onUserAction }) => {
   // Get available actions for user
   const getAvailableActions = (user: User) => {
     const actions = [];
@@ -111,7 +100,7 @@ const UsersTable: React.FC<UsersTableProps> = ({
           actions={getAvailableActions(user)}
           userId={user.id}
           isLoading={actionLoadingId === user.id}
-          onAction={(action) => onUserAction(user, action)}
+          onAction={action => onUserAction(user, action)}
         />
       </TableCell>
     </TableRow>

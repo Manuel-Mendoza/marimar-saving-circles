@@ -1,7 +1,13 @@
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Grupo } from '@/lib/types';
 import { Search, X } from 'lucide-react';
 
@@ -52,7 +58,7 @@ export const GroupSearchFilter: React.FC<GroupSearchFilterProps> = ({
           type="text"
           placeholder="Buscar grupos por nombre..."
           value={searchTerm}
-          onChange={(e) => onSearchChange(e.target.value)}
+          onChange={e => onSearchChange(e.target.value)}
           className="pl-10 pr-4"
         />
       </div>
@@ -60,9 +66,7 @@ export const GroupSearchFilter: React.FC<GroupSearchFilterProps> = ({
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-4">
         <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Estado:
-          </label>
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Estado:</label>
           <Select onValueChange={handleStatusChange}>
             <SelectTrigger className="w-40">
               <SelectValue placeholder="Seleccionar estado" />
@@ -103,12 +107,7 @@ export const GroupSearchFilter: React.FC<GroupSearchFilterProps> = ({
 
         {/* Clear Filters Button */}
         {hasActiveFilters && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onClearFilters}
-            className="ml-auto"
-          >
+          <Button variant="outline" size="sm" onClick={onClearFilters} className="ml-auto">
             <X className="h-4 w-4 mr-1" />
             Limpiar filtros
           </Button>

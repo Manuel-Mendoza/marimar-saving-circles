@@ -86,9 +86,7 @@ export const GroupDetailModal: React.FC<GroupDetailModalProps> = ({
               <span>{group.nombre}</span>
               <GroupStatusBadge status={group.estado} />
             </div>
-            <Badge variant="outline">
-              Grupo #{group.id}
-            </Badge>
+            <Badge variant="outline">Grupo #{group.id}</Badge>
           </DialogTitle>
         </DialogHeader>
 
@@ -250,8 +248,11 @@ export const GroupDetailModal: React.FC<GroupDetailModalProps> = ({
                     </p>
                   ) : (
                     <div className="space-y-2">
-                      {members.map((member) => (
-                        <div key={member.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                      {members.map(member => (
+                        <div
+                          key={member.id}
+                          className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                        >
                           <div className="flex items-center space-x-3 flex-1 min-w-0">
                             <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center flex-shrink-0">
                               <User className="h-4 w-4 text-blue-600 dark:text-blue-400" />
@@ -313,35 +314,49 @@ export const GroupDetailModal: React.FC<GroupDetailModalProps> = ({
                         .filter(c => c.fechaPago) // Solo pagos realizados
                         .sort((a, b) => {
                           // Ordenar por fecha descendente, luego por periodo descendente
-                          const dateCompare = new Date(b.fechaPago!).getTime() - new Date(a.fechaPago!).getTime();
+                          const dateCompare =
+                            new Date(b.fechaPago!).getTime() - new Date(a.fechaPago!).getTime();
                           if (dateCompare !== 0) return dateCompare;
                           return b.periodo.localeCompare(a.periodo);
                         })
                         // Eliminar duplicados por usuario + periodo (mantener el más reciente)
-                        .filter((contribution, index, self) =>
-                          index === self.findIndex(c =>
-                            c.userId === contribution.userId && c.periodo === contribution.periodo
-                          )
+                        .filter(
+                          (contribution, index, self) =>
+                            index ===
+                            self.findIndex(
+                              c =>
+                                c.userId === contribution.userId &&
+                                c.periodo === contribution.periodo
+                            )
                         )
                         .slice(0, 15) // Limitar a 15 para performance
                         .map((contribution, index) => {
                           const isRecent = index < 3; // Marcar los 3 más recientes
                           const daysSincePayment = contribution.fechaPago
-                            ? Math.floor((new Date().getTime() - new Date(contribution.fechaPago).getTime()) / (1000 * 60 * 60 * 24))
+                            ? Math.floor(
+                                (new Date().getTime() -
+                                  new Date(contribution.fechaPago).getTime()) /
+                                  (1000 * 60 * 60 * 24)
+                              )
                             : null;
 
                           return (
-                            <div key={contribution.id} className={`flex items-center justify-between p-3 rounded-lg border ${
-                              isRecent
-                                ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
-                                : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'
-                            }`}>
+                            <div
+                              key={contribution.id}
+                              className={`flex items-center justify-between p-3 rounded-lg border ${
+                                isRecent
+                                  ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                                  : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+                              }`}
+                            >
                               <div className="flex items-center space-x-3 flex-1 min-w-0">
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                                  isRecent
-                                    ? 'bg-green-500 text-white'
-                                    : 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400'
-                                }`}>
+                                <div
+                                  className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                    isRecent
+                                      ? 'bg-green-500 text-white'
+                                      : 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400'
+                                  }`}
+                                >
                                   {isRecent ? (
                                     <span className="text-xs font-bold">#{index + 1}</span>
                                   ) : (
@@ -354,7 +369,10 @@ export const GroupDetailModal: React.FC<GroupDetailModalProps> = ({
                                       {contribution.user?.nombre} {contribution.user?.apellido}
                                     </p>
                                     {isRecent && (
-                                      <Badge variant="outline" className="text-xs px-1.5 py-0.5 bg-green-100 text-green-800 border-green-300">
+                                      <Badge
+                                        variant="outline"
+                                        className="text-xs px-1.5 py-0.5 bg-green-100 text-green-800 border-green-300"
+                                      >
                                         Reciente
                                       </Badge>
                                     )}
@@ -363,15 +381,23 @@ export const GroupDetailModal: React.FC<GroupDetailModalProps> = ({
                                     {contribution.periodo}
                                   </p>
                                   {contribution.fechaPago && (
-                                    <p className={`text-xs truncate ${
-                                      isRecent
-                                        ? 'text-green-700 dark:text-green-300 font-medium'
-                                        : 'text-gray-500 dark:text-gray-500'
-                                    }`}>
+                                    <p
+                                      className={`text-xs truncate ${
+                                        isRecent
+                                          ? 'text-green-700 dark:text-green-300 font-medium'
+                                          : 'text-gray-500 dark:text-gray-500'
+                                      }`}
+                                    >
                                       {formatDate(contribution.fechaPago)}
                                       {daysSincePayment !== null && daysSincePayment <= 7 && (
                                         <span className="ml-1">
-                                          ({daysSincePayment === 0 ? 'hoy' : daysSincePayment === 1 ? 'ayer' : `${daysSincePayment} días`})
+                                          (
+                                          {daysSincePayment === 0
+                                            ? 'hoy'
+                                            : daysSincePayment === 1
+                                              ? 'ayer'
+                                              : `${daysSincePayment} días`}
+                                          )
                                         </span>
                                       )}
                                     </p>
@@ -380,10 +406,14 @@ export const GroupDetailModal: React.FC<GroupDetailModalProps> = ({
                               </div>
                               <div className="flex items-center space-x-2 flex-shrink-0">
                                 <Badge
-                                  variant={contribution.estado === 'CONFIRMADO' ? 'default' : 'secondary'}
+                                  variant={
+                                    contribution.estado === 'CONFIRMADO' ? 'default' : 'secondary'
+                                  }
                                   className="text-xs px-2 py-1"
                                 >
-                                  {contribution.estado === 'CONFIRMADO' ? 'Confirmada' : 'Pendiente'}
+                                  {contribution.estado === 'CONFIRMADO'
+                                    ? 'Confirmada'
+                                    : 'Pendiente'}
                                 </Badge>
                                 <span className="text-xs text-gray-600 dark:text-gray-400 font-medium">
                                   {formatCurrency(contribution.monto, contribution.moneda)}
@@ -416,8 +446,11 @@ export const GroupDetailModal: React.FC<GroupDetailModalProps> = ({
                     </p>
                   ) : (
                     <div className="space-y-3">
-                      {deliveries.map((delivery) => (
-                        <div key={delivery.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                      {deliveries.map(delivery => (
+                        <div
+                          key={delivery.id}
+                          className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                        >
                           <div className="flex items-center space-x-3">
                             <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center">
                               <Package className="h-5 w-5 text-purple-600 dark:text-purple-400" />
@@ -462,10 +495,13 @@ export const GroupDetailModal: React.FC<GroupDetailModalProps> = ({
       </DialogContent>
 
       {/* Confirmation Dialog for Advance Month */}
-      <Dialog open={showAdvanceConfirm} onOpenChange={(open) => {
-        console.log('🔄 Confirmation Dialog onOpenChange:', open);
-        setShowAdvanceConfirm(open);
-      }}>
+      <Dialog
+        open={showAdvanceConfirm}
+        onOpenChange={open => {
+          console.log('🔄 Confirmation Dialog onOpenChange:', open);
+          setShowAdvanceConfirm(open);
+        }}
+      >
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Confirmar Avance de Mes</DialogTitle>
@@ -502,7 +538,11 @@ export const GroupDetailModal: React.FC<GroupDetailModalProps> = ({
               onClick={() => {
                 console.log('🎯 Confirmar Avance presionado');
                 console.log('📤 onAdvanceMonth disponible:', !!onAdvanceMonth);
-                console.log('📊 group data:', { id: group.id, nombre: group.nombre, estado: group.estado });
+                console.log('📊 group data:', {
+                  id: group.id,
+                  nombre: group.nombre,
+                  estado: group.estado,
+                });
                 console.log('🔄 Cerrando diálogo de confirmación...');
                 setShowAdvanceConfirm(false);
                 try {

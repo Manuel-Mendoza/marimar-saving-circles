@@ -60,7 +60,7 @@ export const useAdminDashboardStats = () => {
 
       if (statsResponse.success && statsResponse.data?.stats) {
         const currentStats = statsResponse.data.stats;
-        let trends = {
+        const trends = {
           totalUsers: { value: 0, label: 'vs mes anterior' },
           activeProducts: { value: 0, label: 'vs mes anterior' },
           activeGroups: { value: 0, label: 'vs mes anterior' },
@@ -77,14 +77,16 @@ export const useAdminDashboardStats = () => {
 
             // Calculate percentage change for users
             if (previousMonth.usuarios > 0) {
-              const userChange = ((currentMonth.usuarios - previousMonth.usuarios) / previousMonth.usuarios) * 100;
+              const userChange =
+                ((currentMonth.usuarios - previousMonth.usuarios) / previousMonth.usuarios) * 100;
               trends.totalUsers.value = Math.round(userChange);
             }
 
             // For products and groups, we use the same logic (assuming similar growth patterns)
             // In a real scenario, you'd have separate product/group historical data
             if (previousMonth.grupos > 0) {
-              const groupChange = ((currentMonth.grupos - previousMonth.grupos) / previousMonth.grupos) * 100;
+              const groupChange =
+                ((currentMonth.grupos - previousMonth.grupos) / previousMonth.grupos) * 100;
               trends.activeGroups.value = Math.round(groupChange);
             }
 

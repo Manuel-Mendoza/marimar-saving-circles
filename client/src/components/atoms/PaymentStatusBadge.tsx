@@ -12,23 +12,22 @@ interface PaymentStatusBadgeProps {
 /**
  * Atom: Badge para mostrar el estado de un pago
  */
-const PaymentStatusBadge: React.FC<PaymentStatusBadgeProps> = ({
-  status,
-  className,
-}) => {
+const PaymentStatusBadge: React.FC<PaymentStatusBadgeProps> = ({ status, className }) => {
   const getStatusConfig = (status: string) => {
     switch (status) {
       case 'PENDIENTE':
         return {
           variant: 'secondary' as const,
           text: 'Pendiente',
-          className: 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900 dark:text-yellow-300',
+          className:
+            'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900 dark:text-yellow-300',
         };
       case 'CONFIRMADO':
         return {
           variant: 'default' as const,
           text: 'Confirmado',
-          className: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900 dark:text-green-300',
+          className:
+            'bg-green-100 text-green-800 border-green-200 dark:bg-green-900 dark:text-green-300',
         };
       case 'RECHAZADO':
         return {
@@ -48,10 +47,7 @@ const PaymentStatusBadge: React.FC<PaymentStatusBadgeProps> = ({
   const config = getStatusConfig(status);
 
   return (
-    <Badge
-      variant={config.variant}
-      className={cn('font-medium', config.className, className)}
-    >
+    <Badge variant={config.variant} className={cn('font-medium', config.className, className)}>
       {config.text}
     </Badge>
   );

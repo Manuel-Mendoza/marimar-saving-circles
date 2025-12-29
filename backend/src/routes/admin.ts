@@ -43,7 +43,14 @@ adminRoute.get("/dashboard-stats", authenticate, async (c) => {
     // Get current month dates for revenue calculation
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+    const endOfMonth = new Date(
+      now.getFullYear(),
+      now.getMonth() + 1,
+      0,
+      23,
+      59,
+      59,
+    );
 
     // Execute all statistics queries in parallel for better performance
     const [
@@ -63,45 +70,62 @@ adminRoute.get("/dashboard-stats", authenticate, async (c) => {
       db.select({ count: count() }).from(users),
 
       // Active users (APROBADO or REACTIVADO)
-      db.select({ count: count() }).from(users).where(
-        sql`${users.estado} IN ('APROBADO', 'REACTIVADO')`
-      ),
+      db
+        .select({ count: count() })
+        .from(users)
+        .where(sql`${users.estado} IN ('APROBADO', 'REACTIVADO')`),
 
       // Pending approvals
-      db.select({ count: count() }).from(users).where(eq(users.estado, "PENDIENTE")),
+      db
+        .select({ count: count() })
+        .from(users)
+        .where(eq(users.estado, "PENDIENTE")),
 
       // Total products (all products, not just active)
       db.select({ count: count() }).from(products),
 
       // Active products
-      db.select({ count: count() }).from(products).where(eq(products.activo, true)),
+      db
+        .select({ count: count() })
+        .from(products)
+        .where(eq(products.activo, true)),
 
       // Total groups
       db.select({ count: count() }).from(groups),
 
       // Active groups (EN_MARCHA)
-      db.select({ count: count() }).from(groups).where(eq(groups.estado, "EN_MARCHA")),
+      db
+        .select({ count: count() })
+        .from(groups)
+        .where(eq(groups.estado, "EN_MARCHA")),
 
       // Completed groups (COMPLETADO)
-      db.select({ count: count() }).from(groups).where(eq(groups.estado, "COMPLETADO")),
+      db
+        .select({ count: count() })
+        .from(groups)
+        .where(eq(groups.estado, "COMPLETADO")),
 
       // Total payment requests
       db.select({ count: count() }).from(paymentRequests),
 
       // Pending payments
-      db.select({ count: count() }).from(paymentRequests).where(eq(paymentRequests.estado, "PENDIENTE")),
+      db
+        .select({ count: count() })
+        .from(paymentRequests)
+        .where(eq(paymentRequests.estado, "PENDIENTE")),
 
       // Monthly revenue (sum of CONFIRMADO payments this month)
-      db.select({
-        total: sum(paymentRequests.monto)
-      })
+      db
+        .select({
+          total: sum(paymentRequests.monto),
+        })
         .from(paymentRequests)
         .where(
           and(
             eq(paymentRequests.estado, "CONFIRMADO"),
             gte(paymentRequests.fechaAprobacion, startOfMonth),
-            lte(paymentRequests.fechaAprobacion, endOfMonth)
-          )
+            lte(paymentRequests.fechaAprobacion, endOfMonth),
+          ),
         ),
     ]);
 
@@ -154,43 +178,59 @@ adminRoute.get("/dashboard-charts", authenticate, async (c) => {
     // Get data for the last 12 months
     const now = new Date();
     const revenueData: Array<{ mes: string; ingresos: number }> = [];
-    const userGroupData: Array<{ mes: string; usuarios: number; grupos: number }> = [];
+    const userGroupData: Array<{
+      mes: string;
+      usuarios: number;
+      grupos: number;
+    }> = [];
 
     // Prepare all queries for parallel execution
     const queries = [];
     for (let i = 11; i >= 0; i--) {
       const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59);
-      const monthName = monthStart.toLocaleDateString('es-ES', { month: 'short' });
+      const monthEnd = new Date(
+        now.getFullYear(),
+        now.getMonth() - i + 1,
+        0,
+        23,
+        59,
+        59,
+      );
+      const monthName = monthStart.toLocaleDateString("es-ES", {
+        month: "short",
+      });
 
       queries.push({
         monthName,
-        revenueQuery: db.select({
-          total: sum(paymentRequests.monto)
-        })
+        revenueQuery: db
+          .select({
+            total: sum(paymentRequests.monto),
+          })
           .from(paymentRequests)
           .where(
             and(
               eq(paymentRequests.estado, "CONFIRMADO"),
               gte(paymentRequests.fechaAprobacion, monthStart),
-              lte(paymentRequests.fechaAprobacion, monthEnd)
-            )
+              lte(paymentRequests.fechaAprobacion, monthEnd),
+            ),
           ),
-        usersQuery: db.select({ count: count() })
+        usersQuery: db
+          .select({ count: count() })
           .from(users)
           .where(
             and(
               gte(users.fechaRegistro, monthStart),
-              lte(users.fechaRegistro, monthEnd)
-            )
+              lte(users.fechaRegistro, monthEnd),
+            ),
           ),
-        groupsQuery: db.select({ count: count() })
+        groupsQuery: db
+          .select({ count: count() })
           .from(groups)
           .where(
             and(
               gte(groups.fechaInicio, monthStart),
-              lte(groups.fechaInicio, monthEnd)
-            )
+              lte(groups.fechaInicio, monthEnd),
+            ),
           ),
       });
     }
@@ -210,7 +250,7 @@ adminRoute.get("/dashboard-charts", authenticate, async (c) => {
           users: usersResult[0]?.count || 0,
           groups: groupsResult[0]?.count || 0,
         };
-      })
+      }),
     );
 
     // Build response data
@@ -268,7 +308,7 @@ adminRoute.get("/ratings", authenticate, async (c) => {
       .orderBy(desc(userRatings.createdAt));
 
     // For now, return simplified data
-    const simplifiedRatings = ratings.map(rating => ({
+    const simplifiedRatings = ratings.map((rating) => ({
       id: rating.id,
       raterId: rating.raterId,
       ratedId: rating.ratedId,
@@ -278,12 +318,12 @@ adminRoute.get("/ratings", authenticate, async (c) => {
       comment: rating.comment,
       createdAt: rating.createdAt,
       rater: {
-        nombre: 'Usuario', // Will be enhanced later
-        apellido: 'Desconocido'
+        nombre: "Usuario", // Will be enhanced later
+        apellido: "Desconocido",
       },
       rated: {
-        nombre: 'Usuario',
-        apellido: 'Desconocido'
+        nombre: "Usuario",
+        apellido: "Desconocido",
       },
       group: null, // Will be enhanced later
     }));
@@ -299,7 +339,7 @@ adminRoute.get("/ratings", authenticate, async (c) => {
     let totalReputation = 0;
 
     for (const user of allUsers) {
-      const userReputation = parseFloat(user.reputationScore || '0');
+      const userReputation = parseFloat(user.reputationScore || "0");
       totalReputation += userReputation;
 
       if (userReputation >= 9.0) excellentUsers++;
@@ -393,8 +433,8 @@ adminRoute.post("/groups/:id/advance-month", authenticate, async (c) => {
         and(
           eq(contributions.groupId, groupId),
           eq(contributions.periodo, currentPeriod),
-          eq(contributions.estado, "PENDIENTE")
-        )
+          eq(contributions.estado, "PENDIENTE"),
+        ),
       );
 
     if (pendingContributions.length > 0) {
@@ -425,8 +465,8 @@ adminRoute.post("/groups/:id/advance-month", authenticate, async (c) => {
       .where(
         and(
           eq(userGroups.groupId, groupId),
-          eq(userGroups.posicion, currentTurn)
-        )
+          eq(userGroups.posicion, currentTurn),
+        ),
       )
       .limit(1);
 
@@ -448,8 +488,8 @@ adminRoute.post("/groups/:id/advance-month", authenticate, async (c) => {
       .where(
         and(
           eq(contributions.userId, currentTurnUser.userId),
-          eq(contributions.groupId, groupId)
-        )
+          eq(contributions.groupId, groupId),
+        ),
       )
       .limit(1);
 
@@ -464,7 +504,8 @@ adminRoute.post("/groups/:id/advance-month", authenticate, async (c) => {
       mesEntrega: `Mes ${currentTurn}`,
       estado: "PENDIENTE", // Wait for admin confirmation
       direccion: currentTurnUser.user.direccion || null, // User delivery address
-      notas: deliveryNotes || `Entrega del Mes ${currentTurn} - ${currentPeriod}`,
+      notas:
+        deliveryNotes || `Entrega del Mes ${currentTurn} - ${currentPeriod}`,
     });
 
     // Advance to next turn
@@ -687,7 +728,11 @@ adminRoute.put("/deliveries/:id/status", authenticate, async (c) => {
         .where(eq(groups.id, delivery.groupId))
         .limit(1);
 
-      if (group && allDeliveries.filter(d => d.estado === "ENTREGADO").length >= group.duracionMeses) {
+      if (
+        group &&
+        allDeliveries.filter((d) => d.estado === "ENTREGADO").length >=
+          group.duracionMeses
+      ) {
         await db
           .update(groups)
           .set({
@@ -773,8 +818,8 @@ adminRoute.post("/groups/auto-advance-month", authenticate, async (c) => {
             and(
               eq(contributions.groupId, group.id),
               eq(contributions.periodo, currentPeriod),
-              eq(contributions.estado, "PENDIENTE")
-            )
+              eq(contributions.estado, "PENDIENTE"),
+            ),
           );
 
         // If there are pending contributions, skip this group
@@ -800,13 +845,15 @@ adminRoute.post("/groups/auto-advance-month", authenticate, async (c) => {
           .where(
             and(
               eq(userGroups.groupId, group.id),
-              eq(userGroups.posicion, currentTurn)
-            )
+              eq(userGroups.posicion, currentTurn),
+            ),
           )
           .limit(1);
 
         if (!currentTurnUser) {
-          console.warn(`No se encontró usuario para turno ${currentTurn} en grupo ${group.id}`);
+          console.warn(
+            `No se encontró usuario para turno ${currentTurn} en grupo ${group.id}`,
+          );
           continue;
         }
 
@@ -817,8 +864,8 @@ adminRoute.post("/groups/auto-advance-month", authenticate, async (c) => {
           .where(
             and(
               eq(contributions.userId, currentTurnUser.userId),
-              eq(contributions.groupId, group.id)
-            )
+              eq(contributions.groupId, group.id),
+            ),
           )
           .limit(1);
 
@@ -828,7 +875,8 @@ adminRoute.post("/groups/auto-advance-month", authenticate, async (c) => {
         await db.insert(deliveries).values({
           userId: currentTurnUser.userId,
           groupId: group.id,
-          productName: currentTurnUser.productoSeleccionado || "Producto del grupo",
+          productName:
+            currentTurnUser.productoSeleccionado || "Producto del grupo",
           productValue: monthlyPayment.toString(),
           mesEntrega: `Mes ${currentTurn}`,
           estado: "PENDIENTE",
@@ -865,8 +913,9 @@ adminRoute.post("/groups/auto-advance-month", authenticate, async (c) => {
 
         advancedCount++;
 
-        console.log(`Grupo ${group.id} (${group.nombre}) avanzado automáticamente al turno ${nextTurn}${isCompleted ? ' - COMPLETADO' : ''}`);
-
+        console.log(
+          `Grupo ${group.id} (${group.nombre}) avanzado automáticamente al turno ${nextTurn}${isCompleted ? " - COMPLETADO" : ""}`,
+        );
       } catch (error) {
         console.error(`Error procesando grupo ${group.id}:`, error);
         // Continue with next group
@@ -962,7 +1011,7 @@ adminRoute.post("/groups/regenerate-contributions", authenticate, async (c) => {
         // Calculate monthly payment based on product selection
         // For now, we'll use a default calculation - this should be improved
         let monthlyPayment = 100; // Default fallback
-        if (member.monedaPago === 'USD') {
+        if (member.monedaPago === "USD") {
           monthlyPayment = 35; // Example USD amount
         } else {
           monthlyPayment = 140000; // Example VES amount
@@ -978,7 +1027,7 @@ adminRoute.post("/groups/regenerate-contributions", authenticate, async (c) => {
               userId: member.userId,
               groupId: groupId,
               monto: monthlyPayment,
-              moneda: member.monedaPago || 'USD', // Ensure it's not null
+              moneda: member.monedaPago || "USD", // Ensure it's not null
               fechaPago: null,
               periodo: periodo,
               metodoPago: null,
@@ -994,7 +1043,9 @@ adminRoute.post("/groups/regenerate-contributions", authenticate, async (c) => {
         await db.insert(contributions).values(contributionsToCreate);
         totalContributionsCreated += contributionsToCreate.length;
 
-        console.log(`Grupo ${groupId} (${groupData.groupName}): Created ${contributionsToCreate.length} missing contributions`);
+        console.log(
+          `Grupo ${groupId} (${groupData.groupName}): Created ${contributionsToCreate.length} missing contributions`,
+        );
       }
     }
 
@@ -1036,7 +1087,14 @@ adminRoute.get("/deliveries-dashboard", authenticate, async (c) => {
     // Get current month dates for delivery statistics
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+    const endOfMonth = new Date(
+      now.getFullYear(),
+      now.getMonth() + 1,
+      0,
+      23,
+      59,
+      59,
+    );
 
     // Execute all delivery statistics queries in parallel for better performance
     const [
@@ -1052,29 +1110,48 @@ adminRoute.get("/deliveries-dashboard", authenticate, async (c) => {
       db.select({ count: count() }).from(deliveries),
 
       // Pending deliveries
-      db.select({ count: count() }).from(deliveries).where(eq(deliveries.estado, "PENDIENTE")),
+      db
+        .select({ count: count() })
+        .from(deliveries)
+        .where(eq(deliveries.estado, "PENDIENTE")),
 
       // In route deliveries
-      db.select({ count: count() }).from(deliveries).where(eq(deliveries.estado, "EN_RUTA")),
+      db
+        .select({ count: count() })
+        .from(deliveries)
+        .where(eq(deliveries.estado, "EN_RUTA")),
 
       // Completed deliveries
-      db.select({ count: count() }).from(deliveries).where(eq(deliveries.estado, "ENTREGADO")),
+      db
+        .select({ count: count() })
+        .from(deliveries)
+        .where(eq(deliveries.estado, "ENTREGADO")),
 
       // Monthly deliveries (this month)
-      db.select({ count: count() })
+      db
+        .select({ count: count() })
         .from(deliveries)
         .where(
           and(
             gte(deliveries.fechaEntrega, startOfMonth),
-            lte(deliveries.fechaEntrega, endOfMonth)
-          )
+            lte(deliveries.fechaEntrega, endOfMonth),
+          ),
         ),
 
       // Deliveries by status - separate queries for each status
       Promise.all([
-        db.select({ count: count() }).from(deliveries).where(eq(deliveries.estado, "PENDIENTE")),
-        db.select({ count: count() }).from(deliveries).where(eq(deliveries.estado, "EN_RUTA")),
-        db.select({ count: count() }).from(deliveries).where(eq(deliveries.estado, "ENTREGADO")),
+        db
+          .select({ count: count() })
+          .from(deliveries)
+          .where(eq(deliveries.estado, "PENDIENTE")),
+        db
+          .select({ count: count() })
+          .from(deliveries)
+          .where(eq(deliveries.estado, "EN_RUTA")),
+        db
+          .select({ count: count() })
+          .from(deliveries)
+          .where(eq(deliveries.estado, "ENTREGADO")),
       ]).then(([pending, inRoute, completed]) => ({
         PENDIENTE: Number(pending[0]?.count) || 0,
         EN_RUTA: Number(inRoute[0]?.count) || 0,
@@ -1082,22 +1159,23 @@ adminRoute.get("/deliveries-dashboard", authenticate, async (c) => {
       })),
 
       // Recent deliveries (last 10)
-      db.select({
-        id: deliveries.id,
-        productName: deliveries.productName,
-        productValue: deliveries.productValue,
-        fechaEntrega: deliveries.fechaEntrega,
-        mesEntrega: deliveries.mesEntrega,
-        estado: deliveries.estado,
-        direccion: deliveries.direccion,
-        user: {
-          nombre: users.nombre,
-          apellido: users.apellido,
-        },
-        group: {
-          nombre: groups.nombre,
-        },
-      })
+      db
+        .select({
+          id: deliveries.id,
+          productName: deliveries.productName,
+          productValue: deliveries.productValue,
+          fechaEntrega: deliveries.fechaEntrega,
+          mesEntrega: deliveries.mesEntrega,
+          estado: deliveries.estado,
+          direccion: deliveries.direccion,
+          user: {
+            nombre: users.nombre,
+            apellido: users.apellido,
+          },
+          group: {
+            nombre: groups.nombre,
+          },
+        })
         .from(deliveries)
         .innerJoin(users, eq(deliveries.userId, users.id))
         .innerJoin(groups, eq(deliveries.groupId, groups.id))
@@ -1105,13 +1183,14 @@ adminRoute.get("/deliveries-dashboard", authenticate, async (c) => {
         .limit(10),
 
       // Deliveries by group (active groups)
-      db.select({
-        groupId: groups.id,
-        groupName: groups.nombre,
-        totalDeliveries: count(deliveries.id),
-        pendingDeliveries: sql<number>`count(case when ${deliveries.estado} = 'PENDIENTE' then 1 end)`,
-        completedDeliveries: sql<number>`count(case when ${deliveries.estado} = 'ENTREGADO' then 1 end)`,
-      })
+      db
+        .select({
+          groupId: groups.id,
+          groupName: groups.nombre,
+          totalDeliveries: count(deliveries.id),
+          pendingDeliveries: sql<number>`count(case when ${deliveries.estado} = 'PENDIENTE' then 1 end)`,
+          completedDeliveries: sql<number>`count(case when ${deliveries.estado} = 'ENTREGADO' then 1 end)`,
+        })
         .from(groups)
         .leftJoin(deliveries, eq(groups.id, deliveries.groupId))
         .where(eq(groups.estado, "EN_MARCHA"))
@@ -1124,9 +1203,14 @@ adminRoute.get("/deliveries-dashboard", authenticate, async (c) => {
       pendingDeliveries: pendingDeliveriesResult[0]?.count || 0,
       completedDeliveries: completedDeliveriesResult[0]?.count || 0,
       monthlyDeliveries: monthlyDeliveriesResult[0]?.count || 0,
-      completionRate: (totalDeliveriesResult[0]?.count || 0) > 0
-        ? Math.round(((completedDeliveriesResult[0]?.count || 0) / (totalDeliveriesResult[0]?.count || 1)) * 100)
-        : 0,
+      completionRate:
+        (totalDeliveriesResult[0]?.count || 0) > 0
+          ? Math.round(
+              ((completedDeliveriesResult[0]?.count || 0) /
+                (totalDeliveriesResult[0]?.count || 1)) *
+                100,
+            )
+          : 0,
     };
 
     // deliveriesByStatusResult is already the object we need

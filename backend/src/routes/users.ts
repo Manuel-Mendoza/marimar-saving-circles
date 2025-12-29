@@ -264,7 +264,14 @@ usersRoute.put("/:id/profile", authenticate, async (c) => {
     }
 
     const body = await c.req.json();
-    const { nombre, apellido, telefono, direccion, correoElectronico, imagenPerfil } = body;
+    const {
+      nombre,
+      apellido,
+      telefono,
+      direccion,
+      correoElectronico,
+      imagenPerfil,
+    } = body;
 
     // Validate required fields if provided
     if (nombre && nombre.trim().length === 0) {
@@ -324,7 +331,12 @@ usersRoute.put("/:id/profile", authenticate, async (c) => {
       const [existingUser] = await db
         .select()
         .from(users)
-        .where(and(eq(users.correoElectronico, correoElectronico), not(eq(users.id, userId))))
+        .where(
+          and(
+            eq(users.correoElectronico, correoElectronico),
+            not(eq(users.id, userId)),
+          ),
+        )
         .limit(1);
 
       if (existingUser) {
@@ -871,82 +883,86 @@ usersRoute.get("/me/deliveries", authenticate, async (c) => {
 });
 
 // Update delivery address for user's current delivery
-usersRoute.put("/me/deliveries/:deliveryId/address", authenticate, async (c) => {
-  try {
-    const userPayload = c.get("user") as JWTPayload;
-    const deliveryId = parseInt(c.req.param("deliveryId"));
-    const { direccion } = await c.req.json();
+usersRoute.put(
+  "/me/deliveries/:deliveryId/address",
+  authenticate,
+  async (c) => {
+    try {
+      const userPayload = c.get("user") as JWTPayload;
+      const deliveryId = parseInt(c.req.param("deliveryId"));
+      const { direccion } = await c.req.json();
 
-    if (!direccion || direccion.trim().length === 0) {
-      return c.json(
-        {
-          success: false,
-          message: "La dirección es requerida",
-        },
-        400,
-      );
-    }
+      if (!direccion || direccion.trim().length === 0) {
+        return c.json(
+          {
+            success: false,
+            message: "La dirección es requerida",
+          },
+          400,
+        );
+      }
 
-    // Verify the delivery belongs to the user and is in PENDIENTE state
-    const [delivery] = await db
-      .select()
-      .from(deliveries)
-      .where(
-        and(
-          eq(deliveries.id, deliveryId),
-          eq(deliveries.userId, userPayload.id),
-          eq(deliveries.estado, "PENDIENTE")
+      // Verify the delivery belongs to the user and is in PENDIENTE state
+      const [delivery] = await db
+        .select()
+        .from(deliveries)
+        .where(
+          and(
+            eq(deliveries.id, deliveryId),
+            eq(deliveries.userId, userPayload.id),
+            eq(deliveries.estado, "PENDIENTE"),
+          ),
         )
-      )
-      .limit(1);
+        .limit(1);
 
-    if (!delivery) {
-      return c.json(
-        {
-          success: false,
-          message: "Entrega no encontrada o ya procesada",
+      if (!delivery) {
+        return c.json(
+          {
+            success: false,
+            message: "Entrega no encontrada o ya procesada",
+          },
+          404,
+        );
+      }
+
+      // Update the delivery address
+      const updatedDelivery = await db
+        .update(deliveries)
+        .set({
+          direccion: direccion.trim(),
+        })
+        .where(eq(deliveries.id, deliveryId))
+        .returning();
+
+      if (updatedDelivery.length === 0) {
+        return c.json(
+          {
+            success: false,
+            message: "Error al actualizar la dirección",
+          },
+          500,
+        );
+      }
+
+      return c.json({
+        success: true,
+        message: "Dirección de entrega actualizada exitosamente",
+        data: {
+          delivery: updatedDelivery[0],
         },
-        404,
-      );
-    }
-
-    // Update the delivery address
-    const updatedDelivery = await db
-      .update(deliveries)
-      .set({
-        direccion: direccion.trim(),
-      })
-      .where(eq(deliveries.id, deliveryId))
-      .returning();
-
-    if (updatedDelivery.length === 0) {
+      });
+    } catch (error) {
+      console.error("Error actualizando dirección de entrega:", error);
       return c.json(
         {
           success: false,
-          message: "Error al actualizar la dirección",
+          message: "Error interno del servidor",
         },
         500,
       );
     }
-
-    return c.json({
-      success: true,
-      message: "Dirección de entrega actualizada exitosamente",
-      data: {
-        delivery: updatedDelivery[0],
-      },
-    });
-  } catch (error) {
-    console.error("Error actualizando dirección de entrega:", error);
-    return c.json(
-      {
-        success: false,
-        message: "Error interno del servidor",
-      },
-      500,
-    );
-  }
-});
+  },
+);
 
 // Create delivery for current user turn (when it's their turn)
 usersRoute.post("/me/deliveries/create-current", authenticate, async (c) => {
@@ -980,8 +996,8 @@ usersRoute.post("/me/deliveries/create-current", authenticate, async (c) => {
       .where(
         and(
           eq(userGroups.userId, userPayload.id),
-          eq(userGroups.groupId, groupId)
-        )
+          eq(userGroups.groupId, groupId),
+        ),
       )
       .limit(1);
 
@@ -1034,8 +1050,8 @@ usersRoute.post("/me/deliveries/create-current", authenticate, async (c) => {
         and(
           eq(deliveries.userId, userPayload.id),
           eq(deliveries.groupId, groupId),
-          eq(deliveries.estado, "PENDIENTE")
-        )
+          eq(deliveries.estado, "PENDIENTE"),
+        ),
       )
       .limit(1);
 
@@ -1077,8 +1093,8 @@ usersRoute.post("/me/deliveries/create-current", authenticate, async (c) => {
       .where(
         and(
           eq(contributions.userId, userPayload.id),
-          eq(contributions.groupId, groupId)
-        )
+          eq(contributions.groupId, groupId),
+        ),
       )
       .limit(1);
 

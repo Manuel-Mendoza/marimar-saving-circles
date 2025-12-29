@@ -66,20 +66,14 @@ export const GroupsTable: React.FC<GroupsTableProps> = ({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {groups.map((group) => (
+            {groups.map(group => (
               <TableRow key={group.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                <TableCell className="font-medium">
-                  {group.nombre}
-                </TableCell>
+                <TableCell className="font-medium">{group.nombre}</TableCell>
                 <TableCell>
                   <GroupStatusBadge status={group.estado} />
                 </TableCell>
-                <TableCell>
-                  {group.participantes || 0}
-                </TableCell>
-                <TableCell>
-                  {group.fechaInicio ? 'Asignadas' : 'Sin definir'}
-                </TableCell>
+                <TableCell>{group.participantes || 0}</TableCell>
+                <TableCell>{group.fechaInicio ? 'Asignadas' : 'Sin definir'}</TableCell>
                 <TableCell>
                   <div className="flex items-center space-x-2">
                     <button
@@ -98,8 +92,6 @@ export const GroupsTable: React.FC<GroupsTableProps> = ({
                         {actionLoadingId === group.id ? 'Iniciando...' : 'Sortear'}
                       </button>
                     )}
-
-
 
                     <button
                       onClick={() => onDeleteGroup(group)}

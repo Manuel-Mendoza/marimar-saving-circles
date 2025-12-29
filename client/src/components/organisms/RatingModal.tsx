@@ -110,7 +110,6 @@ const RatingModal: React.FC<RatingModalProps> = ({
       setRating(0);
       setComment('');
       onOpenChange(false);
-
     } catch (error) {
       console.error('Error submitting rating:', error);
 
@@ -142,7 +141,10 @@ const RatingModal: React.FC<RatingModalProps> = ({
             {ratingInfo.title}
           </DialogTitle>
           <DialogDescription>
-            Calificando a <strong>{targetUser.nombre} {targetUser.apellido}</strong>
+            Calificando a{' '}
+            <strong>
+              {targetUser.nombre} {targetUser.apellido}
+            </strong>
             <br />
             {ratingInfo.description}
           </DialogDescription>
@@ -183,7 +185,7 @@ const RatingModal: React.FC<RatingModalProps> = ({
               id="comment"
               placeholder={ratingInfo.placeholder}
               value={comment}
-              onChange={(e) => setComment(e.target.value)}
+              onChange={e => setComment(e.target.value)}
               rows={3}
               className="resize-none"
               disabled={isSubmitting}
@@ -203,20 +205,11 @@ const RatingModal: React.FC<RatingModalProps> = ({
           </Alert>
 
           <DialogFooter className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleClose}
-              disabled={isSubmitting}
-            >
+            <Button type="button" variant="outline" onClick={handleClose} disabled={isSubmitting}>
               Cancelar
             </Button>
 
-            <Button
-              type="submit"
-              disabled={rating === 0 || isSubmitting}
-              className="min-w-[100px]"
-            >
+            <Button type="submit" disabled={rating === 0 || isSubmitting} className="min-w-[100px]">
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />

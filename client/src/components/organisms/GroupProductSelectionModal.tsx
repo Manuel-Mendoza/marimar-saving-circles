@@ -1,5 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -48,7 +55,7 @@ export const GroupProductSelectionModal: React.FC<GroupProductSelectionModalProp
   const { toast } = useToast();
 
   // Load products that match the group's duration
-  const loadProducts = async () => {
+  const loadProducts = useCallback(async () => {
     if (!group) return;
 
     try {
@@ -83,7 +90,7 @@ export const GroupProductSelectionModal: React.FC<GroupProductSelectionModalProp
     } finally {
       setLoading(false);
     }
-  };
+  }, [group, toast]);
 
   useEffect(() => {
     if (isOpen && group) {
@@ -94,7 +101,7 @@ export const GroupProductSelectionModal: React.FC<GroupProductSelectionModalProp
       setSelectedProduct(null);
       setSelectedCurrency('VES');
     }
-  }, [isOpen, group]);
+  }, [isOpen, group, loadProducts]);
 
   // Handle joining the group with selected product
   const handleJoinGroup = async () => {
@@ -136,7 +143,9 @@ export const GroupProductSelectionModal: React.FC<GroupProductSelectionModalProp
       style: 'currency',
       currency: currency === 'USD' ? 'USD' : 'VES',
       minimumFractionDigits: 2,
-    }).format(amount).replace('Bs.S', 'BcV');
+    })
+      .format(amount)
+      .replace('Bs.S', 'BcV');
   };
 
   if (!group) return null;
@@ -163,7 +172,9 @@ export const GroupProductSelectionModal: React.FC<GroupProductSelectionModalProp
                 </div>
                 <div>
                   <DollarSign className="h-8 w-8 mx-auto mb-2 text-green-600" />
-                  <div className="font-semibold">{group.participantes || 0}/{group.duracionMeses}</div>
+                  <div className="font-semibold">
+                    {group.participantes || 0}/{group.duracionMeses}
+                  </div>
                   <div className="text-sm text-gray-600 dark:text-gray-400">Participantes</div>
                 </div>
                 <div>
@@ -181,7 +192,9 @@ export const GroupProductSelectionModal: React.FC<GroupProductSelectionModalProp
 
           {/* Product Selection */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Planes disponibles para {group.duracionMeses} meses</h3>
+            <h3 className="text-lg font-semibold">
+              Planes disponibles para {group.duracionMeses} meses
+            </h3>
 
             {loading ? (
               <div className="text-center py-8">
@@ -190,7 +203,7 @@ export const GroupProductSelectionModal: React.FC<GroupProductSelectionModalProp
               </div>
             ) : products.length > 0 ? (
               <div className="grid gap-4 md:grid-cols-2">
-                {products.map((product) => (
+                {products.map(product => (
                   <Card
                     key={product.id}
                     className={`cursor-pointer transition-all ${
@@ -261,7 +274,7 @@ export const GroupProductSelectionModal: React.FC<GroupProductSelectionModalProp
               <CardContent>
                 <RadioGroup
                   value={selectedCurrency}
-                  onValueChange={(value) => setSelectedCurrency(value as 'VES' | 'USD')}
+                  onValueChange={value => setSelectedCurrency(value as 'VES' | 'USD')}
                   className="space-y-3"
                 >
                   <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">
@@ -296,10 +309,7 @@ export const GroupProductSelectionModal: React.FC<GroupProductSelectionModalProp
           <Button variant="outline" onClick={onClose} disabled={joining}>
             Cancelar
           </Button>
-          <Button
-            onClick={handleJoinGroup}
-            disabled={!selectedProduct || joining}
-          >
+          <Button onClick={handleJoinGroup} disabled={!selectedProduct || joining}>
             {joining ? 'Uniéndose...' : 'Unirme al Grupo'}
           </Button>
         </DialogFooter>

@@ -121,7 +121,10 @@ const ProductActionDialogs: React.FC<ProductActionDialogsProps> = ({
       tiempoDuracion: parseInt(formData.tiempoDuracion),
       imagen: formData.imagen || undefined,
       descripcion: formData.descripcion,
-      tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
+      tags: formData.tags
+        .split(',')
+        .map(tag => tag.trim())
+        .filter(tag => tag),
     };
 
     try {
@@ -180,7 +183,7 @@ const ProductActionDialogs: React.FC<ProductActionDialogsProps> = ({
                 <Input
                   id="nombre"
                   value={formData.nombre}
-                  onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                  onChange={e => setFormData({ ...formData, nombre: e.target.value })}
                   required
                 />
               </div>
@@ -191,7 +194,7 @@ const ProductActionDialogs: React.FC<ProductActionDialogsProps> = ({
                   id="tiempoDuracion"
                   type="number"
                   value={formData.tiempoDuracion}
-                  onChange={(e) => setFormData({ ...formData, tiempoDuracion: e.target.value })}
+                  onChange={e => setFormData({ ...formData, tiempoDuracion: e.target.value })}
                   required
                   min="1"
                 />
@@ -206,7 +209,7 @@ const ProductActionDialogs: React.FC<ProductActionDialogsProps> = ({
                   type="number"
                   step="0.01"
                   value={formData.precioUsd}
-                  onChange={(e) => setFormData({ ...formData, precioUsd: e.target.value })}
+                  onChange={e => setFormData({ ...formData, precioUsd: e.target.value })}
                   required
                   min="0"
                 />
@@ -219,7 +222,7 @@ const ProductActionDialogs: React.FC<ProductActionDialogsProps> = ({
                   type="number"
                   step="0.01"
                   value={formData.precioVes}
-                  onChange={(e) => setFormData({ ...formData, precioVes: e.target.value })}
+                  onChange={e => setFormData({ ...formData, precioVes: e.target.value })}
                   required
                   min="0"
                 />
@@ -232,7 +235,7 @@ const ProductActionDialogs: React.FC<ProductActionDialogsProps> = ({
                 id="imagen"
                 type="url"
                 value={formData.imagen}
-                onChange={(e) => setFormData({ ...formData, imagen: e.target.value })}
+                onChange={e => setFormData({ ...formData, imagen: e.target.value })}
                 placeholder="https://ejemplo.com/imagen.jpg"
               />
             </div>
@@ -242,7 +245,7 @@ const ProductActionDialogs: React.FC<ProductActionDialogsProps> = ({
               <Textarea
                 id="descripcion"
                 value={formData.descripcion}
-                onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
+                onChange={e => setFormData({ ...formData, descripcion: e.target.value })}
                 required
                 rows={3}
               />
@@ -253,7 +256,7 @@ const ProductActionDialogs: React.FC<ProductActionDialogsProps> = ({
               <Input
                 id="tags"
                 value={formData.tags}
-                onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+                onChange={e => setFormData({ ...formData, tags: e.target.value })}
                 placeholder="electrodomésticos, lavadoras, hogar"
               />
             </div>
@@ -282,8 +285,8 @@ const ProductActionDialogs: React.FC<ProductActionDialogsProps> = ({
           <AlertDialogHeader>
             <AlertDialogTitle>¿Eliminar Producto?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta acción no se puede deshacer. El producto "{selectedProduct?.nombre}" será
-              marcado como inactivo y ya no estará disponible para nuevos grupos.
+              Esta acción no se puede deshacer. El producto "{selectedProduct?.nombre}" será marcado
+              como inactivo y ya no estará disponible para nuevos grupos.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { LoadingSpinner } from '@/components/atoms';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -50,7 +50,7 @@ export const UserGroupsManagement: React.FC<UserGroupsManagementProps> = ({ user
   const { toast } = useToast();
 
   // Load user's groups and available groups
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -86,11 +86,11 @@ export const UserGroupsManagement: React.FC<UserGroupsManagementProps> = ({ user
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
   // Handle showing product selection modal for joining a group
   const handleJoinGroup = (group: Grupo) => {
@@ -122,13 +122,14 @@ export const UserGroupsManagement: React.FC<UserGroupsManagementProps> = ({ user
   // Get status badge for groups
   const getStatusBadge = (estado: string) => {
     const statusConfig = {
-      'SIN_COMPLETAR': { label: 'Formándose', variant: 'secondary' as const, icon: Clock },
-      'LLENO': { label: 'Completo', variant: 'default' as const, icon: Users },
-      'EN_MARCHA': { label: 'Activo', variant: 'default' as const, icon: CheckCircle },
-      'COMPLETADO': { label: 'Finalizado', variant: 'outline' as const, icon: CheckCircle },
+      SIN_COMPLETAR: { label: 'Formándose', variant: 'secondary' as const, icon: Clock },
+      LLENO: { label: 'Completo', variant: 'default' as const, icon: Users },
+      EN_MARCHA: { label: 'Activo', variant: 'default' as const, icon: CheckCircle },
+      COMPLETADO: { label: 'Finalizado', variant: 'outline' as const, icon: CheckCircle },
     };
 
-    const config = statusConfig[estado as keyof typeof statusConfig] || statusConfig['SIN_COMPLETAR'];
+    const config =
+      statusConfig[estado as keyof typeof statusConfig] || statusConfig['SIN_COMPLETAR'];
     const IconComponent = config.icon;
 
     return (
@@ -152,9 +153,7 @@ export const UserGroupsManagement: React.FC<UserGroupsManagementProps> = ({ user
   return (
     <div className="flex-1 p-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-          Mis Grupos
-        </h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Mis Grupos</h1>
         <p className="text-gray-600 dark:text-gray-400">
           Gestiona tus grupos de ahorro y descubre nuevos grupos disponibles
         </p>
@@ -169,7 +168,7 @@ export const UserGroupsManagement: React.FC<UserGroupsManagementProps> = ({ user
         <TabsContent value="my-groups" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {myGroups.length > 0 ? (
-              myGroups.map((userGroup) => (
+              myGroups.map(userGroup => (
                 <Card
                   key={userGroup.id}
                   className="hover:shadow-md transition-shadow cursor-pointer"
@@ -227,22 +226,22 @@ export const UserGroupsManagement: React.FC<UserGroupsManagementProps> = ({ user
         <TabsContent value="available-groups" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {availableGroups.length > 0 ? (
-              availableGroups.map((group) => (
+              availableGroups.map(group => (
                 <Card key={group.id} className="hover:shadow-md transition-shadow">
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-lg">{group.nombre}</CardTitle>
                       {getStatusBadge(group.estado)}
                     </div>
-                    <CardDescription>
-                      Grupo de {group.duracionMeses} meses
-                    </CardDescription>
+                    <CardDescription>Grupo de {group.duracionMeses} meses</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600 dark:text-gray-400">Participantes:</span>
-                        <span className="font-medium">{group.participantes || 0}/{group.duracionMeses}</span>
+                        <span className="font-medium">
+                          {group.participantes || 0}/{group.duracionMeses}
+                        </span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600 dark:text-gray-400">Estado:</span>
@@ -250,11 +249,7 @@ export const UserGroupsManagement: React.FC<UserGroupsManagementProps> = ({ user
                           {group.estado === 'SIN_COMPLETAR' ? 'Formándose' : 'Completo'}
                         </span>
                       </div>
-                      <Button
-                        onClick={() => handleJoinGroup(group)}
-                        className="w-full"
-                        size="sm"
-                      >
+                      <Button onClick={() => handleJoinGroup(group)} className="w-full" size="sm">
                         Unirse al Grupo
                       </Button>
                     </div>

@@ -2,7 +2,13 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Search, Filter, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -80,7 +86,7 @@ const PaymentSearchFilter: React.FC<PaymentSearchFilterProps> = ({
           <Input
             placeholder="Buscar por nombre, grupo, período..."
             value={searchTerm}
-            onChange={(e) => onSearchChange(e.target.value)}
+            onChange={e => onSearchChange(e.target.value)}
             className="pl-10"
           />
         </div>
@@ -91,7 +97,7 @@ const PaymentSearchFilter: React.FC<PaymentSearchFilterProps> = ({
             Estado del pago
           </label>
           <div className="flex flex-wrap gap-2">
-            {statusOptions.map((option) => {
+            {statusOptions.map(option => {
               const isSelected = statusFilters.has(option.value);
               return (
                 <Badge
@@ -117,7 +123,7 @@ const PaymentSearchFilter: React.FC<PaymentSearchFilterProps> = ({
             Moneda
           </label>
           <div className="flex flex-wrap gap-2">
-            {currencyOptions.map((option) => {
+            {currencyOptions.map(option => {
               const isSelected = currencyFilters.has(option.value);
               return (
                 <Badge
@@ -141,11 +147,14 @@ const PaymentSearchFilter: React.FC<PaymentSearchFilterProps> = ({
         {hasActiveFilters && (
           <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
             <p className="text-xs text-gray-600 dark:text-gray-400">
-              Filtros activos: {[
+              Filtros activos:{' '}
+              {[
                 searchTerm && 'búsqueda',
                 statusFilters.size > 0 && `${statusFilters.size} estado(s)`,
                 currencyFilters.size > 0 && `${currencyFilters.size} moneda(s)`,
-              ].filter(Boolean).join(', ')}
+              ]
+                .filter(Boolean)
+                .join(', ')}
             </p>
           </div>
         )}

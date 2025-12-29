@@ -1,11 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { LoadingSpinner } from '@/components/atoms';
 import ReputationBadge from '@/components/atoms/ReputationBadge';
 import RatingStars from '@/components/atoms/RatingStars';
@@ -80,7 +96,7 @@ export const RatingsManagement: React.FC<RatingsManagementProps> = ({ user }) =>
   const { toast } = useToast();
 
   // Load ratings and stats data
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -101,11 +117,11 @@ export const RatingsManagement: React.FC<RatingsManagementProps> = ({ user }) =>
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
   // Filter ratings based on search and filters
   const filteredRatings = ratings.filter(rating => {
@@ -311,7 +327,7 @@ export const RatingsManagement: React.FC<RatingsManagementProps> = ({ user }) =>
                     <Input
                       placeholder="Buscar por usuario o comentario..."
                       value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
+                      onChange={e => setSearchTerm(e.target.value)}
                       className="pl-10"
                     />
                   </div>
@@ -344,7 +360,7 @@ export const RatingsManagement: React.FC<RatingsManagementProps> = ({ user }) =>
                 </CardContent>
               </Card>
             ) : (
-              filteredRatings.map((rating) => (
+              filteredRatings.map(rating => (
                 <Card key={rating.id}>
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between">
@@ -382,9 +398,7 @@ export const RatingsManagement: React.FC<RatingsManagementProps> = ({ user }) =>
                         {/* Rating Details */}
                         <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
                           <div className="flex items-center space-x-4">
-                            {rating.group && (
-                              <span>Grupo: {rating.group.nombre}</span>
-                            )}
+                            {rating.group && <span>Grupo: {rating.group.nombre}</span>}
                             <span>{formatDate(rating.createdAt)}</span>
                           </div>
                         </div>
@@ -456,7 +470,7 @@ export const RatingsManagement: React.FC<RatingsManagementProps> = ({ user }) =>
                           {stats.underObservationUsers}
                         </div>
                         <div className="text-sm text-red-600 dark:text-red-400">
-                          Bajo Observación ({"<5.0"})
+                          Bajo Observación ({'<5.0'})
                         </div>
                       </div>
                     </div>
@@ -468,7 +482,8 @@ export const RatingsManagement: React.FC<RatingsManagementProps> = ({ user }) =>
                     <div className="space-y-2">
                       {['PAYMENT', 'DELIVERY', 'COMMUNICATION'].map(type => {
                         const count = ratings.filter(r => r.ratingType === type).length;
-                        const percentage = ratings.length > 0 ? (count / ratings.length * 100).toFixed(1) : '0';
+                        const percentage =
+                          ratings.length > 0 ? ((count / ratings.length) * 100).toFixed(1) : '0';
                         return (
                           <div key={type} className="flex items-center justify-between">
                             <span className="text-sm">{formatRatingType(type)}</span>
@@ -508,8 +523,8 @@ export const RatingsManagement: React.FC<RatingsManagementProps> = ({ user }) =>
           <AlertDialogHeader>
             <AlertDialogTitle>¿Eliminar calificación?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta acción no se puede deshacer. La calificación será eliminada permanentemente
-              y afectará el cálculo de reputación del usuario.
+              Esta acción no se puede deshacer. La calificación será eliminada permanentemente y
+              afectará el cálculo de reputación del usuario.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

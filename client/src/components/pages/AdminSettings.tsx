@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -45,7 +45,7 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ user }) => {
   });
 
   // Cargar configuración de pagos existente
-  const loadPaymentSettings = async () => {
+  const loadPaymentSettings = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -74,15 +74,20 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ user }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   useEffect(() => {
     loadPaymentSettings();
-  }, []);
+  }, [loadPaymentSettings]);
 
   // Guardar configuración de pago móvil
   const handleSaveMobilePayment = async () => {
-    if (!mobileFormData.numero || !mobileFormData.titular || !mobileFormData.cedula || !mobileFormData.cuentaBancaria) {
+    if (
+      !mobileFormData.numero ||
+      !mobileFormData.titular ||
+      !mobileFormData.cedula ||
+      !mobileFormData.cuentaBancaria
+    ) {
       toast({
         title: 'Error',
         description: 'Por favor complete todos los campos requeridos',
@@ -116,7 +121,12 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ user }) => {
 
   // Guardar configuración de pago bancario
   const handleSaveBankPayment = async () => {
-    if (!bankFormData.numeroCuenta || !bankFormData.titular || !bankFormData.cedula || !bankFormData.banco) {
+    if (
+      !bankFormData.numeroCuenta ||
+      !bankFormData.titular ||
+      !bankFormData.cedula ||
+      !bankFormData.banco
+    ) {
       toast({
         title: 'Error',
         description: 'Por favor complete todos los campos requeridos',
@@ -216,7 +226,14 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ user }) => {
 
       if (deleteResponse.success) {
         setBankPayment(null);
-        setBankFormData({ numeroCuenta: '', titular: '', tipoDocumento: 'V', cedula: '', banco: '', tipoCuenta: 'corriente' });
+        setBankFormData({
+          numeroCuenta: '',
+          titular: '',
+          tipoDocumento: 'V',
+          cedula: '',
+          banco: '',
+          tipoCuenta: 'corriente',
+        });
         toast({
           title: 'Éxito',
           description: 'Configuración de transferencia bancaria eliminada exitosamente',
@@ -249,7 +266,8 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ user }) => {
           Configuración de Pagos
         </h1>
         <p className="text-gray-600 dark:text-gray-400">
-          Configura las opciones de pago móvil y datos bancarios que los usuarios verán al realizar sus pagos
+          Configura las opciones de pago móvil y datos bancarios que los usuarios verán al realizar
+          sus pagos
         </p>
       </div>
 
@@ -294,10 +312,14 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ user }) => {
                     </div>
                     <div>
                       <h3 className="font-medium text-gray-900 dark:text-white">
-                        Pago Móvil - {mobilePayment.cuentaBancaria ? `Cuenta: ${mobilePayment.cuentaBancaria}XXXX` : 'Sin cuenta bancaria'}
+                        Pago Móvil -{' '}
+                        {mobilePayment.cuentaBancaria
+                          ? `Cuenta: ${mobilePayment.cuentaBancaria}XXXX`
+                          : 'Sin cuenta bancaria'}
                       </h3>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Número: {mobilePayment.numero} | Titular: {mobilePayment.titular} | CI: {mobilePayment.cedula}
+                        Número: {mobilePayment.numero} | Titular: {mobilePayment.titular} | CI:{' '}
+                        {mobilePayment.cedula}
                       </p>
                     </div>
                   </div>
@@ -322,7 +344,7 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ user }) => {
                     id="mobile-number"
                     placeholder="04141234567"
                     value={mobileFormData.numero}
-                    onChange={(e) => setMobileFormData(prev => ({ ...prev, numero: e.target.value }))}
+                    onChange={e => setMobileFormData(prev => ({ ...prev, numero: e.target.value }))}
                   />
                 </div>
                 <div className="space-y-2">
@@ -331,7 +353,7 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ user }) => {
                     id="mobile-id"
                     placeholder="V-12345678"
                     value={mobileFormData.cedula}
-                    onChange={(e) => setMobileFormData(prev => ({ ...prev, cedula: e.target.value }))}
+                    onChange={e => setMobileFormData(prev => ({ ...prev, cedula: e.target.value }))}
                   />
                 </div>
               </div>
@@ -342,16 +364,22 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ user }) => {
                     id="mobile-holder"
                     placeholder="Juan Pérez"
                     value={mobileFormData.titular}
-                    onChange={(e) => setMobileFormData(prev => ({ ...prev, titular: e.target.value }))}
+                    onChange={e =>
+                      setMobileFormData(prev => ({ ...prev, titular: e.target.value }))
+                    }
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="mobile-bank-account">Cuenta bancaria (primeros 4 dígitos) *</Label>
+                  <Label htmlFor="mobile-bank-account">
+                    Cuenta bancaria (primeros 4 dígitos) *
+                  </Label>
                   <Input
                     id="mobile-bank-account"
                     placeholder="0108"
                     value={mobileFormData.cuentaBancaria}
-                    onChange={(e) => setMobileFormData(prev => ({ ...prev, cuentaBancaria: e.target.value }))}
+                    onChange={e =>
+                      setMobileFormData(prev => ({ ...prev, cuentaBancaria: e.target.value }))
+                    }
                   />
                 </div>
               </div>
@@ -408,7 +436,9 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ user }) => {
                         Transferencia Bancaria - {bankPayment.banco}
                       </h3>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Cuenta: ****{bankPayment.numeroCuenta.slice(-4)} | {bankPayment.tipoDocumento}-{bankPayment.cedula} | {bankPayment.tipoCuenta} | Propietario: {bankPayment.titular}
+                        Cuenta: ****{bankPayment.numeroCuenta.slice(-4)} |{' '}
+                        {bankPayment.tipoDocumento}-{bankPayment.cedula} | {bankPayment.tipoCuenta}{' '}
+                        | Propietario: {bankPayment.titular}
                       </p>
                     </div>
                   </div>
@@ -433,7 +463,9 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ user }) => {
                     id="account-number"
                     placeholder="01081234567890123456"
                     value={bankFormData.numeroCuenta}
-                    onChange={(e) => setBankFormData(prev => ({ ...prev, numeroCuenta: e.target.value }))}
+                    onChange={e =>
+                      setBankFormData(prev => ({ ...prev, numeroCuenta: e.target.value }))
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -442,10 +474,12 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ user }) => {
                     id="document-type"
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     value={bankFormData.tipoDocumento}
-                    onChange={(e) => setBankFormData(prev => ({
-                      ...prev,
-                      tipoDocumento: e.target.value as 'V' | 'J' | 'E' | 'P'
-                    }))}
+                    onChange={e =>
+                      setBankFormData(prev => ({
+                        ...prev,
+                        tipoDocumento: e.target.value as 'V' | 'J' | 'E' | 'P',
+                      }))
+                    }
                   >
                     <option value="V">V - Venezolano</option>
                     <option value="J">J - Jurídico</option>
@@ -461,7 +495,7 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ user }) => {
                     id="account-id"
                     placeholder="12345678"
                     value={bankFormData.cedula}
-                    onChange={(e) => setBankFormData(prev => ({ ...prev, cedula: e.target.value }))}
+                    onChange={e => setBankFormData(prev => ({ ...prev, cedula: e.target.value }))}
                   />
                 </div>
                 <div className="space-y-2">
@@ -470,7 +504,7 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ user }) => {
                     id="account-holder"
                     placeholder="Empresa XYZ C.A."
                     value={bankFormData.titular}
-                    onChange={(e) => setBankFormData(prev => ({ ...prev, titular: e.target.value }))}
+                    onChange={e => setBankFormData(prev => ({ ...prev, titular: e.target.value }))}
                   />
                 </div>
               </div>
@@ -481,7 +515,7 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ user }) => {
                     id="bank-name"
                     placeholder="0108 - Banco Mercantil"
                     value={bankFormData.banco}
-                    onChange={(e) => setBankFormData(prev => ({ ...prev, banco: e.target.value }))}
+                    onChange={e => setBankFormData(prev => ({ ...prev, banco: e.target.value }))}
                   />
                 </div>
                 <div className="space-y-2">
@@ -490,10 +524,12 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ user }) => {
                     id="account-type"
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     value={bankFormData.tipoCuenta}
-                    onChange={(e) => setBankFormData(prev => ({
-                      ...prev,
-                      tipoCuenta: e.target.value as 'corriente' | 'ahorros'
-                    }))}
+                    onChange={e =>
+                      setBankFormData(prev => ({
+                        ...prev,
+                        tipoCuenta: e.target.value as 'corriente' | 'ahorros',
+                      }))
+                    }
                   >
                     <option value="corriente">Cuenta Corriente</option>
                     <option value="ahorros">Cuenta de Ahorros</option>

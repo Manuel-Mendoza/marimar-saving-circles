@@ -38,7 +38,13 @@ interface UserDashboardStats {
 
 interface ActivityItem {
   id: string;
-  type: 'payment_made' | 'payment_approved' | 'payment_rejected' | 'group_joined' | 'draw_completed' | 'product_delivered';
+  type:
+    | 'payment_made'
+    | 'payment_approved'
+    | 'payment_rejected'
+    | 'group_joined'
+    | 'draw_completed'
+    | 'product_delivered';
   message: string;
   timestamp: Date;
   groupId?: number;
@@ -106,9 +112,12 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
 
   // Rating system: 10/10 = green, 7/10 = yellow, 4/10 = red
   const getRatingColor = (rating: number) => {
-    if (rating >= 9.0) return { bg: 'bg-green-100', icon: 'text-green-600', text: 'text-green-700' };
-    if (rating >= 7.0) return { bg: 'bg-yellow-100', icon: 'text-yellow-600', text: 'text-yellow-700' };
-    if (rating >= 5.0) return { bg: 'bg-yellow-100', icon: 'text-yellow-600', text: 'text-yellow-700' };
+    if (rating >= 9.0)
+      return { bg: 'bg-green-100', icon: 'text-green-600', text: 'text-green-700' };
+    if (rating >= 7.0)
+      return { bg: 'bg-yellow-100', icon: 'text-yellow-600', text: 'text-yellow-700' };
+    if (rating >= 5.0)
+      return { bg: 'bg-yellow-100', icon: 'text-yellow-600', text: 'text-yellow-700' };
     return { bg: 'bg-red-100', icon: 'text-red-600', text: 'text-red-700' }; // Default to red for very low ratings
   };
 
@@ -198,10 +207,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
               </p>
             </div>
             {currentStats.activeGroups === 0 && (
-              <Button
-                onClick={onJoinGroup}
-                className="bg-white text-blue-600 hover:bg-blue-50"
-              >
+              <Button onClick={onJoinGroup} className="bg-white text-blue-600 hover:bg-blue-50">
                 <Plus className="h-4 w-4 mr-2" />
                 Unirme a un grupo
               </Button>
@@ -234,12 +240,8 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  Puntuación
-                </p>
-                <p className={`text-2xl font-bold ${ratingColors.text}`}>
-                  {ratingValue}/10
-                </p>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Puntuación</p>
+                <p className={`text-2xl font-bold ${ratingColors.text}`}>{ratingValue}/10</p>
               </div>
               <div className={`p-3 ${ratingColors.bg} ${ratingColors.icon} rounded-full`}>
                 <TrendingUp className="h-6 w-6" />
@@ -338,11 +340,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
               <CardTitle>Acciones Rápidas</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button
-                onClick={onJoinGroup}
-                className="w-full justify-start"
-                variant="outline"
-              >
+              <Button onClick={onJoinGroup} className="w-full justify-start" variant="outline">
                 <Plus className="h-4 w-4 mr-2" />
                 Unirme a un grupo
               </Button>
@@ -387,8 +385,6 @@ const UserDashboard: React.FC<UserDashboardProps> = ({
           </Card>
         </div>
       </div>
-
-
     </div>
   );
 

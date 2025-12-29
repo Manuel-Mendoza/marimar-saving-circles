@@ -1,14 +1,28 @@
-import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { LoadingSpinner } from '@/components/atoms';
-import { Users, Calendar, DollarSign, CheckCircle, Clock, AlertCircle, CreditCard } from 'lucide-react';
+import {
+  Users,
+  Calendar,
+  DollarSign,
+  CheckCircle,
+  Clock,
+  AlertCircle,
+  CreditCard,
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import api from '@/lib/api';
-import { UserGroup, Contribution } from '@/lib/types';
+import { UserGroup, Contribution, Delivery } from '@/lib/types';
 import { PaymentRequestModal } from './PaymentRequestModal';
 
 /**
@@ -38,7 +52,7 @@ export const UserGroupDetailsModal: React.FC<UserGroupDetailsModalProps> = ({
   user,
 }) => {
   const [contributions, setContributions] = useState<Contribution[]>([]);
-  const [deliveries, setDeliveries] = useState<any[]>([]);
+  const [deliveries, setDeliveries] = useState<Delivery[]>([]);
   const [loading, setLoading] = useState(false);
   const [showPaymentRequestModal, setShowPaymentRequestModal] = useState(false);
   const [selectedContribution, setSelectedContribution] = useState<Contribution | null>(null);
@@ -49,7 +63,7 @@ export const UserGroupDetailsModal: React.FC<UserGroupDetailsModalProps> = ({
   const { toast } = useToast();
 
   // Load contributions and deliveries for this group
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     if (!userGroup) return;
 
     try {
@@ -69,7 +83,10 @@ export const UserGroupDetailsModal: React.FC<UserGroupDetailsModalProps> = ({
           const key = `${contribution.userId}-${contribution.groupId}-${contribution.periodo}`;
           const existing = uniqueContributions.get(key);
 
-          if (!existing || (existing.estado === 'PENDIENTE' && contribution.estado === 'CONFIRMADO')) {
+          if (
+            !existing ||
+            (existing.estado === 'PENDIENTE' && contribution.estado === 'CONFIRMADO')
+          ) {
             uniqueContributions.set(key, contribution);
           }
         });
@@ -83,7 +100,6 @@ export const UserGroupDetailsModal: React.FC<UserGroupDetailsModalProps> = ({
       if (deliveriesResponse.success) {
         setDeliveries(deliveriesResponse.data.deliveries);
       }
-
     } catch (error) {
       console.error('Error loading data:', error);
       toast({
@@ -94,13 +110,13 @@ export const UserGroupDetailsModal: React.FC<UserGroupDetailsModalProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [userGroup, toast]);
 
   useEffect(() => {
     if (isOpen && userGroup) {
       loadData();
     }
-  }, [isOpen, userGroup]);
+  }, [isOpen, userGroup, loadData]);
 
   // Handle payment action
   const handleMakePayment = (contribution: Contribution) => {
@@ -124,9 +140,7 @@ export const UserGroupDetailsModal: React.FC<UserGroupDetailsModalProps> = ({
       console.log('🔍 Buscando delivery para grupo:', userGroup.groupId, 'usuario:', user.id);
 
       // Find the user's current delivery for this group (pending or with address)
-      let currentDelivery = deliveries.find(
-        delivery => delivery.groupId === userGroup.groupId
-      );
+      let currentDelivery = deliveries.find(delivery => delivery.groupId === userGroup.groupId);
 
       console.log('🎯 Delivery encontrada:', currentDelivery);
 
@@ -196,14 +210,26 @@ export const UserGroupDetailsModal: React.FC<UserGroupDetailsModalProps> = ({
       style: 'currency',
       currency: currency === 'USD' ? 'USD' : 'VES',
       minimumFractionDigits: 2,
-    }).format(amount).replace('Bs.S', 'BcV');
+    })
+      .format(amount)
+      .replace('Bs.S', 'BcV');
   };
 
   // Get status badge for contributions
   const getContributionStatusBadge = (estado: string) => {
     const statusConfig = {
-      'PENDIENTE': { label: 'Pendiente', variant: 'secondary' as const, icon: Clock, color: 'text-yellow-600' },
-      'CONFIRMADO': { label: 'Pagado', variant: 'default' as const, icon: CheckCircle, color: 'text-green-600' },
+      PENDIENTE: {
+        label: 'Pendiente',
+        variant: 'secondary' as const,
+        icon: Clock,
+        color: 'text-yellow-600',
+      },
+      CONFIRMADO: {
+        label: 'Pagado',
+        variant: 'default' as const,
+        icon: CheckCircle,
+        color: 'text-green-600',
+      },
     };
 
     const config = statusConfig[estado as keyof typeof statusConfig] || statusConfig['PENDIENTE'];
@@ -220,19 +246,16 @@ export const UserGroupDetailsModal: React.FC<UserGroupDetailsModalProps> = ({
   // Get status badge for group
   const getGroupStatusBadge = (estado: string) => {
     const statusConfig = {
-      'SIN_COMPLETAR': { label: 'Formándose', variant: 'secondary' as const },
-      'LLENO': { label: 'Completo', variant: 'default' as const },
-      'EN_MARCHA': { label: 'Activo', variant: 'default' as const },
-      'COMPLETADO': { label: 'Finalizado', variant: 'outline' as const },
+      SIN_COMPLETAR: { label: 'Formándose', variant: 'secondary' as const },
+      LLENO: { label: 'Completo', variant: 'default' as const },
+      EN_MARCHA: { label: 'Activo', variant: 'default' as const },
+      COMPLETADO: { label: 'Finalizado', variant: 'outline' as const },
     };
 
-    const config = statusConfig[estado as keyof typeof statusConfig] || statusConfig['SIN_COMPLETAR'];
+    const config =
+      statusConfig[estado as keyof typeof statusConfig] || statusConfig['SIN_COMPLETAR'];
 
-    return (
-      <Badge variant={config.variant}>
-        {config.label}
-      </Badge>
-    );
+    return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
   if (!userGroup) return null;
@@ -348,157 +371,173 @@ export const UserGroupDetailsModal: React.FC<UserGroupDetailsModalProps> = ({
           </Card>
 
           {/* Delivery Status - Only show when it's the user's turn */}
-          {userGroup.group?.turnoActual === userGroup.posicion && userGroup.group.estado === 'EN_MARCHA' && (
-            <Card className="border-purple-200 dark:border-purple-800">
-              <CardHeader>
-                <CardTitle className="text-lg text-purple-700 dark:text-purple-300 flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5" />
-                  ¡Es tu turno para recibir el producto!
-                </CardTitle>
-                <CardDescription>
-                  Ingresa tu dirección de entrega para procesar tu pedido
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="bg-purple-50 dark:bg-purple-950 p-4 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center">
-                      <DollarSign className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+          {userGroup.group?.turnoActual === userGroup.posicion &&
+            userGroup.group.estado === 'EN_MARCHA' && (
+              <Card className="border-purple-200 dark:border-purple-800">
+                <CardHeader>
+                  <CardTitle className="text-lg text-purple-700 dark:text-purple-300 flex items-center gap-2">
+                    <CheckCircle className="h-5 w-5" />
+                    ¡Es tu turno para recibir el producto!
+                  </CardTitle>
+                  <CardDescription>
+                    Ingresa tu dirección de entrega para procesar tu pedido
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="bg-purple-50 dark:bg-purple-950 p-4 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center">
+                        <DollarSign className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-purple-900 dark:text-purple-100">
+                          {userGroup.productoSeleccionado}
+                        </h3>
+                        <p className="text-sm text-purple-700 dark:text-purple-300">
+                          Mes {userGroup.group.turnoActual} - Tu turno ha llegado
+                        </p>
+                      </div>
+                      <Badge variant="default" className="bg-purple-600">
+                        Procesando
+                      </Badge>
                     </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-purple-900 dark:text-purple-100">
-                        {userGroup.productoSeleccionado}
-                      </h3>
-                      <p className="text-sm text-purple-700 dark:text-purple-300">
-                        Mes {userGroup.group.turnoActual} - Tu turno ha llegado
-                      </p>
-                    </div>
-                    <Badge variant="default" className="bg-purple-600">
-                      Procesando
-                    </Badge>
                   </div>
-                </div>
 
-                {/* Address Input Form - Show different UI based on whether address exists */}
-                <div className="space-y-3">
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Dirección de Entrega
-                    </label>
-                    {(() => {
-                      // Find existing delivery with address for this user/group
-                      const existingDeliveryWithAddress = deliveries.find(
-                        delivery =>
-                          delivery.groupId === userGroup.groupId &&
-                          delivery.direccion &&
-                          delivery.direccion.trim().length > 0
-                      );
-
-                      const hasAddress = !!existingDeliveryWithAddress;
-
-                      if (isEditingAddress || !hasAddress) {
-                        return (
-                          <textarea
-                            className="mt-1 w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white resize-none"
-                            rows={3}
-                            placeholder="Ingresa tu dirección completa para la entrega..."
-                            value={isEditingAddress && existingDeliveryWithAddress ? existingDeliveryWithAddress.direccion : deliveryAddress}
-                            onChange={(e) => setDeliveryAddress(e.target.value)}
-                          />
+                  {/* Address Input Form - Show different UI based on whether address exists */}
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Dirección de Entrega
+                      </label>
+                      {(() => {
+                        // Find existing delivery with address for this user/group
+                        const existingDeliveryWithAddress = deliveries.find(
+                          delivery =>
+                            delivery.groupId === userGroup.groupId &&
+                            delivery.direccion &&
+                            delivery.direccion.trim().length > 0
                         );
-                      } else {
-                        return (
-                          <div className="mt-1 p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-md">
-                            <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-                              {existingDeliveryWithAddress?.direccion}
-                            </p>
-                            <div className="flex gap-2 mt-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => {
-                                  setIsEditingAddress(true);
-                                  setDeliveryAddress(existingDeliveryWithAddress?.direccion || '');
-                                }}
-                                className="text-xs"
-                              >
-                                Editar
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => {
-                                  if (confirm('¿Estás seguro de que quieres eliminar la dirección?')) {
-                                    // Clear the address
-                                    if (existingDeliveryWithAddress) {
-                                      api.updateDeliveryAddress(existingDeliveryWithAddress.id, '').then(response => {
-                                        if (response.success) {
-                                          loadData(); // Reload data
-                                          toast({
-                                            title: 'Dirección eliminada',
-                                            description: 'La dirección de entrega ha sido eliminada.',
+
+                        const hasAddress = !!existingDeliveryWithAddress;
+
+                        if (isEditingAddress || !hasAddress) {
+                          return (
+                            <textarea
+                              className="mt-1 w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white resize-none"
+                              rows={3}
+                              placeholder="Ingresa tu dirección completa para la entrega..."
+                              value={
+                                isEditingAddress && existingDeliveryWithAddress
+                                  ? existingDeliveryWithAddress.direccion
+                                  : deliveryAddress
+                              }
+                              onChange={e => setDeliveryAddress(e.target.value)}
+                            />
+                          );
+                        } else {
+                          return (
+                            <div className="mt-1 p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-md">
+                              <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                                {existingDeliveryWithAddress?.direccion}
+                              </p>
+                              <div className="flex gap-2 mt-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    setIsEditingAddress(true);
+                                    setDeliveryAddress(
+                                      existingDeliveryWithAddress?.direccion || ''
+                                    );
+                                  }}
+                                  className="text-xs"
+                                >
+                                  Editar
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    if (
+                                      confirm('¿Estás seguro de que quieres eliminar la dirección?')
+                                    ) {
+                                      // Clear the address
+                                      if (existingDeliveryWithAddress) {
+                                        api
+                                          .updateDeliveryAddress(existingDeliveryWithAddress.id, '')
+                                          .then(response => {
+                                            if (response.success) {
+                                              loadData(); // Reload data
+                                              toast({
+                                                title: 'Dirección eliminada',
+                                                description:
+                                                  'La dirección de entrega ha sido eliminada.',
+                                              });
+                                            }
                                           });
-                                        }
-                                      });
+                                      }
                                     }
-                                  }
-                                }}
-                                className="text-xs text-red-600 hover:text-red-700"
-                              >
-                                Eliminar
-                              </Button>
+                                  }}
+                                  className="text-xs text-red-600 hover:text-red-700"
+                                >
+                                  Eliminar
+                                </Button>
+                              </div>
                             </div>
-                          </div>
-                        );
-                      }
-                    })()}
-                  </div>
-                  <Button
-                    onClick={handleSubmitDeliveryAddress}
-                    disabled={!deliveryAddress.trim() || isSubmittingAddress}
-                    className="w-full bg-purple-600 hover:bg-purple-700 text-white"
-                  >
-                    {isSubmittingAddress ? 'Enviando...' : isEditingAddress ? 'Actualizar Dirección' : 'Enviar Dirección y Confirmar Entrega'}
-                  </Button>
-                  {isEditingAddress && (
+                          );
+                        }
+                      })()}
+                    </div>
                     <Button
-                      variant="outline"
-                      onClick={() => {
-                        setIsEditingAddress(false);
-                        setDeliveryAddress('');
-                      }}
-                      className="w-full"
+                      onClick={handleSubmitDeliveryAddress}
+                      disabled={!deliveryAddress.trim() || isSubmittingAddress}
+                      className="w-full bg-purple-600 hover:bg-purple-700 text-white"
                     >
-                      Cancelar Edición
+                      {isSubmittingAddress
+                        ? 'Enviando...'
+                        : isEditingAddress
+                          ? 'Actualizar Dirección'
+                          : 'Enviar Dirección y Confirmar Entrega'}
                     </Button>
-                  )}
-                </div>
+                    {isEditingAddress && (
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setIsEditingAddress(false);
+                          setDeliveryAddress('');
+                        }}
+                        className="w-full"
+                      >
+                        Cancelar Edición
+                      </Button>
+                    )}
+                  </div>
 
-                <div className="text-sm text-gray-600 dark:text-gray-400 space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4" />
-                    <span>Una vez enviada la dirección, los administradores procesarán tu entrega</span>
+                  <div className="text-sm text-gray-600 dark:text-gray-400 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      <span>
+                        Una vez enviada la dirección, los administradores procesarán tu entrega
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="h-4 w-4" />
+                      <span>Recibirás confirmación cuando tu producto esté en camino</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4" />
+                      <span>Todos tus pagos han sido verificados</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <AlertCircle className="h-4 w-4" />
-                    <span>Recibirás confirmación cuando tu producto esté en camino</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4" />
-                    <span>Todos tus pagos han sido verificados</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+                </CardContent>
+              </Card>
+            )}
 
           {/* Payment Summary */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Resumen de Pagos</CardTitle>
-              <CardDescription>
-                Estado de tus contribuciones mensuales
-              </CardDescription>
+              <CardDescription>Estado de tus contribuciones mensuales</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -527,7 +566,11 @@ export const UserGroupDetailsModal: React.FC<UserGroupDetailsModalProps> = ({
                           Próximo pago pendiente
                         </div>
                         <div className="text-sm text-yellow-700 dark:text-yellow-300">
-                          {nextPendingContribution.periodo} - {formatCurrency(nextPendingContribution.monto, nextPendingContribution.moneda)}
+                          {nextPendingContribution.periodo} -{' '}
+                          {formatCurrency(
+                            nextPendingContribution.monto,
+                            nextPendingContribution.moneda
+                          )}
                         </div>
                       </div>
                     </div>
@@ -548,9 +591,7 @@ export const UserGroupDetailsModal: React.FC<UserGroupDetailsModalProps> = ({
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Historial de Contribuciones</CardTitle>
-              <CardDescription>
-                Detalle de todos tus pagos mensuales
-              </CardDescription>
+              <CardDescription>Detalle de todos tus pagos mensuales</CardDescription>
             </CardHeader>
             <CardContent>
               {loading ? (
@@ -570,28 +611,34 @@ export const UserGroupDetailsModal: React.FC<UserGroupDetailsModalProps> = ({
                       return aNum - bNum;
                     })
                     .map((contribution, index) => (
-                    <div key={contribution.id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <div className="flex-shrink-0">
-                          <Badge variant="default" className="flex items-center gap-1 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
-                            <CheckCircle className="h-3 w-3" />
-                            Pagado
-                          </Badge>
+                      <div
+                        key={contribution.id}
+                        className="flex items-center justify-between p-3 border rounded-lg"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="flex-shrink-0">
+                            <Badge
+                              variant="default"
+                              className="flex items-center gap-1 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+                            >
+                              <CheckCircle className="h-3 w-3" />
+                              Pagado
+                            </Badge>
+                          </div>
+                          <div>
+                            <div className="font-medium">{contribution.periodo}</div>
+                            <div className="text-sm text-gray-600 dark:text-gray-400">
+                              {formatCurrency(contribution.monto, contribution.moneda)}
+                            </div>
+                          </div>
                         </div>
-                        <div>
-                          <div className="font-medium">{contribution.periodo}</div>
+                        <div className="text-right">
                           <div className="text-sm text-gray-600 dark:text-gray-400">
-                            {formatCurrency(contribution.monto, contribution.moneda)}
+                            Pagado: {new Date(contribution.fechaPago!).toLocaleDateString('es-ES')}
                           </div>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="text-sm text-gray-600 dark:text-gray-400">
-                          Pagado: {new Date(contribution.fechaPago!).toLocaleDateString('es-ES')}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               ) : (
                 <div className="text-center py-8 text-gray-500">
