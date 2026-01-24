@@ -2,12 +2,16 @@ import { Toaster } from '@/components/ui/toaster';
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useRoutes } from 'react-router-dom';
 import ErrorBoundary from '@/components/ErrorBoundary';
-import { Index, NotFound, DashboardLayout } from '@/components/pages';
+import { Index, NotFound } from '@/components/pages';
 import { useAuth } from '@/contexts/AuthContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { AppStateProvider } from '@/contexts/AppStateContext';
+import { Suspense, lazy } from 'react';
+
+// Lazy loading para componentes pesados
+const DashboardLayout = lazy(() => import('@/components/pages/DashboardLayout'));
 
 const queryClient = new QueryClient();
 

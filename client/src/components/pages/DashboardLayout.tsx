@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { NavigationSidebar } from '@/components/molecules';
 import { AdminDashboard, UserDashboard, UserProfile } from '@/components/organisms';
