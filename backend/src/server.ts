@@ -22,20 +22,33 @@ const PORT = parseInt(process.env.PORT || "5000");
 // Connect to database
 connectDB();
 
-// CORS middleware - more permissive for development
+// CORS middleware - more permissive for development and production
 app.use(
   "*",
   cors({
     origin: (origin, c) => {
-      // Allow localhost on any port for development and specific frontend URL
-      if (
-        origin?.startsWith("http://localhost:") ||
-        origin === "https://marimar-saving-circles.vercel.app/api" ||
-        origin === "https://marimar-saving-circles.vercel.app/api/" ||
-        !origin
-      ) {
+      // Allow localhost on any port for development
+      if (origin?.startsWith("http://localhost:") || origin?.startsWith("http://127.0.0.1:")) {
         return origin;
       }
+      
+      // Allow specific production domains
+      const allowedOrigins = [
+        "https://marimar-saving-circles.vercel.app",
+        "https://marimar-saving-circles.vercel.app/",
+        "https://marimar-saving-circles.vercel.app/api",
+        "https://marimar-saving-circles.vercel.app/api/",
+      ];
+      
+      if (allowedOrigins.includes(origin)) {
+        return origin;
+      }
+      
+      // Allow requests without origin (like mobile apps or server-to-server)
+      if (!origin) {
+        return "*";
+      }
+      
       return null;
     },
     credentials: true,
@@ -46,7 +59,10 @@ app.use(
       "X-Requested-With",
       "Accept",
       "Origin",
+      "X-Forwarded-For",
+      "X-Real-IP",
     ],
+    exposeHeaders: ["Content-Length", "Content-Type"],
   }),
 );
 

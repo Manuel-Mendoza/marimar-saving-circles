@@ -154,6 +154,13 @@ auth.post("/login", async (c) => {
 // Register endpoint
 auth.post("/register", async (c) => {
   try {
+    // Set CORS headers for this specific endpoint
+    c.header("Access-Control-Allow-Origin", "*");
+    c.header("Access-Control-Allow-Methods", "POST, OPTIONS");
+    c.header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
+    c.header("Access-Control-Allow-Credentials", "true");
+    c.header("Access-Control-Expose-Headers", "Content-Length, Content-Type");
+
     const body = await c.req.parseBody();
     const file = body["imagenCedula"] as File;
 
@@ -385,6 +392,9 @@ auth.post("/register", async (c) => {
       201,
     );
   } catch (error) {
+    console.error("Error en registro:", error);
+    
+    // Manejo específico de errores de validación
     if (error instanceof z.ZodError) {
       return c.json(
         {
@@ -396,11 +406,22 @@ auth.post("/register", async (c) => {
       );
     }
 
-    console.error("Error en registro:", error);
+    // Manejo de errores de parseo de body (FormData)
+    if (error instanceof Error && error.message.includes("Failed to fetch")) {
+      return c.json(
+        {
+          success: false,
+          message: "Error al procesar la solicitud. Verifica que los datos sean correctos.",
+        },
+        400,
+      );
+    }
+
+    // Error interno del servidor
     return c.json(
       {
         success: false,
-        message: "Error interno del servidor",
+        message: "Error interno del servidor. Por favor intenta de nuevo más tarde.",
       },
       500,
     );

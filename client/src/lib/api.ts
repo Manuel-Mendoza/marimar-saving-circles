@@ -136,24 +136,55 @@ class ApiClient {
   }
 
   async register(formData: FormData) {
-    const response = await this.request<{
-      user: User;
-      token: string;
-    }>('/auth/register', {
-      method: 'POST',
-      body: formData,
-      headers: {
-        // No incluir Content-Type para que el navegador lo setee automáticamente con boundary
-      },
-    });
+    const url = `${this.baseURL}/auth/register`;
+    
+    try {
+      // Configurar headers específicos para FormData
+      const headers = new Headers();
+      headers.set('Accept', 'application/json');
+      // No establecer Content-Type para que el navegador lo configure automáticamente con boundary
+      
+      // Si hay token, incluirlo en los headers
+      if (this.token) {
+        headers.set('Authorization', `Bearer ${this.token}`);
+      }
 
-    // Store token
-    if (response.success && response.data?.token) {
-      localStorage.setItem('auth_token', response.data.token);
-      this.token = response.data.token;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: headers,
+        body: formData,
+        mode: 'cors',
+        credentials: 'include', // Incluir cookies si las hay
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Manejar errores específicos de CORS y red
+        if (response.status === 0) {
+          throw new Error('Error de red o CORS. Verifica la URL del backend y la configuración de CORS.');
+        }
+        
+        throw new Error(data.message || `Error ${response.status}: ${response.statusText}`);
+      }
+
+      // Store token
+      if (data.success && data.data?.token) {
+        localStorage.setItem('auth_token', data.data.token);
+        this.token = data.data.token;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Registration error:', error);
+      
+      // Si es un error de red/CORS, proporcionar un mensaje más descriptivo
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('Error de conexión. Verifica que el backend esté corriendo y la URL sea correcta.');
+      }
+      
+      throw error;
     }
-
-    return response;
   }
 
   async logout() {
