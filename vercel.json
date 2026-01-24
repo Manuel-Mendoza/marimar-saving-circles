@@ -1,0 +1,25 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "backend/src/server.ts",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": [
+          "backend/dist/**",
+          "backend/package.json",
+          "backend/tsconfig.json",
+          "backend/tsconfig.production.json",
+          "backend/fix-imports.js",
+          "backend/tsc-alias.config.json"
+        ]
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "backend/src/server.ts"
+    }
+  ]
+}
