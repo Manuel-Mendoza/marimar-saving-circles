@@ -23,25 +23,27 @@ async function getAvailableApiUrl() {
     return configuredUrl;
   }
   
-  // Intentar primero con localhost
-  try {
-    const response = await fetch(`${localUrl}/health`, {
-      method: 'GET',
-      mode: 'cors',
-      cache: 'no-cache',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    
-    if (response.ok) {
-      return localUrl;
+  // Solo intentar localhost en entorno de desarrollo
+  if (import.meta.env.DEV) {
+    try {
+      const response = await fetch(`${localUrl}/health`, {
+        method: 'GET',
+        mode: 'cors',
+        cache: 'no-cache',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (response.ok) {
+        return localUrl;
+      }
+    } catch (error) {
+      console.warn('Local API not available, trying configured URL:', error);
     }
-  } catch (error) {
-    console.warn('Local API not available, trying configured URL:', error);
   }
   
-  // Si localhost no está disponible, usar la URL configurada
+  // En producción o si localhost no está disponible, usar la URL configurada
   return configuredUrl;
 }
 
