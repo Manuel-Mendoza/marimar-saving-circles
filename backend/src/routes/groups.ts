@@ -272,7 +272,7 @@ groupsRoute.post("/", authenticate, async (c) => {
       return c.json(
         {
           success: false,
-          message: "Acceso denegado",
+          message: "Acceso denegado: Solo administradores pueden crear grupos",
         },
         403,
       );
@@ -281,20 +281,60 @@ groupsRoute.post("/", authenticate, async (c) => {
     const body = await c.req.json();
     const { nombre, duracionMeses } = body;
 
-    if (!nombre || !duracionMeses || duracionMeses < 1) {
+    // Validate required fields
+    if (!nombre || !duracionMeses) {
       return c.json(
         {
           success: false,
-          message: "Datos inválidos",
+          message: "Datos incompletos: Se requieren nombre y duracionMeses",
         },
         400,
+      );
+    }
+
+    // Validate nombre
+    if (typeof nombre !== "string" || nombre.trim().length < 2) {
+      return c.json(
+        {
+          success: false,
+          message: "El nombre debe ser una cadena de al menos 2 caracteres",
+        },
+        400,
+      );
+    }
+
+    // Validate duracionMeses
+    if (typeof duracionMeses !== "number" || duracionMeses < 1 || duracionMeses > 60) {
+      return c.json(
+        {
+          success: false,
+          message: "duracionMeses debe ser un número entre 1 y 60",
+        },
+        400,
+      );
+    }
+
+    // Check if group name already exists
+    const existingGroup = await db
+      .select()
+      .from(groups)
+      .where(eq(groups.nombre, nombre.trim()))
+      .limit(1);
+
+    if (existingGroup.length > 0) {
+      return c.json(
+        {
+          success: false,
+          message: "Ya existe un grupo con este nombre",
+        },
+        409,
       );
     }
 
     const newGroup = await db
       .insert(groups)
       .values({
-        nombre,
+        nombre: nombre.trim(),
         duracionMeses,
         estado: "SIN_COMPLETAR",
         turnoActual: 0,
@@ -311,6 +351,19 @@ groupsRoute.post("/", authenticate, async (c) => {
     });
   } catch (error) {
     console.error("Error creando grupo:", error);
+    
+    if (error instanceof Error) {
+      if (error.message.includes("JSON")) {
+        return c.json(
+          {
+            success: false,
+            message: "Formato de solicitud inválido",
+          },
+          400,
+        );
+      }
+    }
+    
     return c.json(
       {
         success: false,

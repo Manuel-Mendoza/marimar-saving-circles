@@ -127,64 +127,149 @@ const WS_PORT = 6001; // Fixed WebSocket port
 const wss = new WebSocketServer({ port: WS_PORT });
 
 wss.on("connection", (ws, req) => {
-  const requestUrl = req.url;
-  if (!requestUrl) {
-    ws.close(1008, "Invalid request URL");
-    return;
-  }
-  const url = new URL(requestUrl, `http://localhost:${WS_PORT}`);
-  const pathParts = url.pathname.split("/");
-  const groupIdStr = pathParts[pathParts.length - 1];
-  if (!groupIdStr) {
-    ws.close(1008, "Invalid group path");
-    return;
-  }
-  const groupId = parseInt(groupIdStr);
+  let groupId: number | null = null;
+  let isClosed = false;
 
-  if (isNaN(groupId)) {
-    ws.close(1008, "Invalid group ID");
-    return;
-  }
-
-  // Add connection to group
-  if (!groupConnections.has(groupId)) {
-    groupConnections.set(groupId, []);
-  }
-  groupConnections.get(groupId)!.push(ws);
-
-  // Send welcome message
-  ws.send(
-    JSON.stringify({
-      type: "CONNECTED",
-      groupId,
-      message: "Connected to group real-time updates",
-    }),
-  );
-
-  ws.on("message", (data) => {
-    try {
-      const message = JSON.parse(data.toString());
-      // Handle incoming messages if needed
-    } catch (error) {
-      console.error("Error parsing WebSocket message:", error);
-    }
-  });
-
-  ws.on("close", () => {
-    // Remove connection from group
-    const connections = groupConnections.get(groupId) || [];
-    const index = connections.indexOf(ws);
-    if (index > -1) {
-      connections.splice(index, 1);
+  try {
+    const requestUrl = req.url;
+    if (!requestUrl) {
+      ws.close(1008, "Invalid request URL");
+      return;
     }
 
-    // Clean up empty arrays
-    if (connections.length === 0) {
-      groupConnections.delete(groupId);
+    const url = new URL(requestUrl, `http://localhost:${WS_PORT}`);
+    const pathParts = url.pathname.split("/");
+    const groupIdStr = pathParts[pathParts.length - 1];
+    
+    if (!groupIdStr) {
+      ws.close(1008, "Invalid group path");
+      return;
     }
-  });
 
-  ws.on("error", (error) => {
-    console.error("WebSocket error:", error);
-  });
+    const parsedGroupId = parseInt(groupIdStr);
+    if (isNaN(parsedGroupId) || parsedGroupId <= 0) {
+      ws.close(1008, "Invalid group ID");
+      return;
+    }
+
+    groupId = parsedGroupId;
+
+    // Add connection to group
+    if (!groupConnections.has(groupId)) {
+      groupConnections.set(groupId, []);
+    }
+    groupConnections.get(groupId)!.push(ws);
+
+    // Send welcome message
+    ws.send(
+      JSON.stringify({
+        type: "CONNECTED",
+        groupId,
+        message: "Connected to group real-time updates",
+        timestamp: new Date().toISOString(),
+      }),
+    );
+
+    console.log(`WebSocket connected to group ${groupId}. Total connections: ${groupConnections.get(groupId)!.length}`);
+
+    ws.on("message", (data) => {
+      try {
+        const message = JSON.parse(data.toString());
+        
+        // Handle incoming messages if needed
+        // For now, we just log them
+        console.log(`Message from group ${groupId}:`, message);
+        
+        // Optional: Echo back to sender for testing
+        if (message.type === "PING") {
+          ws.send(JSON.stringify({
+            type: "PONG",
+            timestamp: new Date().toISOString(),
+          }));
+        }
+      } catch (error) {
+        console.error("Error parsing WebSocket message:", error);
+        ws.send(JSON.stringify({
+          type: "ERROR",
+          message: "Invalid message format",
+        }));
+      }
+    });
+
+    ws.on("close", () => {
+      if (isClosed || groupId === null) return;
+      isClosed = true;
+
+      // Remove connection from group
+      const connections = groupConnections.get(groupId) || [];
+      const index = connections.indexOf(ws);
+      if (index > -1) {
+        connections.splice(index, 1);
+      }
+
+      // Clean up empty arrays
+      if (connections.length === 0) {
+        groupConnections.delete(groupId);
+      }
+
+      console.log(`WebSocket disconnected from group ${groupId}. Remaining connections: ${connections.length}`);
+    });
+
+    ws.on("error", (error) => {
+      console.error(`WebSocket error for group ${groupId}:`, error);
+      // Don't close the connection here, let the close event handle cleanup
+    });
+
+    // Handle connection timeout
+    const timeout = setTimeout(() => {
+      if (!isClosed) {
+        console.warn(`WebSocket connection to group ${groupId} timed out`);
+        ws.terminate();
+      }
+    }, 300000); // 5 minutes timeout
+
+    ws.on("close", () => {
+      clearTimeout(timeout);
+    });
+
+    ws.on("pong", () => {
+      clearTimeout(timeout);
+      // Set new timeout for next ping
+      setTimeout(() => {
+        if (!isClosed) {
+          ws.ping();
+        }
+      }, 30000); // Ping every 30 seconds
+    });
+
+    // Initial ping
+    ws.ping();
+
+  } catch (error) {
+    console.error("Error in WebSocket connection:", error);
+    if (!isClosed) {
+      ws.close(1011, "Internal server error");
+    }
+  }
+});
+
+// Handle WebSocket server errors
+wss.on("error", (error) => {
+  console.error("WebSocket server error:", error);
+});
+
+// Handle WebSocket server close
+wss.on("close", () => {
+  console.log("WebSocket server closed");
+});
+
+// Graceful shutdown for WebSocket server
+process.on("SIGTERM", () => {
+  console.log("SIGTERM received, closing WebSocket server...");
+  wss.close();
+});
+
+process.on("SIGINT", () => {
+  console.log("SIGINT received, closing WebSocket server...");
+  wss.close();
 });

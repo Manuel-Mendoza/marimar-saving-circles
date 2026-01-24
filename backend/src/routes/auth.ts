@@ -216,7 +216,7 @@ auth.post("/register", async (c) => {
         return c.json(
           {
             success: false,
-            message: "El archivo debe ser una imagen",
+            message: "El archivo debe ser una imagen válida (JPEG, PNG, GIF, etc.)",
           },
           400,
         );
@@ -233,18 +233,49 @@ auth.post("/register", async (c) => {
         );
       }
 
+      // Validar dimensiones mínimas
       try {
-        // Convertir archivo a base64 para imgbb
         const arrayBuffer = await file.arrayBuffer();
-        const base64 = Buffer.from(arrayBuffer).toString("base64");
+        const imageBlob = new Blob([arrayBuffer], { type: file.type });
+        
+        // Crear imagen temporal para validar dimensiones
+        const img = new Image();
+        const imageUrlTemp = URL.createObjectURL(imageBlob);
+        
+        await new Promise<void>((resolve, reject) => {
+          img.onload = () => {
+            if (img.width < 100 || img.height < 100) {
+              URL.revokeObjectURL(imageUrlTemp);
+              reject(new Error("La imagen debe tener al menos 100x100 píxeles"));
+            } else {
+              URL.revokeObjectURL(imageUrlTemp);
+              resolve();
+            }
+          };
+          img.onerror = () => {
+            URL.revokeObjectURL(imageUrlTemp);
+            reject(new Error("El archivo no es una imagen válida"));
+          };
+          img.src = imageUrlTemp;
+        });
+      } catch (imageError) {
+        return c.json(
+          {
+            success: false,
+            message: imageError instanceof Error ? imageError.message : "Error validando la imagen",
+          },
+          400,
+        );
+      }
 
+      try {
         // Subir a imgbb
         const imgbbApiKey = process.env.IMGBB_API_KEY;
         if (!imgbbApiKey) {
           return c.json(
             {
               success: false,
-              message: "Error de configuración del servidor",
+              message: "Error de configuración del servidor: IMGBB_API_KEY no configurada",
             },
             500,
           );
@@ -252,7 +283,7 @@ auth.post("/register", async (c) => {
 
         const imgbbFormData = new FormData();
         imgbbFormData.append("key", imgbbApiKey);
-        imgbbFormData.append("image", base64);
+        imgbbFormData.append("image", file);
         imgbbFormData.append(
           "name",
           `cedula-${validatedData.cedula}-${Date.now()}`,
@@ -263,15 +294,20 @@ auth.post("/register", async (c) => {
           body: imgbbFormData,
         });
 
+        if (!imgbbResponse.ok) {
+          throw new Error(`ImgBB API error: ${imgbbResponse.statusText}`);
+        }
+
         const imgbbResult = await imgbbResponse.json();
 
-        if (imgbbResult.success) {
+        if (imgbbResult.success && imgbbResult.data && imgbbResult.data.url) {
           imageUrl = imgbbResult.data.url;
         } else {
+          console.error("ImgBB response:", imgbbResult);
           return c.json(
             {
               success: false,
-              message: "Error al subir la imagen",
+              message: "Error al subir la imagen a ImgBB",
             },
             500,
           );
@@ -281,7 +317,7 @@ auth.post("/register", async (c) => {
         return c.json(
           {
             success: false,
-            message: "Error al procesar la imagen",
+            message: "Error al procesar la imagen: " + (error instanceof Error ? error.message : String(error)),
           },
           500,
         );

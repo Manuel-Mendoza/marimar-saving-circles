@@ -3,6 +3,7 @@ import { eq, and, desc } from "drizzle-orm";
 import { paymentRequests } from "../db/tables/payment-requests.js";
 import { users } from "../db/tables/users.js";
 import { groups } from "../db/tables/groups.js";
+import { userGroups } from "../db/tables/user-groups.js";
 import { contributions } from "../db/tables/contributions.js";
 import { db } from "../config/database.js";
 import { authenticate } from "../middleware/auth.js";
@@ -262,7 +263,28 @@ paymentRequestsRoute.post("/", authenticate, async (c) => {
       return c.json(
         {
           success: false,
-          message: "Datos incompletos",
+          message: "Datos incompletos: Se requieren groupId, periodo, monto, moneda y metodoPago",
+        },
+        400,
+      );
+    }
+
+    // Validate numeric fields
+    if (typeof groupId !== "number" || groupId <= 0) {
+      return c.json(
+        {
+          success: false,
+          message: "groupId debe ser un número positivo",
+        },
+        400,
+      );
+    }
+
+    if (typeof monto !== "number" || monto <= 0) {
+      return c.json(
+        {
+          success: false,
+          message: "monto debe ser un número positivo",
         },
         400,
       );
@@ -273,26 +295,100 @@ paymentRequestsRoute.post("/", authenticate, async (c) => {
       return c.json(
         {
           success: false,
-          message: "Moneda inválida",
+          message: "Moneda inválida: solo se aceptan VES o USD",
         },
         400,
       );
     }
 
-    // Check if user is in the group
-    const userGroup = await db
+    // Validate periodo format (YYYY-MM)
+    const periodoRegex = /^\d{4}-\d{2}$/;
+    if (!periodoRegex.test(periodo)) {
+      return c.json(
+        {
+          success: false,
+          message: "Formato de periodo inválido: debe ser YYYY-MM",
+        },
+        400,
+      );
+    }
+
+    // Validate metodoPago
+    const validMetodos = ["Transferencia", "Pago móvil", "Efectivo", "Binance"];
+    if (!validMetodos.includes(metodoPago)) {
+      return c.json(
+        {
+          success: false,
+          message: `Método de pago inválido: debe ser uno de ${validMetodos.join(", ")}`,
+        },
+        400,
+      );
+    }
+
+    // Validate referenciaPago
+    if (!referenciaPago || referenciaPago.trim().length < 5) {
+      return c.json(
+        {
+          success: false,
+          message: "referenciaPago es requerida y debe tener al menos 5 caracteres",
+        },
+        400,
+      );
+    }
+
+    // Check if user exists
+    const [user] = await db
       .select()
       .from(users)
       .where(eq(users.id, userPayload.id))
       .limit(1);
 
-    if (!userGroup.length) {
+    if (!user) {
       return c.json(
         {
           success: false,
           message: "Usuario no encontrado",
         },
         404,
+      );
+    }
+
+    // Check if group exists
+    const [group] = await db
+      .select()
+      .from(groups)
+      .where(eq(groups.id, groupId))
+      .limit(1);
+
+    if (!group) {
+      return c.json(
+        {
+          success: false,
+          message: "Grupo no encontrado",
+        },
+        404,
+      );
+    }
+
+    // Check if user is member of the group
+    const [userGroup] = await db
+      .select()
+      .from(userGroups)
+      .where(
+        and(
+          eq(userGroups.userId, userPayload.id),
+          eq(userGroups.groupId, groupId),
+        ),
+      )
+      .limit(1);
+
+    if (!userGroup) {
+      return c.json(
+        {
+          success: false,
+          message: "No eres miembro de este grupo",
+        },
+        403,
       );
     }
 
@@ -305,10 +401,7 @@ paymentRequestsRoute.post("/", authenticate, async (c) => {
           eq(paymentRequests.userId, userPayload.id),
           eq(paymentRequests.groupId, groupId),
           eq(paymentRequests.periodo, periodo),
-          and(
-            eq(paymentRequests.estado, "PENDIENTE"),
-            eq(paymentRequests.estado, "CONFIRMADO"),
-          ),
+          eq(paymentRequests.estado, "PENDIENTE"),
         ),
       )
       .limit(1);
@@ -317,8 +410,31 @@ paymentRequestsRoute.post("/", authenticate, async (c) => {
       return c.json(
         {
           success: false,
-          message:
-            "Ya tienes una solicitud pendiente o confirmada para este período",
+          message: "Ya tienes una solicitud pendiente para este período",
+        },
+        400,
+      );
+    }
+
+    // Check if user already has a confirmed request for this period
+    const confirmedRequest = await db
+      .select()
+      .from(paymentRequests)
+      .where(
+        and(
+          eq(paymentRequests.userId, userPayload.id),
+          eq(paymentRequests.groupId, groupId),
+          eq(paymentRequests.periodo, periodo),
+          eq(paymentRequests.estado, "CONFIRMADO"),
+        ),
+      )
+      .limit(1);
+
+    if (confirmedRequest.length > 0) {
+      return c.json(
+        {
+          success: false,
+          message: "Ya tienes una solicitud confirmada para este período",
         },
         400,
       );
@@ -327,7 +443,7 @@ paymentRequestsRoute.post("/", authenticate, async (c) => {
     // Determine if comprobante is required
     const requiereComprobante = moneda === "VES"; // VES requires comprobante, USD doesn't
 
-    if (requiereComprobante && !comprobantePago) {
+    if (requiereComprobante && (!comprobantePago || !comprobantePago.trim())) {
       return c.json(
         {
           success: false,
@@ -335,6 +451,21 @@ paymentRequestsRoute.post("/", authenticate, async (c) => {
         },
         400,
       );
+    }
+
+    // Validate comprobante URL format if provided
+    if (comprobantePago && comprobantePago.trim()) {
+      try {
+        new URL(comprobantePago.trim());
+      } catch (error) {
+        return c.json(
+          {
+            success: false,
+            message: "comprobantePago debe ser una URL válida",
+          },
+          400,
+        );
+      }
     }
 
     // Create payment request
@@ -347,8 +478,8 @@ paymentRequestsRoute.post("/", authenticate, async (c) => {
         monto,
         moneda,
         metodoPago,
-        referenciaPago,
-        comprobantePago,
+        referenciaPago: referenciaPago.trim(),
+        comprobantePago: comprobantePago ? comprobantePago.trim() : null,
         requiereComprobante,
       })
       .returning();
@@ -362,6 +493,19 @@ paymentRequestsRoute.post("/", authenticate, async (c) => {
     });
   } catch (error) {
     console.error("Error creando solicitud de pago:", error);
+    
+    if (error instanceof Error) {
+      if (error.message.includes("JSON")) {
+        return c.json(
+          {
+            success: false,
+            message: "Formato de solicitud inválido",
+          },
+          400,
+        );
+      }
+    }
+    
     return c.json(
       {
         success: false,

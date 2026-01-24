@@ -130,15 +130,51 @@ export async function verifyToken(
   secretKey: string,
 ): Promise<object | null> {
   try {
+    // Validate inputs
+    if (!token || !secretKey) {
+      console.error("Error verifying PASETO token: Missing token or secret key");
+      return null;
+    }
+
+    // Validate token format
+    if (!token.startsWith("v4.local.") && !token.startsWith("v4.public.")) {
+      console.error("Error verifying PASETO token: Invalid token format");
+      return null;
+    }
+
     // Create Ed25519 private key from PEM
     const privateKey = createPrivateKey(secretKey);
 
     // Verify and decode the token
     const payload = await paseto.verify(token, privateKey);
 
+    // Validate payload structure
+    if (!payload || typeof payload !== "object") {
+      console.error("Error verifying PASETO token: Invalid payload");
+      return null;
+    }
+
+    // Check expiration
+    if (payload.exp && new Date(payload.exp as string) < new Date()) {
+      console.error("Error verifying PASETO token: Token expired");
+      return null;
+    }
+
     return payload;
   } catch (error) {
     console.error("Error verifying PASETO token:", error);
+    
+    // Provide specific error messages
+    if (error instanceof Error) {
+      if (error.message.includes("Invalid token")) {
+        console.error("💡 The token format is invalid or corrupted");
+      } else if (error.message.includes("Expired")) {
+        console.error("💡 The token has expired");
+      } else if (error.message.includes("Invalid signature")) {
+        console.error("💡 The token signature is invalid");
+      }
+    }
+    
     return null;
   }
 }

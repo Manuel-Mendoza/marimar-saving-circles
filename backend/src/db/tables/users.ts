@@ -46,3 +46,47 @@ export const users = pgTable("users", {
 // Types
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
+
+// Índices para búsquedas eficientes
+export const usersIndexes = {
+  // Índice compuesto para búsquedas por email y estado
+  emailEstado: "idx_users_email_estado",
+  // Índice para búsquedas por cédula
+  cedula: "idx_users_cedula",
+  // Índice para búsquedas por tipo de usuario
+  tipo: "idx_users_tipo",
+  // Índice para búsquedas por estado
+  estado: "idx_users_estado",
+  // Índice para búsquedas por reputación
+  reputationScore: "idx_users_reputation_score",
+  // Índice para búsquedas por fecha de registro
+  fechaRegistro: "idx_users_fecha_registro",
+  // Índice para búsquedas por último acceso
+  ultimoAcceso: "idx_users_ultimo_acceso",
+};
+
+// Restricciones únicas
+export const usersConstraints = {
+  // Email único
+  uniqueEmail: "unique_email",
+  // Cédula única
+  uniqueCedula: "unique_cedula",
+  // Combinación única de cédula y email
+  uniqueCedulaEmail: "unique_cedula_email",
+};
+
+// Índices para relaciones
+export const usersRelationsIndexes = {
+  // Índice para relaciones con userGroups
+  idForUserGroups: "idx_users_id_for_user_groups",
+  // Índice para relaciones con contributions
+  idForContributions: "idx_users_id_for_contributions",
+  // Índice para relaciones con deliveries
+  idForDeliveries: "idx_users_id_for_deliveries",
+  // Índice para relaciones con userRatings
+  idForUserRatings: "idx_users_id_for_user_ratings",
+  // Índice para relaciones con paymentRequests
+  idForPaymentRequests: "idx_users_id_for_payment_requests",
+  // Índice para relaciones con productSelections
+  idForProductSelections: "idx_users_id_for_product_selections",
+};

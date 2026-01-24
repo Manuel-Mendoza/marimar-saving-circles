@@ -5,6 +5,8 @@ import { userGroups } from "./tables/user-groups";
 import { contributions } from "./tables/contributions";
 import { deliveries } from "./tables/deliveries";
 import { userRatings } from "./tables/user-ratings";
+import { paymentRequests } from "./tables/payment-requests";
+import { productSelections } from "./tables/product-selections";
 
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
@@ -13,6 +15,8 @@ export const usersRelations = relations(users, ({ many }) => ({
   entregas: many(deliveries),
   ratingsGiven: many(userRatings, { relationName: "rater" }),
   ratingsReceived: many(userRatings, { relationName: "rated" }),
+  paymentRequests: many(paymentRequests),
+  productSelections: many(productSelections),
 }));
 
 export const groupsRelations = relations(groups, ({ many }) => ({
@@ -20,6 +24,7 @@ export const groupsRelations = relations(groups, ({ many }) => ({
   contribuciones: many(contributions),
   entregas: many(deliveries),
   ratings: many(userRatings),
+  paymentRequests: many(paymentRequests),
 }));
 
 export const userGroupsRelations = relations(userGroups, ({ one }) => ({
@@ -69,5 +74,23 @@ export const userRatingsRelations = relations(userRatings, ({ one }) => ({
   group: one(groups, {
     fields: [userRatings.groupId],
     references: [groups.id],
+  }),
+}));
+
+export const paymentRequestsRelations = relations(paymentRequests, ({ one }) => ({
+  user: one(users, {
+    fields: [paymentRequests.userId],
+    references: [users.id],
+  }),
+  group: one(groups, {
+    fields: [paymentRequests.groupId],
+    references: [groups.id],
+  }),
+}));
+
+export const productSelectionsRelations = relations(productSelections, ({ one }) => ({
+  user: one(users, {
+    fields: [productSelections.userId],
+    references: [users.id],
   }),
 }));
