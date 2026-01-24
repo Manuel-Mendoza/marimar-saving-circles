@@ -6,8 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "tsc",
-    "start": "node dist/server.js",
+    "build": "tsc -p tsconfig.production.json",
+    "start": "if [ ! -f dist/server.js ]; then echo 'Building TypeScript...'; bun run build; fi && node dist/server.js",
     "lint": "eslint src/**/*.ts",
     "format": "prettier --write .",
     "type-check": "tsc --noEmit",
