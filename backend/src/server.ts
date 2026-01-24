@@ -30,7 +30,10 @@ app.use(
       // Allow localhost on any port for development and specific frontend URL
       if (
         origin?.startsWith("http://localhost:") ||
+        origin === "https://marimar-saving-circles-client.vercel.app" ||
         origin === "https://marimar-saving-circles-client.vercel.app/" ||
+        origin === "https://marimar-saving-circles.vercel.app" ||
+        origin === "https://marimar-saving-circles.vercel.app/" ||
         !origin
       ) {
         return origin;
