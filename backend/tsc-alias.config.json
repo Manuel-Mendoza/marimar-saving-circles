@@ -1,0 +1,8 @@
+{
+  "resolveFullPaths": true,
+  "useTsconfig": true,
+  "resolveExactExtension": true,
+  "resolveExtensions": [".js", ".ts", ".tsx"],
+  "resolvePaths": true,
+  "resolveSymlinks": true
+}

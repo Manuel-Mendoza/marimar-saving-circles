@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "tsc -p tsconfig.production.json",
+    "build": "tsc -p tsconfig.production.json && node fix-imports.js",
     "start": "if [ ! -f dist/server.js ]; then echo 'Building TypeScript...'; bun run build; fi && node dist/server.js",
     "lint": "eslint src/**/*.ts",
     "format": "prettier --write .",
@@ -38,5 +38,8 @@
     "typescript"
   ],
   "author": "Marimar Team",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "tsc-alias": "^1.8.16"
+  }
 }
