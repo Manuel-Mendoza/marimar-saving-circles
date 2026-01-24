@@ -16,14 +16,20 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
-    chunkSizeWarningLimit: 1000,
+    chunkSizeWarningLimit: 2000,
     minify: 'terser',
     terserOptions: {
       compress: {
         drop_console: true,
         drop_debugger: true,
+        passes: 2,
+      },
+      mangle: {
+        safari10: true,
       },
     },
+    target: 'es2020',
+    cssTarget: 'es2020',
     rollupOptions: {
       output: {
         manualChunks: {
