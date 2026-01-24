@@ -11,7 +11,7 @@
     "dev": "concurrently \"cd client && pnpm exec vite\" \"cd backend && pnpm run dev\"",
     "dev:client": "pnpm run dev --filter client",
     "dev:backend": "pnpm run dev --filter backend",
-    "build": "cd client && pnpm exec vite build && cd ../backend && pnpm run build",
+    "build": "cd client && NODE_OPTIONS=\"--max-old-space-size=4096\" pnpm exec vite build && cd ../backend && pnpm run build",
     "build:client": "pnpm run build --filter client",
     "build:backend": "pnpm run build --filter backend",
     "start": "concurrently \"pnpm exec vite preview --cwd client\" \"pnpm run start --filter backend\"",
