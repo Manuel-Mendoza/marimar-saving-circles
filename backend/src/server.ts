@@ -18,7 +18,10 @@ import sseRoutes from "./routes/sse.js";
 function broadcastToGroup(groupId: number, message: any) {
   // For now, this is a basic implementation that logs the message
   // In a production environment, this would use WebSockets or SSE to broadcast to group members
-  console.log(`Broadcasting to group ${groupId}:`, JSON.stringify(message, null, 2));
+  console.log(
+    `Broadcasting to group ${groupId}:`,
+    JSON.stringify(message, null, 2),
+  );
 
   // TODO: Implement actual real-time broadcasting using WebSockets or SSE
   // This could integrate with the existing SSE routes for group updates
@@ -35,10 +38,27 @@ app.use(
   "*",
   cors({
     origin: (origin, c) => {
-      // Allow localhost on any port for development
+      // Allow localhost on any port or domain for development
       if (
-        origin?.startsWith("http://localhost:") ||
-        origin?.startsWith("http://127.0.0.1:")
+        origin?.startsWith("http://localhost") ||
+        origin?.startsWith("http://127.0.0.1") ||
+        origin?.startsWith("http://0.0.0.0")
+      ) {
+        return origin;
+      }
+
+      // Allow specific local network IP addresses for development
+      if (
+        origin === "http://192.168.0.188:8080" ||
+        origin?.startsWith("http://192.168.")
+      ) {
+        return origin;
+      }
+
+      // Allow other local network ranges
+      if (
+        origin?.startsWith("http://10.") ||
+        origin?.startsWith("http://172.")
       ) {
         return origin;
       }
@@ -93,7 +113,6 @@ app.route("/api/payment-requests", paymentRequestsRoutes);
 app.route("/api/payment-options", paymentOptionsRoutes);
 app.route("/api/ratings", ratingsRoutes);
 app.route("/api", sseRoutes);
-
 
 // Health check
 app.get("/api/health", (c) => {

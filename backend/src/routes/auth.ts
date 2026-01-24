@@ -154,13 +154,6 @@ auth.post("/login", async (c) => {
 // Register endpoint
 auth.post("/register", async (c) => {
   try {
-    // Set CORS headers for this specific endpoint
-    c.header("Access-Control-Allow-Origin", "*");
-    c.header("Access-Control-Allow-Methods", "POST, OPTIONS");
-    c.header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
-    c.header("Access-Control-Allow-Credentials", "true");
-    c.header("Access-Control-Expose-Headers", "Content-Length, Content-Type");
-
     const body = await c.req.parseBody();
     const file = body["imagenCedula"] as File;
 
@@ -223,7 +216,8 @@ auth.post("/register", async (c) => {
         return c.json(
           {
             success: false,
-            message: "El archivo debe ser una imagen válida (JPEG, PNG, GIF, etc.)",
+            message:
+              "El archivo debe ser una imagen válida (JPEG, PNG, GIF, etc.)",
           },
           400,
         );
@@ -244,16 +238,18 @@ auth.post("/register", async (c) => {
       try {
         const arrayBuffer = await file.arrayBuffer();
         const imageBlob = new Blob([arrayBuffer], { type: file.type });
-        
+
         // Crear imagen temporal para validar dimensiones
         const img = new Image();
         const imageUrlTemp = URL.createObjectURL(imageBlob);
-        
+
         await new Promise<void>((resolve, reject) => {
           img.onload = () => {
             if (img.width < 100 || img.height < 100) {
               URL.revokeObjectURL(imageUrlTemp);
-              reject(new Error("La imagen debe tener al menos 100x100 píxeles"));
+              reject(
+                new Error("La imagen debe tener al menos 100x100 píxeles"),
+              );
             } else {
               URL.revokeObjectURL(imageUrlTemp);
               resolve();
@@ -269,7 +265,10 @@ auth.post("/register", async (c) => {
         return c.json(
           {
             success: false,
-            message: imageError instanceof Error ? imageError.message : "Error validando la imagen",
+            message:
+              imageError instanceof Error
+                ? imageError.message
+                : "Error validando la imagen",
           },
           400,
         );
@@ -282,7 +281,8 @@ auth.post("/register", async (c) => {
           return c.json(
             {
               success: false,
-              message: "Error de configuración del servidor: IMGBB_API_KEY no configurada",
+              message:
+                "Error de configuración del servidor: IMGBB_API_KEY no configurada",
             },
             500,
           );
@@ -324,7 +324,9 @@ auth.post("/register", async (c) => {
         return c.json(
           {
             success: false,
-            message: "Error al procesar la imagen: " + (error instanceof Error ? error.message : String(error)),
+            message:
+              "Error al procesar la imagen: " +
+              (error instanceof Error ? error.message : String(error)),
           },
           500,
         );
@@ -393,7 +395,7 @@ auth.post("/register", async (c) => {
     );
   } catch (error) {
     console.error("Error en registro:", error);
-    
+
     // Manejo específico de errores de validación
     if (error instanceof z.ZodError) {
       return c.json(
@@ -411,7 +413,8 @@ auth.post("/register", async (c) => {
       return c.json(
         {
           success: false,
-          message: "Error al procesar la solicitud. Verifica que los datos sean correctos.",
+          message:
+            "Error al procesar la solicitud. Verifica que los datos sean correctos.",
         },
         400,
       );
@@ -421,7 +424,8 @@ auth.post("/register", async (c) => {
     return c.json(
       {
         success: false,
-        message: "Error interno del servidor. Por favor intenta de nuevo más tarde.",
+        message:
+          "Error interno del servidor. Por favor intenta de nuevo más tarde.",
       },
       500,
     );

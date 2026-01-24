@@ -17,8 +17,6 @@ import {
   Lock,
   User,
   Phone,
-  AlertCircle,
-  Upload,
   CheckCircle,
   XCircle,
   FileText,

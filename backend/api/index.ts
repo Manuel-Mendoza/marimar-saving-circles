@@ -24,10 +24,27 @@ app.use(
   "*",
   cors({
     origin: (origin, c) => {
-      // Allow localhost on any port for development
+      // Allow localhost on any port or domain for development
       if (
-        origin?.startsWith("http://localhost:") ||
-        origin?.startsWith("http://127.0.0.1:")
+        origin?.startsWith("http://localhost") ||
+        origin?.startsWith("http://127.0.0.1") ||
+        origin?.startsWith("http://0.0.0.0")
+      ) {
+        return origin;
+      }
+
+      // Allow specific local network IP addresses for development
+      if (
+        origin === "http://192.168.0.188:8080" ||
+        origin?.startsWith("http://192.168.")
+      ) {
+        return origin;
+      }
+
+      // Allow other local network ranges
+      if (
+        origin?.startsWith("http://10.") ||
+        origin?.startsWith("http://172.")
       ) {
         return origin;
       }
