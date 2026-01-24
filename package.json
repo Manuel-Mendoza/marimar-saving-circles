@@ -8,7 +8,7 @@
     "backend"
   ],
   "scripts": {
-    "dev": "concurrently \"cd client && pnpm exec vite\" \"cd backend && pnpm run dev\"",
+    "dev": "concurrently \"cd client && pnpm exec vite\" \"cd backend && bun run dev\"",
     "dev:client": "pnpm run dev --filter client",
     "dev:backend": "pnpm run dev --filter backend",
     "build": "cd client && NODE_OPTIONS=\"--max-old-space-size=4096\" pnpm exec vite build && cd ../backend && pnpm run build",

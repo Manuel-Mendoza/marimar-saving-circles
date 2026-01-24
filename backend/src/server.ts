@@ -3,7 +3,6 @@ import { cors } from "hono/cors";
 import { serve } from "@hono/node-server";
 import { createServer } from "http";
 import { WebSocketServer, WebSocket } from "ws";
-import dotenv from "dotenv";
 import { connectDB } from "./config/database.js";
 import authRoutes from "./routes/auth.js";
 import groupRoutes from "./routes/groups.js";
@@ -16,8 +15,6 @@ import adminRoutes from "./routes/admin.js";
 import ratingsRoutes from "./routes/ratings.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { rateLimiter } from "./middleware/rateLimiter.js";
-
-dotenv.config();
 
 const app = new Hono();
 const PORT = parseInt(process.env.PORT || "5000");
