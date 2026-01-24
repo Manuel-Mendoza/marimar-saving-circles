@@ -4,6 +4,9 @@
     "declaration": false,
     "declarationMap": false,
     "sourceMap": false,
-    "removeComments": true
+    "removeComments": true,
+    "moduleResolution": "node",
+    "module": "ESNext",
+    "resolveJsonModule": true
   }
 }
