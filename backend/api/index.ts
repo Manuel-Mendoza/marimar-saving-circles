@@ -1,20 +1,20 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { connectDB } from "./config/database.js";
-import authRoutes from "./routes/auth.js";
-import groupRoutes from "./routes/groups.js";
-import userRoutes from "./routes/users.js";
-import productRoutes from "./routes/products.js";
-import productSelectionsRoutes from "./routes/product-selections.js";
-import paymentRequestsRoutes from "./routes/payment-requests.js";
-import paymentOptionsRoutes from "./routes/payment-options.js";
-import adminRoutes from "./routes/admin.js";
-import ratingsRoutes from "./routes/ratings.js";
-import { errorHandler } from "./middleware/errorHandler.js";
-import { rateLimiter } from "./middleware/rateLimiter.js";
+import { handle } from "@hono/node-server/vercel";
+import { connectDB } from "../src/config/database.js";
+import authRoutes from "../src/routes/auth.js";
+import groupRoutes from "../src/routes/groups.js";
+import userRoutes from "../src/routes/users.js";
+import productRoutes from "../src/routes/products.js";
+import productSelectionsRoutes from "../src/routes/product-selections.js";
+import paymentRequestsRoutes from "../src/routes/payment-requests.js";
+import paymentOptionsRoutes from "../src/routes/payment-options.js";
+import adminRoutes from "../src/routes/admin.js";
+import ratingsRoutes from "../src/routes/ratings.js";
+import { errorHandler } from "../src/middleware/errorHandler.js";
+import { rateLimiter } from "../src/middleware/rateLimiter.js";
 
 const app = new Hono();
-const PORT = parseInt(process.env.PORT || "5000");
 
 // Connect to database
 connectDB();
@@ -82,7 +82,6 @@ app.route("/api/payment-requests", paymentRequestsRoutes);
 app.route("/api/payment-options", paymentOptionsRoutes);
 app.route("/api/ratings", ratingsRoutes);
 
-
 // Health check
 app.get("/api/health", (c) => {
   return c.json({ status: "OK", timestamp: new Date().toISOString() });
@@ -96,13 +95,11 @@ app.notFound((c) => {
   return c.json({ message: "Route not found" }, 404);
 });
 
-// For development, we still want to run the server locally
-// but for production Vercel deployment, this won't be used
-if (process.env.NODE_ENV !== "production") {
-  const { serve } = await import("@hono/node-server");
+// Vercel configuration
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
 
-  serve({
-    fetch: app.fetch,
-    port: PORT,
-  });
-}
+export default handle(app);

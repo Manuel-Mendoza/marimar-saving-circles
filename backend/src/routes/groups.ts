@@ -6,7 +6,6 @@ import { users } from "../db/tables/users.js";
 import { contributions as contributionsTable } from "../db/tables/contributions.js";
 import { deliveries as deliveriesTable } from "../db/tables/deliveries.js";
 import { db } from "../config/database.js";
-import { broadcastToGroup } from "../server.js";
 import { authenticate } from "../middleware/auth.js";
 
 // JWT payload type
@@ -304,7 +303,11 @@ groupsRoute.post("/", authenticate, async (c) => {
     }
 
     // Validate duracionMeses
-    if (typeof duracionMeses !== "number" || duracionMeses < 1 || duracionMeses > 60) {
+    if (
+      typeof duracionMeses !== "number" ||
+      duracionMeses < 1 ||
+      duracionMeses > 60
+    ) {
       return c.json(
         {
           success: false,
@@ -351,7 +354,7 @@ groupsRoute.post("/", authenticate, async (c) => {
     });
   } catch (error) {
     console.error("Error creando grupo:", error);
-    
+
     if (error instanceof Error) {
       if (error.message.includes("JSON")) {
         return c.json(
@@ -363,7 +366,7 @@ groupsRoute.post("/", authenticate, async (c) => {
         );
       }
     }
-    
+
     return c.json(
       {
         success: false,
@@ -629,18 +632,6 @@ groupsRoute.post("/:id/start-draw", authenticate, async (c) => {
       delay: index * 1000, // 1 second delay between each position reveal
     }));
 
-    // Broadcast to all connected clients
-    broadcastToGroup(groupId, {
-      type: "DRAW_STARTED",
-      groupId,
-      animationSequence,
-      startTime: Date.now(),
-      finalPositions: shuffledMembers.map((member, index) => ({
-        position: index + 1,
-        userId: member.userId,
-        name: `${member.nombre} ${member.apellido}`,
-      })),
-    });
 
     return c.json({
       success: true,
