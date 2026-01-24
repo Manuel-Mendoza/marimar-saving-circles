@@ -13,38 +13,15 @@ import type {
   BankPaymentData,
 } from './types';
 
-// Función para intentar conectar primero al localhost y luego a la URL configurada
-async function getAvailableApiUrl() {
-  const localUrl = 'http://localhost:5000/api';
-  const configuredUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-  
-  // Si la URL configurada es localhost, usarla directamente
-  if (configuredUrl === localUrl) {
-    return configuredUrl;
-  }
-  
-  // Solo intentar localhost en entorno de desarrollo
+// Función para determinar la URL del API según el entorno
+function getApiUrl() {
+  // Si estamos en desarrollo, usar localhost
   if (import.meta.env.DEV) {
-    try {
-      const response = await fetch(`${localUrl}/health`, {
-        method: 'GET',
-        mode: 'cors',
-        cache: 'no-cache',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      if (response.ok) {
-        return localUrl;
-      }
-    } catch (error) {
-      console.warn('Local API not available, trying configured URL:', error);
-    }
+    return 'http://localhost:5000/api';
   }
   
-  // En producción o si localhost no está disponible, usar la URL configurada
-  return configuredUrl;
+  // Si estamos en producción, usar la URL de Vercel
+  return 'https://marimar-saving-circles-backend.vercel.app/api';
 }
 
 interface ApiResponse<T = unknown> {
@@ -737,14 +714,14 @@ class ApiClient {
 }
 
 // Crear una instancia de ApiClient que use la URL disponible
-const createApiClient = async () => {
-  const availableUrl = await getAvailableApiUrl();
+const createApiClient = () => {
+  const availableUrl = getApiUrl();
   console.log('Using API URL:', availableUrl);
   return new ApiClient(availableUrl);
 };
 
 // Crear instancia inmediatamente con la URL base incluyendo /api
-const apiClientInstance = new ApiClient(import.meta.env.VITE_API_URL || 'http://localhost:5000/api');
+const apiClientInstance = createApiClient();
 
 // Exportar el cliente API configurado
 export const apiClient = apiClientInstance;

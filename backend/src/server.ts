@@ -14,6 +14,16 @@ import { errorHandler } from "./middleware/errorHandler.js";
 import { rateLimiter } from "./middleware/rateLimiter.js";
 import sseRoutes from "./routes/sse.js";
 
+// Broadcast function for group updates (basic implementation)
+function broadcastToGroup(groupId: number, message: any) {
+  // For now, this is a basic implementation that logs the message
+  // In a production environment, this would use WebSockets or SSE to broadcast to group members
+  console.log(`Broadcasting to group ${groupId}:`, JSON.stringify(message, null, 2));
+
+  // TODO: Implement actual real-time broadcasting using WebSockets or SSE
+  // This could integrate with the existing SSE routes for group updates
+}
+
 const app = new Hono();
 const PORT = parseInt(process.env.PORT || "5000");
 
@@ -108,3 +118,6 @@ if (process.env.NODE_ENV !== "production") {
     port: PORT,
   });
 }
+
+// Export the broadcast function for use in other modules
+export { broadcastToGroup };
