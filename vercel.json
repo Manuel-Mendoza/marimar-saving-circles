@@ -21,5 +21,6 @@
       "src": "/api/(.*)",
       "dest": "backend/src/server.ts"
     }
-  ]
+  ],
+  "outputDirectory": "backend/dist"
 }
