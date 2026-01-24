@@ -712,6 +712,9 @@ const createApiClient = async () => {
   return new ApiClient(availableUrl);
 };
 
-// Exportar una promesa que resuelve con el cliente API configurado
-export const apiClient = createApiClient();
+// Crear instancia inmediatamente con la URL base
+const apiClientInstance = new ApiClient(import.meta.env.VITE_API_URL || 'http://localhost:5000/api');
+
+// Exportar el cliente API configurado
+export const apiClient = apiClientInstance;
 export default apiClient;

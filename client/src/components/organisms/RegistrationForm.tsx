@@ -241,6 +241,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onBack, onRegistrat
       }
     } catch (err) {
       console.error('Registration error:', err);
+      console.error('Registration error details:', err instanceof Error ? err.message : err);
       setDialogErrorMessage('Error al registrar usuario. Inténtalo de nuevo.');
       setShowErrorDialog(true);
     } finally {
