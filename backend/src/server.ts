@@ -22,18 +22,15 @@ const PORT = parseInt(process.env.PORT || "5000");
 // Connect to database
 connectDB();
 
-// Middleware
-const frontendUrl = process.env.FRONTEND_URL || "http://localhost:8080";
-
 // CORS middleware - more permissive for development
 app.use(
   "*",
   cors({
     origin: (origin, c) => {
-      // Allow localhost on any port for development
+      // Allow localhost on any port for development and specific frontend URL
       if (
         origin?.startsWith("http://localhost:") ||
-        origin === frontendUrl ||
+        origin === "https://marimar-saving-circles-client.vercel.app/" ||
         !origin
       ) {
         return origin;
@@ -140,7 +137,7 @@ wss.on("connection", (ws, req) => {
     const url = new URL(requestUrl, `http://localhost:${WS_PORT}`);
     const pathParts = url.pathname.split("/");
     const groupIdStr = pathParts[pathParts.length - 1];
-    
+
     if (!groupIdStr) {
       ws.close(1008, "Invalid group path");
       return;
@@ -170,29 +167,35 @@ wss.on("connection", (ws, req) => {
       }),
     );
 
-    console.log(`WebSocket connected to group ${groupId}. Total connections: ${groupConnections.get(groupId)!.length}`);
+    console.log(
+      `WebSocket connected to group ${groupId}. Total connections: ${groupConnections.get(groupId)!.length}`,
+    );
 
     ws.on("message", (data) => {
       try {
         const message = JSON.parse(data.toString());
-        
+
         // Handle incoming messages if needed
         // For now, we just log them
         console.log(`Message from group ${groupId}:`, message);
-        
+
         // Optional: Echo back to sender for testing
         if (message.type === "PING") {
-          ws.send(JSON.stringify({
-            type: "PONG",
-            timestamp: new Date().toISOString(),
-          }));
+          ws.send(
+            JSON.stringify({
+              type: "PONG",
+              timestamp: new Date().toISOString(),
+            }),
+          );
         }
       } catch (error) {
         console.error("Error parsing WebSocket message:", error);
-        ws.send(JSON.stringify({
-          type: "ERROR",
-          message: "Invalid message format",
-        }));
+        ws.send(
+          JSON.stringify({
+            type: "ERROR",
+            message: "Invalid message format",
+          }),
+        );
       }
     });
 
@@ -212,7 +215,9 @@ wss.on("connection", (ws, req) => {
         groupConnections.delete(groupId);
       }
 
-      console.log(`WebSocket disconnected from group ${groupId}. Remaining connections: ${connections.length}`);
+      console.log(
+        `WebSocket disconnected from group ${groupId}. Remaining connections: ${connections.length}`,
+      );
     });
 
     ws.on("error", (error) => {
@@ -244,7 +249,6 @@ wss.on("connection", (ws, req) => {
 
     // Initial ping
     ws.ping();
-
   } catch (error) {
     console.error("Error in WebSocket connection:", error);
     if (!isClosed) {

@@ -13,7 +13,37 @@ import type {
   BankPaymentData,
 } from './types';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// Función para intentar conectar primero al localhost y luego a la URL configurada
+async function getAvailableApiUrl() {
+  const localUrl = 'http://localhost:5000/api';
+  const configuredUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  
+  // Si la URL configurada es localhost, usarla directamente
+  if (configuredUrl === localUrl) {
+    return configuredUrl;
+  }
+  
+  // Intentar primero con localhost
+  try {
+    const response = await fetch(`${localUrl}/health`, {
+      method: 'GET',
+      mode: 'cors',
+      cache: 'no-cache',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (response.ok) {
+      return localUrl;
+    }
+  } catch (error) {
+    console.warn('Local API not available, trying configured URL:', error);
+  }
+  
+  // Si localhost no está disponible, usar la URL configurada
+  return configuredUrl;
+}
 
 interface ApiResponse<T = unknown> {
   success: boolean;
@@ -673,5 +703,13 @@ class ApiClient {
   }
 }
 
-export const apiClient = new ApiClient(API_BASE_URL);
+// Crear una instancia de ApiClient que use la URL disponible
+const createApiClient = async () => {
+  const availableUrl = await getAvailableApiUrl();
+  console.log('Using API URL:', availableUrl);
+  return new ApiClient(availableUrl);
+};
+
+// Exportar una promesa que resuelve con el cliente API configurado
+export const apiClient = createApiClient();
 export default apiClient;
