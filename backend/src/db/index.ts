@@ -13,6 +13,7 @@ export * from "./tables/payment-options";
 export * from "./tables/payment-requests";
 export * from "./tables/notifications";
 export * from "./tables/user-ratings";
+export * from "./tables/draw-sessions";
 
 // Relations
 export * from "./relations";

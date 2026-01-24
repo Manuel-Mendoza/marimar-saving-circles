@@ -6,6 +6,7 @@ import { users } from "../db/tables/users.js";
 import { contributions as contributionsTable } from "../db/tables/contributions.js";
 import { deliveries as deliveriesTable } from "../db/tables/deliveries.js";
 import { db } from "../config/database.js";
+import { drawSessions } from "../db/tables/draw-sessions.js";
 import { authenticate } from "../middleware/auth.js";
 
 // JWT payload type
@@ -632,12 +633,38 @@ groupsRoute.post("/:id/start-draw", authenticate, async (c) => {
       delay: index * 1000, // 1 second delay between each position reveal
     }));
 
+    // Create draw session for SSE
+    const drawSession = await db
+      .insert(drawSessions)
+      .values({
+        groupId: groupId,
+        adminId: userPayload.id,
+        status: "IN_PROGRESS",
+        finalPositions: shuffledMembers.map((member, index) => ({
+          position: index + 1,
+          userId: member.userId,
+          name: `${member.nombre} ${member.apellido}`,
+        })),
+        totalSteps: shuffledMembers.length,
+        currentStep: 0,
+      })
+      .returning();
+
+    if (drawSession.length === 0) {
+      return c.json({
+        success: false,
+        message: "Error al crear la sesión de sorteo",
+      }, 500);
+    }
+
+    const session = drawSession[0]!;
 
     return c.json({
       success: true,
       message: "Sorteo iniciado exitosamente",
       data: {
         groupId,
+        sessionId: session.id,
         finalPositions: shuffledMembers.map((member, index) => ({
           position: index + 1,
           userId: member.userId,

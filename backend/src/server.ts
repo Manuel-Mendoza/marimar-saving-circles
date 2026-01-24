@@ -12,6 +12,7 @@ import adminRoutes from "./routes/admin.js";
 import ratingsRoutes from "./routes/ratings.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { rateLimiter } from "./middleware/rateLimiter.js";
+import sseRoutes from "./routes/sse.js";
 
 const app = new Hono();
 const PORT = parseInt(process.env.PORT || "5000");
@@ -81,6 +82,7 @@ app.route("/api/product-selections", productSelectionsRoutes);
 app.route("/api/payment-requests", paymentRequestsRoutes);
 app.route("/api/payment-options", paymentOptionsRoutes);
 app.route("/api/ratings", ratingsRoutes);
+app.route("/api", sseRoutes);
 
 
 // Health check
