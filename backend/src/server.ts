@@ -28,27 +28,28 @@ app.use(
   cors({
     origin: (origin, c) => {
       // Allow localhost on any port for development
-      if (origin?.startsWith("http://localhost:") || origin?.startsWith("http://127.0.0.1:")) {
+      if (
+        origin?.startsWith("http://localhost:") ||
+        origin?.startsWith("http://127.0.0.1:")
+      ) {
         return origin;
       }
-      
+
       // Allow specific production domains
       const allowedOrigins = [
         "https://marimar-saving-circles.vercel.app",
-        "https://marimar-saving-circles.vercel.app/",
-        "https://marimar-saving-circles.vercel.app/api",
-        "https://marimar-saving-circles.vercel.app/api/",
+        "https://marimar-saving-circles-client.vercel.app",
       ];
-      
+
       if (allowedOrigins.includes(origin)) {
         return origin;
       }
-      
+
       // Allow requests without origin (like mobile apps or server-to-server)
       if (!origin) {
         return "*";
       }
-      
+
       return null;
     },
     credentials: true,
