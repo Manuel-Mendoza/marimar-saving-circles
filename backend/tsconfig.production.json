@@ -7,6 +7,11 @@
     "removeComments": true,
     "moduleResolution": "node",
     "module": "ESNext",
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "incremental": true,
+    "tsBuildInfoFile": "./dist/.tsbuildinfo",
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "noEmitOnError": false
   }
 }
