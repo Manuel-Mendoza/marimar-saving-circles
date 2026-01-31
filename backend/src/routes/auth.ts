@@ -5,6 +5,7 @@ import { users } from "../db/tables/users.js";
 import { db } from "../config/database.js";
 import { hashPassword, verifyPassword, generateToken } from "../utils/auth.js";
 import { authenticate } from "../middleware/auth.js";
+import sharp from "sharp";
 
 // JWT payload type
 interface JWTPayload {
@@ -234,33 +235,18 @@ auth.post("/register", async (c) => {
         );
       }
 
-      // Validar dimensiones mínimas
+      // Validar dimensiones mínimas usando sharp
       try {
-        const arrayBuffer = await file.arrayBuffer();
-        const imageBlob = new Blob([arrayBuffer], { type: file.type });
-
-        // Crear imagen temporal para validar dimensiones
-        const img = new Image();
-        const imageUrlTemp = URL.createObjectURL(imageBlob);
-
-        await new Promise<void>((resolve, reject) => {
-          img.onload = () => {
-            if (img.width < 100 || img.height < 100) {
-              URL.revokeObjectURL(imageUrlTemp);
-              reject(
-                new Error("La imagen debe tener al menos 100x100 píxeles"),
-              );
-            } else {
-              URL.revokeObjectURL(imageUrlTemp);
-              resolve();
-            }
-          };
-          img.onerror = () => {
-            URL.revokeObjectURL(imageUrlTemp);
-            reject(new Error("El archivo no es una imagen válida"));
-          };
-          img.src = imageUrlTemp;
-        });
+        const buffer = await file.arrayBuffer();
+        const metadata = await sharp(Buffer.from(buffer)).metadata();
+        
+        if (!metadata.width || !metadata.height) {
+          throw new Error("No se pudieron determinar las dimensiones de la imagen");
+        }
+        
+        if (metadata.width < 100 || metadata.height < 100) {
+          throw new Error("La imagen debe tener al menos 100x100 píxeles");
+        }
       } catch (imageError) {
         return c.json(
           {
@@ -395,6 +381,11 @@ auth.post("/register", async (c) => {
     );
   } catch (error) {
     console.error("Error en registro:", error);
+    console.error("Error details:", {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : undefined
+    });
 
     // Manejo específico de errores de validación
     if (error instanceof z.ZodError) {
@@ -420,12 +411,13 @@ auth.post("/register", async (c) => {
       );
     }
 
-    // Error interno del servidor
+    // Error interno del servidor - mostrar mensaje específico si está disponible
+    const errorMessage = error instanceof Error ? error.message : "Error interno del servidor. Por favor intenta de nuevo más tarde.";
+    
     return c.json(
       {
         success: false,
-        message:
-          "Error interno del servidor. Por favor intenta de nuevo más tarde.",
+        message: errorMessage,
       },
       500,
     );

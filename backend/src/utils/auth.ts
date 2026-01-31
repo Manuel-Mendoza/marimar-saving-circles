@@ -1,7 +1,8 @@
 // Authentication utilities using Bun's native crypto APIs and PASETO
 
 import { V4 as paseto } from "paseto";
-import { generateKeyPairSync, createPrivateKey } from "crypto";
+import { generateKeyPairSync } from "crypto";
+import * as crypto from "crypto";
 
 export async function hashPassword(password: string): Promise<string> {
   const encoder = new TextEncoder();
@@ -105,7 +106,11 @@ export async function generateToken(
 ): Promise<string> {
   try {
     // Create Ed25519 private key from PEM
-    const privateKey = createPrivateKey(secretKey);
+    const privateKey = crypto.createPrivateKey({
+      key: secretKey,
+      format: "pem",
+      type: "pkcs8",
+    });
 
     // Create PASETO token with expiration
     const token = await paseto.sign(
@@ -132,7 +137,9 @@ export async function verifyToken(
   try {
     // Validate inputs
     if (!token || !secretKey) {
-      console.error("Error verifying PASETO token: Missing token or secret key");
+      console.error(
+        "Error verifying PASETO token: Missing token or secret key",
+      );
       return null;
     }
 
@@ -143,7 +150,11 @@ export async function verifyToken(
     }
 
     // Create Ed25519 private key from PEM
-    const privateKey = createPrivateKey(secretKey);
+    const privateKey = crypto.createPrivateKey({
+      key: secretKey,
+      format: "pem",
+      type: "pkcs8",
+    });
 
     // Verify and decode the token
     const payload = await paseto.verify(token, privateKey);
@@ -163,7 +174,7 @@ export async function verifyToken(
     return payload;
   } catch (error) {
     console.error("Error verifying PASETO token:", error);
-    
+
     // Provide specific error messages
     if (error instanceof Error) {
       if (error.message.includes("Invalid token")) {
@@ -174,7 +185,7 @@ export async function verifyToken(
         console.error("💡 The token signature is invalid");
       }
     }
-    
+
     return null;
   }
 }
